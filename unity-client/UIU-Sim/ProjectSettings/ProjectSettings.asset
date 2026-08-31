@@ -239,8 +239,10 @@ PlayerSettings:
   iOSLaunchScreenCustomStoryboardPath: 
   iOSLaunchScreeniPadCustomStoryboardPath: 
   iOSDeviceRequirements: []
-  iOSURLSchemes: []
-  macOSURLSchemes: []
+  iOSURLSchemes:
+  - uiusim
+  macOSURLSchemes:
+  - uiusim
   iOSBackgroundModes: 0
   iOSMetalForceHardShadows: 0
   metalEditorSupport: 1
