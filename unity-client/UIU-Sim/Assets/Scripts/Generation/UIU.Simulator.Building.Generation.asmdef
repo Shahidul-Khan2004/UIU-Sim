@@ -1,0 +1,8 @@
+{
+  "name": "UIU.Simulator.Building.Generation",
+  "rootNamespace": "UIU.Simulator.Building.Generation",
+  "references": [
+    "UIU.Simulator.Building.Data"
+  ],
+  "autoReferenced": true
+}

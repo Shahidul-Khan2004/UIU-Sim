@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4d6acdb9f5da4676850736e02849024, type: 3}
+  m_Name: GroundFloorLayout
+  m_EditorClassIdentifier: UIU.Simulator.Building.Data::UIU.Simulator.Building.Data.FloorLayoutData
+  floorName: Ground Floor
+  baseElevation: 0
+  ceilingHeight: 3.5
+  wallThickness: 0.25
+  floorSlabThickness: 0.2
+  footprintSize: {x: 100, y: 90}
+  entrancePosition: {x: 0, y: 0, z: 0}
+  entranceWidth: 4
+  entranceApproachSize: {x: 20, y: 12}
+  zones:
+  - zoneName: Entrance Lobby
+    position: {x: 0, y: 0, z: 5}
+    size: {x: 20, y: 3.5, z: 12}
+  - zoneName: Central Hall
+    position: {x: 0, y: 0, z: 25}
+    size: {x: 45, y: 3.5, z: 25}
+  rooms:
+  - roomName: Shaheed Irfan Library G002
+    position: {x: 0, y: 0, z: 55}
+    size: {x: 35, y: 3.5, z: 25}
+    doorSide: 2
+    doorOffset: 0
+    doorWidth: 2.4
+  - roomName: Book Shop
+    position: {x: -25, y: 0, z: 20}
+    size: {x: 15, y: 3.5, z: 12}
+    doorSide: 3
+    doorOffset: 0
+    doorWidth: 1.8
+  - roomName: Guardian Lounge
+    position: {x: -40, y: 0, z: 35}
+    size: {x: 12, y: 3.5, z: 10}
+    doorSide: 3
+    doorOffset: 0
+    doorWidth: 1.8
+  - roomName: Canteen
+    position: {x: -35, y: 0, z: 65}
+    size: {x: 20, y: 3.5, z: 20}
+    doorSide: 3
+    doorOffset: 0
+    doorWidth: 2
+  - roomName: Admission Office
+    position: {x: 35, y: 0, z: 20}
+    size: {x: 18, y: 3.5, z: 12}
+    doorSide: 4
+    doorOffset: 0
+    doorWidth: 1.8
+  - roomName: Finance Office
+    position: {x: 35, y: 0, z: 40}
+    size: {x: 20, y: 3.5, z: 15}
+    doorSide: 4
+    doorOffset: 0
+    doorWidth: 1.8
+  - roomName: Medical Center
+    position: {x: 35, y: 0, z: 65}
+    size: {x: 18, y: 3.5, z: 12}
+    doorSide: 4
+    doorOffset: 0
+    doorWidth: 1.8
+  elevators:
+  - connectionId: Elevator_A
+    position: {x: 15, y: 0, z: 15}
+    size: {x: 3, y: 3.5, z: 3}
+  - connectionId: Elevator_B
+    position: {x: 0, y: 0, z: 45}
+    size: {x: 3, y: 3.5, z: 3}
+  stairs:
+  - connectionId: Stair_SW
+    position: {x: -40, y: 0, z: 20}
+    size: {x: 4, y: 3.5, z: 7}
+  - connectionId: Stair_SE
+    position: {x: 40, y: 0, z: 20}
+    size: {x: 4, y: 3.5, z: 7}
+  - connectionId: Stair_NW
+    position: {x: -40, y: 0, z: 70}
+    size: {x: 4, y: 3.5, z: 7}
+  - connectionId: Stair_NE
+    position: {x: 40, y: 0, z: 70}
+    size: {x: 4, y: 3.5, z: 7}
