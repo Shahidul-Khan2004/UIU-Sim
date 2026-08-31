@@ -42,6 +42,11 @@ desktop.ini
 *.aab
 *.unitypackage
 
+# Environment / secrets
+.env
+.env.local
+**/.env
+
 # Crash reports and local tooling state
 sysinfo.txt
 *.stackdump

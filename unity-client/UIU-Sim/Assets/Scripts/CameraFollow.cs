@@ -75,11 +75,19 @@ public class CameraFollow : MonoBehaviour
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (hasFocus)
+        // Only re-lock while this camera is active in a gameplay scene.
+        if (hasFocus && isActiveAndEnabled)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
+    }
+
+    private void OnDisable()
+    {
+        // Leaving Main / login redirect must restore a clickable cursor.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     private void OnApplicationQuit()

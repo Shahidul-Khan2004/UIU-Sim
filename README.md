@@ -1,36 +1,41 @@
 # University Game
 
-University Game is an MVP 3D university simulation developed as a university game project. The repository contains the Unity game client, a Spring Boot backend API, and the documentation needed to coordinate development.
+University Game (UIU Simulator) is an MVP 3D university simulation. The repository contains the Unity game client, a Spring Boot backend API, and documentation.
 
 ## Technology stack
 
-- **Unity 6** with **C#** — 3D game client and user experience
-- **Spring Boot** — backend API
-- **Clerk** — third-party authentication
-- **PostgreSQL** — planned persistent storage for game data
+- **Unity 6.3** with **C#** — 3D game client
+- **Spring Boot 3.4** (Java 17+) — backend API
+- **Clerk** — browser authentication (JWT)
+- **Supabase PostgreSQL** — player persistence via Flyway
 
 ## Repository structure
 
 ```text
-unity-client/   Unity 6 game project (to be added)
-backend/        Spring Boot API project (to be added)
+unity-client/   Unity 6 game project (UIU-Sim/)
+backend/        Spring Boot API
 docs/           Architecture, setup, API, database, and game design notes
 ```
 
 ## Development setup
 
 1. Clone the repository.
-2. Install Unity 6 with the required 3D development modules.
-3. Install a compatible JDK and Maven or Gradle for Spring Boot development.
-4. Configure Clerk and PostgreSQL when those integrations are introduced.
-5. Follow the relevant instructions in `docs/setup-guide.md`.
+2. Install Unity 6.3 and open `unity-client/UIU-Sim`.
+3. Configure backend env vars from `backend/.env.example` (Clerk + Supabase).
+4. Run the API: `cd backend && mvn spring-boot:run`
+5. Follow `docs/setup-guide.md` for the full auth flow.
 
-The client and backend are currently placeholders. No application logic or external dependencies have been added yet.
+## Authentication flow (MVP)
 
-## Team contribution guidelines
+```text
+Bootstrap → (session?) → Login (Clerk browser) → Main campus
+                 └──────── Authenticated ─────────┘
+```
 
-This section is a placeholder for the team workflow. Before feature development begins, document the branch naming convention, commit format, pull request expectations, code review process, issue tracking workflow, and ownership of shared Unity assets.
+Unity opens Spring-served Clerk login → deep link returns JWT → local session (backend validation optional). Campus scenes are blocked until authenticated.
+
+Unity **never** communicates with Supabase directly.
 
 ## Documentation
 
-See the files in `docs/` for the initial project planning documents.
+See the files in `docs/` for architecture, API, database, and setup details.

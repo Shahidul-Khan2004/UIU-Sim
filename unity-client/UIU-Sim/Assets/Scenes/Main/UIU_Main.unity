@@ -462,6 +462,7 @@ GameObject:
   m_Component:
   - component: {fileID: 867626051}
   - component: {fileID: 867626050}
+  - component: {fileID: 867626052}
   m_Layer: 0
   m_Name: Game Managers
   m_TagString: Untagged
@@ -482,6 +483,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UIU.Simulator.Building.Generation::UIU.Simulator.Building.Generation.FloorSceneLoader
   initialFloorSceneName: GroundFloor
+--- !u!114 &867626052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867626049}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e6d4c13a0b26f8c1d3e5f7a9b02c3d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &867626051
 Transform:
   m_ObjectHideFlags: 0
