@@ -27,7 +27,7 @@ namespace UIU.Simulator.Building.Tests.PlayMode
             Assert.That(groundFloor.IsValid() && groundFloor.isLoaded, Is.True);
             Assert.That(player, Is.Not.Null);
             Assert.That(player.transform.position.x, Is.EqualTo(0f).Within(0.01f));
-            Assert.That(player.transform.position.z, Is.EqualTo(-8f).Within(0.01f));
+            Assert.That(player.transform.position.z, Is.EqualTo(15f).Within(0.01f));
             Assert.That(player.GetComponent<CharacterController>(), Is.Not.Null);
             Assert.That(Camera.main, Is.Not.Null);
             Assert.That(generated, Is.Not.Null);

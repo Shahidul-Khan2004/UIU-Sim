@@ -91,6 +91,11 @@ namespace UIU.Simulator.Building.Tests.Editor
             Assert.That(generated.transform.Find("Elevators"), Is.Not.Null);
             Assert.That(generated.GetComponentsInChildren<BoxCollider>(true).Length, Is.GreaterThan(100));
             Assert.That(scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>(true)), Is.Empty);
+            Assert.That(
+                scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<MonoBehaviour>(true))
+                    .Any(component => component.GetType().Name == "PlayerSpawnPoint"),
+                Is.True);
 
             FloorGenerationMetadata metadata = generated.GetComponent<FloorGenerationMetadata>();
             Assert.That(metadata, Is.Not.Null);
@@ -108,15 +113,7 @@ namespace UIU.Simulator.Building.Tests.Editor
                 .SelectMany(root => root.GetComponentsInChildren<Camera>(true))
                 .Single();
 
-            Assert.That(player, Is.Not.Null);
-            Assert.That(player.transform.position, Is.EqualTo(new Vector3(0f, 0f, -8f)));
-            Assert.That(player.transform.forward, Is.EqualTo(Vector3.forward));
-
-            CharacterController controller = player.GetComponent<CharacterController>();
-            Assert.That(controller, Is.Not.Null);
-            Assert.That(controller.height, Is.EqualTo(1.8f));
-            Assert.That(controller.radius, Is.EqualTo(0.3f));
-            Assert.That(controller.center.y, Is.EqualTo(0.9f));
+            Assert.That(player, Is.Null);
 
             Assert.That(camera.CompareTag("MainCamera"), Is.True);
             Assert.That(
@@ -124,6 +121,9 @@ namespace UIU.Simulator.Building.Tests.Editor
                 Is.True);
             Assert.That(managers, Is.Not.Null);
             Assert.That(managers.GetComponent<FloorSceneLoader>(), Is.Not.Null);
+            Assert.That(
+                managers.GetComponents<MonoBehaviour>().Any(component => component.GetType().Name == "PlayerSpawner"),
+                Is.True);
         }
 
         [Test]

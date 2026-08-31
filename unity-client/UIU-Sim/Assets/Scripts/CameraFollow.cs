@@ -25,6 +25,18 @@ public class CameraFollow : MonoBehaviour
     private float pitch;
     private Vector3 followVelocity;
 
+    /// <summary>
+    /// Assigns the followed transform and aligns yaw to its current facing.
+    /// </summary>
+    public void SetTarget(Transform newTarget)
+    {
+        target = newTarget;
+        if (target != null)
+        {
+            yaw = target.eulerAngles.y;
+        }
+    }
+
     private void Start()
     {
         if (target != null)
