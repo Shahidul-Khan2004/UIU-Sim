@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Provides a smooth, mouse-controlled third-person camera that orbits a player target.
+/// Provides a smooth, mouse-controlled camera that follows and looks around a player target.
 /// </summary>
 public class CameraFollow : MonoBehaviour
 {
@@ -22,7 +22,7 @@ public class CameraFollow : MonoBehaviour
     [SerializeField, Range(0f, 89f)] private float maximumPitch = 70f;
 
     private float yaw;
-    private float pitch = 15f;
+    private float pitch;
     private Vector3 followVelocity;
 
     private void Start()

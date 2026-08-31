@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Moves a third-person player using a CharacterController and the Unity Input System.
+/// Moves a player using a CharacterController and the Unity Input System.
 /// Movement is relative to the assigned camera's horizontal facing direction.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]

@@ -6,8 +6,41 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/Main/UIU_Main.unity
+    guid: e4e499328121334499766d7a4b10f5d7
+  - enabled: 1
+    path: Assets/Scenes/Floors/GroundFloor.unity
+    guid: 54a25a655eb0cb54ca1d98e601d1a346
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor01.unity
+    guid: 02949cfbe1de9dae594b1388eab5c1f3
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor02.unity
+    guid: 018755696570c526381a35a3e54f8a41
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor03.unity
+    guid: 065e0c8804f66b55c9764c9c190460b1
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor04.unity
+    guid: ab367dc16f6da910e9eec83f17d579e7
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor05.unity
+    guid: b1d09489962f94766b5cc8181f5e0572
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor06.unity
+    guid: 763664dfdd50ec02f85544527ceb1145
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor07.unity
+    guid: cbcc3660160238c7eb18637f64ca9060
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor08.unity
+    guid: a96ca8e7dac2b335393c1fa9ee503e08
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor09.unity
+    guid: 5f3f4a5d4e124f1b2ad7944fc59a87df
+  - enabled: 1
+    path: Assets/Scenes/Floors/Floor10.unity
+    guid: 3b74ae231abc2cb4387c7b7e2d3c7610
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

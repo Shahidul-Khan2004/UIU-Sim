@@ -1,0 +1,11 @@
+{
+  "name": "UIU.Simulator.Building.PlayModeTests",
+  "rootNamespace": "UIU.Simulator.Building.Tests.PlayMode",
+  "references": [
+    "UIU.Simulator.Building.Generation"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false
+}

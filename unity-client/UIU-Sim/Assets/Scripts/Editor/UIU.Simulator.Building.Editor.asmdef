@@ -1,0 +1,12 @@
+{
+  "name": "UIU.Simulator.Building.Editor",
+  "rootNamespace": "UIU.Simulator.Building.Editor",
+  "references": [
+    "UIU.Simulator.Building.Data",
+    "UIU.Simulator.Building.Generation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": true
+}
