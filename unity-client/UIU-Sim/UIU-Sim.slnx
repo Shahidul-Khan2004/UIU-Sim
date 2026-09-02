@@ -1,10 +1,11 @@
 ﻿<Solution>
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="UIU.Simulator.Building.EditorTests.csproj" />
   <Project Path="UIU.Simulator.Building.Data.csproj" />
   <Project Path="Unity.ProBuilder.Examples.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.ProBuilder.Examples.Editor.csproj" />
   <Project Path="UIU.Simulator.Building.Generation.csproj" />
   <Project Path="UIU.Simulator.Building.PlayModeTests.csproj" />
   <Project Path="UIU.Simulator.Building.Editor.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
 </Solution>
