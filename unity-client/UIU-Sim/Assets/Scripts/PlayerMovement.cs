@@ -3,18 +3,14 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Moves a player using a CharacterController and the Unity Input System.
-/// Movement is relative to the assigned camera's horizontal facing direction.
+/// Movement is relative to the player transform's forward and right vectors.
+/// Rotation is handled entirely by FirstPersonLook.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("References")]
-    [Tooltip("The camera used to determine the direction of WASD movement.")]
-    [SerializeField] private Transform cameraTransform;
-
     [Header("Movement")]
     [SerializeField, Min(0f)] private float moveSpeed = 5f;
-    [SerializeField, Min(0f)] private float rotationSmoothTime = 0.1f;
 
     [Header("Jumping and Gravity")]
     [SerializeField, Min(0f)] private float jumpHeight = 1.5f;
@@ -22,17 +18,10 @@ public class PlayerMovement : MonoBehaviour
 
     private CharacterController characterController;
     private float verticalVelocity;
-    private float rotationVelocity;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
-
-        // Use the scene's main camera by default, while still allowing an explicit assignment.
-        if (cameraTransform == null && Camera.main != null)
-        {
-            cameraTransform = Camera.main.transform;
-        }
     }
 
     private void Update()
@@ -43,34 +32,23 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        if (Keyboard.current == null || cameraTransform == null)
+        if (Keyboard.current == null)
         {
             return;
         }
 
         // Read WASD as a two-dimensional input vector: X is left/right and Y is forward/back.
         Vector2 input = ReadMovementInput();
-        Vector3 inputDirection = new Vector3(input.x, 0f, input.y).normalized;
 
-        if (inputDirection.sqrMagnitude < 0.01f)
+        if (input.sqrMagnitude < 0.01f)
         {
             return;
         }
 
-        // Ignore the camera's vertical tilt so movement remains level on the ground.
-        float cameraYaw = cameraTransform.eulerAngles.y;
-        float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraYaw;
-
-        // Turn smoothly toward the movement direction for third-person character movement.
-        float smoothedAngle = Mathf.SmoothDampAngle(
-            transform.eulerAngles.y,
-            targetAngle,
-            ref rotationVelocity,
-            rotationSmoothTime);
-        transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
-
-        Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-        characterController.Move(moveDirection.normalized * moveSpeed * Time.deltaTime);
+        // Build the move direction relative to the player's own facing.
+        // FirstPersonLook already yaws the player transform, so forward/right are correct.
+        Vector3 moveDirection = (transform.right * input.x + transform.forward * input.y).normalized;
+        characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
     }
 
     private void HandleGravityAndJump()
