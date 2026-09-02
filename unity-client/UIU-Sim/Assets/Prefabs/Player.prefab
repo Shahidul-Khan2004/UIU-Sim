@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 1428522893070063753}
   - component: {fileID: 1496624783714753556}
   - component: {fileID: 3827461950182736401}
+  - component: {fileID: 1227136766597432367}
+  - component: {fileID: 4065487024800053782}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -73,9 +75,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72ea305493c81636ab32ea0c727c06f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  cameraTransform: {fileID: 4850838767949137115}
   moveSpeed: 5
-  rotationSmoothTime: 0.1
   jumpHeight: 1.5
   gravity: -9.81
 --- !u!114 &3827461950182736401
@@ -94,6 +94,40 @@ MonoBehaviour:
   mouseSensitivity: 0.15
   minPitch: -85
   maxPitch: 85
+--- !u!114 &1227136766597432367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ac7196fb4991f560a8572e040286469, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractionController
+  interactionRange: 3
+  interactionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  drawDebugRay: 1
+--- !u!114 &4065487024800053782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eff51f7ce085744b87e10e980efa2d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractionUI
+  fontSize: 24
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.6}
+  keyHint: E
+  verticalOffset: 0.15
 --- !u!1 &2063734718095882475
 GameObject:
   m_ObjectHideFlags: 0
