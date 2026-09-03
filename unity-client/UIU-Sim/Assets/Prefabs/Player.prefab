@@ -159,6 +159,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
   startWithPermanentID: 1
+  hasIDProblem: 0
+  isPermanentIDResolved: 1
 --- !u!1 &2063734718095882475
 GameObject:
   m_ObjectHideFlags: 0

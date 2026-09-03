@@ -16,6 +16,13 @@ public sealed class PlayerInventory : MonoBehaviour
     [Tooltip("Whether the player begins the game with a permanent ID card.")]
     [SerializeField] private bool startWithPermanentID = true;
 
+    [Header("ID Status")]
+    [Tooltip("True while the player is in the ID problem state.")]
+    [SerializeField] private bool hasIDProblem;
+
+    [Tooltip("True once the permanent ID has been resolved and works normally forever.")]
+    [SerializeField] private bool isPermanentIDResolved;
+
     private bool hasPermanentID;
     private int temporaryIDCount;
     private IDCardType currentIDCard;
@@ -31,8 +38,17 @@ public sealed class PlayerInventory : MonoBehaviour
     /// <summary>Number of single-use temporary ID cards in the player's possession.</summary>
     public int TemporaryIDCount => temporaryIDCount;
 
+    /// <summary>True while the player is in the ID problem state. Every scan fails until resolved.</summary>
+    public bool HasIDProblem => hasIDProblem;
+
+    /// <summary>True once the permanent ID has been resolved and works normally forever.</summary>
+    public bool IsPermanentIDResolved => isPermanentIDResolved;
+
     /// <summary>Raised when the selected card type changes. Payload is the new type.</summary>
     public event Action<IDCardType> OnCardChanged;
+
+    /// <summary>Raised when the ID problem state changes. Payload is true if problem active, false if resolved.</summary>
+    public event Action<bool> OnIDProblemChanged;
 
     // ── Public API — Mutations ─────────────────────────────────────────
 
@@ -57,15 +73,45 @@ public sealed class PlayerInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds one temporary ID card to the inventory.
+    /// Puts the player into the ID problem state. While active, scans fail until resolved.
     /// </summary>
-    public void AddTemporaryID()
+    public void TriggerIDProblem()
+    {
+        if (hasIDProblem)
+        {
+            return;
+        }
+
+        hasIDProblem = true;
+        Debug.Log("[PlayerInventory] ID problem state activated. Scans will fail until resolved by Reception.");
+        OnIDProblemChanged?.Invoke(true);
+    }
+
+    /// <summary>
+    /// Clears the ID problem state and marks the permanent ID as working normally forever.
+    /// </summary>
+    public void ResolveIDProblem()
+    {
+        bool wasProblem = hasIDProblem;
+        hasIDProblem = false;
+        isPermanentIDResolved = true;
+
+        Debug.Log("[PlayerInventory] ID problem resolved. Permanent ID is now valid forever.");
+        if (wasProblem)
+        {
+            OnIDProblemChanged?.Invoke(false);
+        }
+    }
+
+    /// <summary>
+    /// Adds one temporary ID card to the inventory and auto-selects it.
+    /// </summary>
+    public void AddTemporaryID(bool autoSelect = true)
     {
         temporaryIDCount++;
         Debug.Log($"[PlayerInventory] Temporary ID added. Count: {temporaryIDCount}");
 
-        // Auto-select if the player had nothing selected.
-        if (currentIDCard == IDCardType.None)
+        if (autoSelect || currentIDCard == IDCardType.None)
         {
             SelectCard(IDCardType.Temporary);
         }
@@ -73,7 +119,7 @@ public sealed class PlayerInventory : MonoBehaviour
 
     /// <summary>
     /// Consumes one temporary ID card. Returns false if none are available.
-    /// After consumption, automatically selects the best available card.
+    /// Resolves any active ID problem and enables the permanent ID forever.
     /// </summary>
     public bool ConsumeTemporaryID()
     {
@@ -85,6 +131,9 @@ public sealed class PlayerInventory : MonoBehaviour
 
         temporaryIDCount--;
         Debug.Log($"[PlayerInventory] Temporary ID consumed. Remaining: {temporaryIDCount}");
+
+        // After temporary ID is consumed, the ID problem is resolved and permanent ID works normally forever.
+        ResolveIDProblem();
 
         // Auto-select the best available card after consumption.
         if (currentIDCard == IDCardType.Temporary && temporaryIDCount <= 0)
