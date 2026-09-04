@@ -97,6 +97,16 @@ public sealed class InteractionController : MonoBehaviour
         IInteractable previousTarget = currentTarget;
         currentTarget = null;
 
+        // Block interaction targeting while a dialogue panel or queue UI is open.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen)
+        {
+            if (previousTarget != null)
+            {
+                OnTargetLost(previousTarget);
+            }
+            return;
+        }
+
         Transform cameraTransform = playerCamera.transform;
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
 
@@ -142,9 +152,9 @@ public sealed class InteractionController : MonoBehaviour
             return;
         }
 
-        // Block interaction input while a dialogue panel is open.
-        // DialogueUI.IsOpen is a static bool set by DialogueUI.Show / Hide.
-        if (DialogueUI.IsOpen)
+        // Block interaction input while a dialogue panel or queue UI is open.
+        // DialogueUI.IsOpen is set by DialogueUI; CanteenQueueUI.IsOpen is set by CanteenQueueUI.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen)
         {
             return;
         }
