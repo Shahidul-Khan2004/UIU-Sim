@@ -20,8 +20,8 @@ public sealed class PlayerInventory : MonoBehaviour
     [Tooltip("True while the player is in the ID problem state.")]
     [SerializeField] private bool hasIDProblem;
 
-    [Tooltip("True once the permanent ID has been resolved and works normally forever.")]
-    [SerializeField] private bool isPermanentIDResolved;
+    [Tooltip("True once the player has triggered the initial tutorial ID failure.")]
+    [SerializeField] private bool hasTriggeredInitialIDFailure;
 
     private bool hasPermanentID;
     private int temporaryIDCount;
@@ -38,11 +38,11 @@ public sealed class PlayerInventory : MonoBehaviour
     /// <summary>Number of single-use temporary ID cards in the player's possession.</summary>
     public int TemporaryIDCount => temporaryIDCount;
 
-    /// <summary>True while the player is in the ID problem state. Every scan fails until resolved.</summary>
+    /// <summary>True while the player is in the ID problem state. Every permanent scan fails until resolved.</summary>
     public bool HasIDProblem => hasIDProblem;
 
-    /// <summary>True once the permanent ID has been resolved and works normally forever.</summary>
-    public bool IsPermanentIDResolved => isPermanentIDResolved;
+    /// <summary>True once the player has triggered the initial tutorial ID failure.</summary>
+    public bool HasTriggeredInitialIDFailure => hasTriggeredInitialIDFailure;
 
     /// <summary>Raised when the selected card type changes. Payload is the new type.</summary>
     public event Action<IDCardType> OnCardChanged;
@@ -88,15 +88,32 @@ public sealed class PlayerInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// Clears the ID problem state and marks the permanent ID as working normally forever.
+    /// Marks the initial tutorial ID failure as triggered and activates the ID problem state.
+    /// </summary>
+    public void TriggerInitialIDFailure()
+    {
+        hasTriggeredInitialIDFailure = true;
+        TriggerIDProblem();
+    }
+
+    /// <summary>
+    /// Sets whether the initial tutorial ID failure has occurred.
+    /// Used for testing and future backend persistence synchronization.
+    /// </summary>
+    public void SetTriggeredInitialIDFailure(bool value)
+    {
+        hasTriggeredInitialIDFailure = value;
+    }
+
+    /// <summary>
+    /// Clears the active ID problem state. Does not reset HasTriggeredInitialIDFailure.
     /// </summary>
     public void ResolveIDProblem()
     {
         bool wasProblem = hasIDProblem;
         hasIDProblem = false;
-        isPermanentIDResolved = true;
 
-        Debug.Log("[PlayerInventory] ID problem resolved. Permanent ID is now valid forever.");
+        Debug.Log("[PlayerInventory] ID problem resolved. Permanent ID can now be scanned.");
         if (wasProblem)
         {
             OnIDProblemChanged?.Invoke(false);
@@ -119,7 +136,7 @@ public sealed class PlayerInventory : MonoBehaviour
 
     /// <summary>
     /// Consumes one temporary ID card. Returns false if none are available.
-    /// Resolves any active ID problem and enables the permanent ID forever.
+    /// Clears any active ID problem state.
     /// </summary>
     public bool ConsumeTemporaryID()
     {
@@ -132,7 +149,7 @@ public sealed class PlayerInventory : MonoBehaviour
         temporaryIDCount--;
         Debug.Log($"[PlayerInventory] Temporary ID consumed. Remaining: {temporaryIDCount}");
 
-        // After temporary ID is consumed, the ID problem is resolved and permanent ID works normally forever.
+        // Consuming a temporary ID clears the active ID problem.
         ResolveIDProblem();
 
         // Auto-select the best available card after consumption.
