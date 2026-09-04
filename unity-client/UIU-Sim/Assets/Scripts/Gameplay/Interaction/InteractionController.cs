@@ -142,6 +142,13 @@ public sealed class InteractionController : MonoBehaviour
             return;
         }
 
+        // Block interaction input while a dialogue panel is open.
+        // DialogueUI.IsOpen is a static bool set by DialogueUI.Show / Hide.
+        if (DialogueUI.IsOpen)
+        {
+            return;
+        }
+
         // WasPressedThisFrame fires on initial button-down, ignoring the Hold interaction
         // on the action asset. Swap to WasPerformedThisFrame() if you want hold-to-interact.
         if (interactAction.WasPressedThisFrame())

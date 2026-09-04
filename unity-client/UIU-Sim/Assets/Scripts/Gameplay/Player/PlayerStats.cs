@@ -32,7 +32,7 @@ public sealed class PlayerStats : MonoBehaviour
     public event Action<float> OnAuraChanged;
 
     /// <summary>Raised whenever <see cref="AcademicReputation"/> changes. Payload is the new value.</summary>
-    public event Action<float> OnReputationChanged;
+    public event Action<float> OnAcademicReputationChanged;
 
     /// <summary>
     /// Adds <paramref name="delta"/> to Aura (negative values reduce it).
@@ -62,7 +62,7 @@ public sealed class PlayerStats : MonoBehaviour
         if (!Mathf.Approximately(academicReputation, previous))
         {
             Debug.Log($"[PlayerStats] Reputation: {previous:F1} → {academicReputation:F1} (Δ{delta:+0.#;-0.#})");
-            OnReputationChanged?.Invoke(academicReputation);
+            OnAcademicReputationChanged?.Invoke(academicReputation);
         }
     }
 

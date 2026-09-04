@@ -16,6 +16,8 @@ GameObject:
   - component: {fileID: 4065487024800053782}
   - component: {fileID: 4921985342490370136}
   - component: {fileID: 4037660449622152626}
+  - component: {fileID: 4561587381547158817}
+  - component: {fileID: 8293740192847561928}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -160,7 +162,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
   startWithPermanentID: 1
   hasIDProblem: 0
-  isPermanentIDResolved: 0
+  hasTriggeredInitialIDFailure: 0
+--- !u!114 &4561587381547158817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c0bd6602351a31c7bd543efdf363986, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueUI
+  panelBackground: {r: 0.05, g: 0.05, b: 0.05, a: 0.92}
+  speakerColor: {r: 1, g: 0.82, b: 0.35, a: 1}
+  dialogueColor: {r: 1, g: 1, b: 1, a: 1}
+  buttonTextColor: {r: 1, g: 1, b: 1, a: 1}
+  buttonNormalColor: {r: 0.18, g: 0.18, b: 0.18, a: 1}
+  buttonHighlightedColor: {r: 0.32, g: 0.32, b: 0.32, a: 1}
+  buttonPressedColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}
+  speakerFontSize: 18
+  dialogueFontSize: 22
+  buttonFontSize: 20
+--- !u!114 &8293740192847561928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7149c95b68f447781b45209fa2f33c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StatsHUD
+  fontSize: 20
+  feedbackFontSize: 18
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  positiveDeltaColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+  negativeDeltaColor: {r: 1, g: 0.4, b: 0.4, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.65}
+  screenOffset: {x: 24, y: -24}
+  feedbackHoldDuration: 1.4
+  feedbackFadeDuration: 0.6
 --- !u!1 &2063734718095882475
 GameObject:
   m_ObjectHideFlags: 0
@@ -279,7 +324,7 @@ Transform:
   m_GameObject: {fileID: 4752430380649771740}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.6, z: 0}
+  m_LocalPosition: {x: 0, y: 0.769, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

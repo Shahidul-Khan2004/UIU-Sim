@@ -7,9 +7,10 @@ using UnityEngine;
 /// Scan rules:
 /// <list type="bullet">
 ///   <item>First scan with a permanent ID always fails and triggers the ID problem state.</item>
-///   <item>While the ID problem state is active, scans fail until reception resolves it.</item>
-///   <item>Temporary ID scans always succeed and are consumed after scanning.</item>
-///   <item>Consuming a temporary ID resolves the problem and permanent ID works normally forever.</item>
+///   <item>While the ID problem state is active, every permanent ID scan continues to fail.</item>
+///   <item>Temporary ID scans always succeed, have no random failure, and are consumed after scanning.</item>
+///   <item>Consuming a temporary ID clears the ID problem.</item>
+///   <item>After tutorial resolution, normal permanent ID scans have a recurring failure chance (10% by default).</item>
 /// </list>
 /// </para>
 /// <para>
@@ -25,11 +26,27 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
     [Header("Interaction")]
     [SerializeField] private string prompt = "Scan ID";
 
+    [Header("Scan Settings")]
+    [Tooltip("Probability (0.0 to 1.0) that a normal permanent ID scan fails and triggers a new ID problem. Default is 0.10 (10%).")]
+    [SerializeField, Range(0f, 1f)] private float permanentFailChance = 0.1f;
+
     // ── Cached references ──────────────────────────────────────────────
 
     private InteractionFeedback feedback;
     private ScannerVisuals scannerVisuals;  // Optional — may be null.
     private PlayerInventory playerInventory;
+
+    // ── Public API ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Failure probability [0, 1] for permanent ID scans after the initial tutorial failure.
+    /// Default is 0.10 (10%). Set to 0 or 1 for deterministic testing.
+    /// </summary>
+    public float PermanentFailChance
+    {
+        get => permanentFailChance;
+        set => permanentFailChance = Mathf.Clamp01(value);
+    }
 
     // ── IInteractable ──────────────────────────────────────────────────
 
@@ -80,32 +97,48 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
 
     private string HandlePermanentScan()
     {
-        // If the permanent ID problem has been resolved by reception, it works normally forever.
-        if (playerInventory.IsPermanentIDResolved)
-        {
-            Debug.Log("[IDScanner] Scan SUCCEEDED: Permanent ID is verified and active forever.", this);
-            OnScanSucceeded();
-            return "Access granted. Welcome!";
-        }
-
-        // If player already triggered the problem state, every scan continues to fail until resolved.
+        // 1. If player already has an active problem state, every scan continues to fail until resolved.
         if (playerInventory.HasIDProblem)
         {
             Debug.Log("[IDScanner] Scan FAILED: Player ID problem is currently active. Needs Reception resolution.", this);
             OnScanFailed();
-            return "You don't have an id card";
+            return "You don't have an id card, go see the receptionist";
         }
 
-        // First permanent ID scan always fails and triggers the player's ID problem state.
-        Debug.Log("[IDScanner] Scan FAILED: First permanent ID scan failed. Activating ID problem state.", this);
-        playerInventory.TriggerIDProblem();
-        OnScanFailed();
-        return "You don't have an id card";
+        // 2. First-ever permanent ID scan always fails and triggers the player's initial ID problem state (tutorial beat).
+        if (!playerInventory.HasTriggeredInitialIDFailure)
+        {
+            Debug.Log("[IDScanner] Scan FAILED: First permanent ID scan failed (tutorial). Activating ID problem state.", this);
+            playerInventory.TriggerInitialIDFailure();
+            OnScanFailed();
+            return "You don't have an id card, go see the receptionist";
+        }
+
+        // 3. Normal permanent ID scan after tutorial has been resolved: recurring failure chance (10% failure, 90% success by default).
+        bool shouldFail = permanentFailChance >= 1f || (permanentFailChance > 0f && Random.value < permanentFailChance);
+        if (shouldFail)
+        {
+            Debug.Log($"[IDScanner] Scan FAILED: Recurring permanent ID failure rolled ({permanentFailChance * 100f:0.#}% chance). Activating ID problem state.", this);
+            playerInventory.TriggerIDProblem();
+            OnScanFailed();
+            return "You don't have an id card, go see the receptionist";
+        }
+
+        Debug.Log("[IDScanner] Scan SUCCEEDED: Permanent ID accepted.", this);
+        OnScanSucceeded();
+        return "Access granted. Welcome!";
     }
 
     private string HandleTemporaryScan()
     {
-        // Temporary IDs always succeed but are consumed.
+        if (playerInventory.TemporaryIDCount <= 0)
+        {
+            Debug.Log("[IDScanner] Scan FAILED: No temporary ID cards in inventory.", this);
+            OnScanFailed();
+            return "No temporary ID card available.";
+        }
+
+        // Temporary IDs always succeed, have no random failure, and are consumed after scanning.
         Debug.Log("[IDScanner] Scan SUCCEEDED: Temporary ID accepted, consuming card.", this);
         playerInventory.ConsumeTemporaryID();
         OnScanSucceeded();
