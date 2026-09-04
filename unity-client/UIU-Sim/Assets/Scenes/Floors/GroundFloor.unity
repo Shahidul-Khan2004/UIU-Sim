@@ -3526,6 +3526,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.9
 --- !u!114 &152808034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9428,6 +9429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.3
 --- !u!114 &401425576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9565,7 +9567,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 150627062}
+  m_Mesh: {fileID: 1298160505}
 --- !u!33 &401425579
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -16526,6 +16528,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.3
 --- !u!114 &687505959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16663,7 +16666,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 1412917304}
+  m_Mesh: {fileID: 377656146}
 --- !u!33 &687505962
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -21227,6 +21230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.3
 --- !u!114 &863467581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21364,7 +21368,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 150627062}
+  m_Mesh: {fileID: 1412917304}
 --- !u!33 &863467584
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -34029,6 +34033,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.5
 --- !u!114 &1500950682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34166,7 +34171,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 377656146}
+  m_Mesh: {fileID: 1086824138}
 --- !u!33 &1500950685
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -43690,6 +43695,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
+  permanentFailChance: 0.3
 --- !u!114 &1918565442
 MonoBehaviour:
   m_ObjectHideFlags: 0
