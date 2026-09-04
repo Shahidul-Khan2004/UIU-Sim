@@ -10,6 +10,13 @@ namespace UIU.Simulator.Authentication
     /// </summary>
     public static class JwtClaimsParser
     {
+        /// <summary>
+        /// Allowed clock skew in seconds when checking JWT expiry.
+        /// Clerk tokens are short-lived (~60 s) so client clock drift can
+        /// cause false "JWT expired" errors without a tolerance window.
+        /// </summary>
+        private const long ClockSkewSeconds = 60;
+
         [Serializable]
         private class JwtPayload
         {
@@ -54,7 +61,7 @@ namespace UIU.Simulator.Authentication
                 if (payload.exp > 0)
                 {
                     long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    expired = payload.exp <= now;
+                    expired = payload.exp + ClockSkewSeconds < now;
                 }
 
                 return !string.IsNullOrWhiteSpace(subject);
