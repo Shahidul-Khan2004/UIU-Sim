@@ -131,7 +131,7 @@ public sealed class InteractionUI : MonoBehaviour
         promptText.fontSize = fontSize;
         promptText.color = textColor;
         promptText.alignment = TextAlignmentOptions.Center;
-        promptText.enableWordWrapping = false;
+        promptText.textWrappingMode = TextWrappingModes.NoWrap;
     }
 
     private void BuildResponsePanel(Transform parent)
@@ -170,7 +170,7 @@ public sealed class InteractionUI : MonoBehaviour
         responseText.fontSize = responseFontSize;
         responseText.color = responseColor;
         responseText.alignment = TextAlignmentOptions.Center;
-        responseText.enableWordWrapping = false;
+        responseText.textWrappingMode = TextWrappingModes.NoWrap;
         responseText.fontStyle = FontStyles.Italic;
     }
 
