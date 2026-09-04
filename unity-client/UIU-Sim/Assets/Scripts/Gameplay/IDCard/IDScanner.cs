@@ -93,14 +93,14 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
         {
             Debug.Log("[IDScanner] Scan FAILED: Player ID problem is currently active. Needs Reception resolution.", this);
             OnScanFailed();
-            return "You don't have an id card";
+            return "You don't have an id card, go see the receptionist";
         }
 
         // First permanent ID scan always fails and triggers the player's ID problem state.
         Debug.Log("[IDScanner] Scan FAILED: First permanent ID scan failed. Activating ID problem state.", this);
         playerInventory.TriggerIDProblem();
         OnScanFailed();
-        return "You don't have an id card";
+        return "You don't have an id card, go see the receptionist";
     }
 
     private string HandleTemporaryScan()
