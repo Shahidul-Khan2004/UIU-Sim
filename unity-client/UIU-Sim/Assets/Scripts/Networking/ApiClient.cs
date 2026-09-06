@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -27,6 +28,28 @@ namespace UIU.Simulator.Networking
             public string username;
             public string createdAt;
             public string lastLogin;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class PlayerStatsResponseDto
+        {
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class PlayerStatsDeltaRequestDto
+        {
+            public int auraDelta;
+            public int academicReputationDelta;
+
+            public PlayerStatsDeltaRequestDto(int auraDelta, int academicReputationDelta)
+            {
+                this.auraDelta = auraDelta;
+                this.academicReputationDelta = academicReputationDelta;
+            }
         }
 
         [Serializable]
@@ -165,6 +188,15 @@ namespace UIU.Simulator.Networking
             Action<string> onSuccess,
             Action<string> onError)
         {
+            yield return Get(relativePath, jwtToken, onSuccess, (err, _) => onError?.Invoke(err));
+        }
+
+        public IEnumerator Get(
+            string relativePath,
+            string jwtToken,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
             string url = $"{BackendBaseUrl}/{relativePath.TrimStart('/')}";
             using UnityWebRequest request = UnityWebRequest.Get(url);
             if (!string.IsNullOrWhiteSpace(jwtToken))
@@ -177,7 +209,42 @@ namespace UIU.Simulator.Networking
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                onError?.Invoke(ExtractErrorMessage(request));
+                long code = request.responseCode;
+                string message = ExtractErrorMessage(request);
+                onError?.Invoke(message, code);
+                yield break;
+            }
+
+            onSuccess?.Invoke(request.downloadHandler.text);
+        }
+
+        public IEnumerator Patch(
+            string relativePath,
+            string jsonBody,
+            string jwtToken,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
+            string url = $"{BackendBaseUrl}/{relativePath.TrimStart('/')}";
+            using UnityWebRequest request = new UnityWebRequest(url, "PATCH");
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody ?? string.Empty);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Accept", "application/json");
+
+            if (!string.IsNullOrWhiteSpace(jwtToken))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {jwtToken}");
+            }
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                long code = request.responseCode;
+                string message = ExtractErrorMessage(request);
+                onError?.Invoke(message, code);
                 yield break;
             }
 

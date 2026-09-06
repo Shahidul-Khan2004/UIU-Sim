@@ -1,21 +1,23 @@
 using System;
 using UnityEngine;
 
+public enum StatUpdateSource
+{
+    InitialHydration,
+    GameplayMutation
+}
+
 /// <summary>
 /// Tracks the player's social and academic standing.
-/// Attach to the Player prefab root alongside <see cref="PlayerMovement"/> and
-/// <see cref="InteractionController"/>.
-/// <para>
-/// Values are runtime-only — they reset when the scene reloads.
-/// Persistence will be added in a later sprint via the backend API.
-/// </para>
+/// Attach to the Player prefab root alongside PlayerMovement, InteractionController, and PlayerProgressSync.
+/// Local source of truth for stats hydrated and confirmed by the backend PostgreSQL database.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class PlayerStats : MonoBehaviour
 {
     [Header("Initial Values")]
-    [SerializeField, Range(0f, 100f)] private float initialAura = 100f;
-    [SerializeField, Range(0f, 100f)] private float initialReputation = 100f;
+    [SerializeField, Range(0f, 100f)] private float initialAura = 50f;
+    [SerializeField, Range(0f, 100f)] private float initialReputation = 50f;
 
     private float aura;
     private float academicReputation;
@@ -28,42 +30,62 @@ public sealed class PlayerStats : MonoBehaviour
     /// <summary>Current Academic Reputation value, clamped to [0, 100].</summary>
     public float AcademicReputation => academicReputation;
 
-    /// <summary>Raised whenever <see cref="Aura"/> changes. Payload is the new value.</summary>
+    /// <summary>Raised whenever Aura updates, carrying the update source.</summary>
+    public event Action<float, StatUpdateSource> OnAuraUpdated;
+
+    /// <summary>Raised whenever Academic Reputation updates, carrying the update source.</summary>
+    public event Action<float, StatUpdateSource> OnAcademicReputationUpdated;
+
+    /// <summary>Legacy event raised whenever Aura changes. Payload is the new value.</summary>
     public event Action<float> OnAuraChanged;
 
-    /// <summary>Raised whenever <see cref="AcademicReputation"/> changes. Payload is the new value.</summary>
+    /// <summary>Legacy event raised whenever Academic Reputation changes. Payload is the new value.</summary>
     public event Action<float> OnAcademicReputationChanged;
 
     /// <summary>
-    /// Adds <paramref name="delta"/> to Aura (negative values reduce it).
-    /// The result is clamped to [0, 100].
+    /// Applies authoritative server state.
+    /// Distinguishes InitialHydration (suppresses delta popups) from GameplayMutation (shows delta popups).
     /// </summary>
-    public void ModifyAura(float delta)
+    public void ApplyServerState(float newAura, float newReputation, StatUpdateSource source)
     {
-        float previous = aura;
-        aura = Mathf.Clamp(aura + delta, 0f, 100f);
+        float previousAura = aura;
+        float previousReputation = academicReputation;
 
-        if (!Mathf.Approximately(aura, previous))
+        aura = Mathf.Clamp(newAura, 0f, 100f);
+        academicReputation = Mathf.Clamp(newReputation, 0f, 100f);
+
+        Debug.Log($"[PlayerStats] ApplyServerState ({source}): Aura {previousAura:F1} → {aura:F1}, Reputation {previousReputation:F1} → {academicReputation:F1}");
+
+        OnAuraUpdated?.Invoke(aura, source);
+        OnAcademicReputationUpdated?.Invoke(academicReputation, source);
+
+        if (!Mathf.Approximately(aura, previousAura))
         {
-            Debug.Log($"[PlayerStats] Aura: {previous:F1} → {aura:F1} (Δ{delta:+0.#;-0.#})");
             OnAuraChanged?.Invoke(aura);
+        }
+
+        if (!Mathf.Approximately(academicReputation, previousReputation))
+        {
+            OnAcademicReputationChanged?.Invoke(academicReputation);
         }
     }
 
     /// <summary>
-    /// Adds <paramref name="delta"/> to Academic Reputation (negative values reduce it).
-    /// The result is clamped to [0, 100].
+    /// Local stat modification for test seams / standalone testing.
+    /// In production gameplay, deltas are requested through PlayerProgressSync.
+    /// </summary>
+    public void ModifyAura(float delta)
+    {
+        ApplyServerState(aura + delta, academicReputation, StatUpdateSource.GameplayMutation);
+    }
+
+    /// <summary>
+    /// Local stat modification for test seams / standalone testing.
+    /// In production gameplay, deltas are requested through PlayerProgressSync.
     /// </summary>
     public void ModifyReputation(float delta)
     {
-        float previous = academicReputation;
-        academicReputation = Mathf.Clamp(academicReputation + delta, 0f, 100f);
-
-        if (!Mathf.Approximately(academicReputation, previous))
-        {
-            Debug.Log($"[PlayerStats] Reputation: {previous:F1} → {academicReputation:F1} (Δ{delta:+0.#;-0.#})");
-            OnAcademicReputationChanged?.Invoke(academicReputation);
-        }
+        ApplyServerState(aura, academicReputation + delta, StatUpdateSource.GameplayMutation);
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────

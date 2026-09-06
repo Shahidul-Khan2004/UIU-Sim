@@ -69,8 +69,8 @@ public sealed class StatsHUD : MonoBehaviour
             lastAura = playerStats.Aura;
             lastReputation = playerStats.AcademicReputation;
 
-            playerStats.OnAuraChanged += HandleAuraChanged;
-            playerStats.OnAcademicReputationChanged += HandleReputationChanged;
+            playerStats.OnAuraUpdated += HandleAuraUpdated;
+            playerStats.OnAcademicReputationUpdated += HandleReputationUpdated;
 
             UpdateAuraDisplay(lastAura);
             UpdateReputationDisplay(lastReputation);
@@ -81,8 +81,8 @@ public sealed class StatsHUD : MonoBehaviour
     {
         if (playerStats != null)
         {
-            playerStats.OnAuraChanged -= HandleAuraChanged;
-            playerStats.OnAcademicReputationChanged -= HandleReputationChanged;
+            playerStats.OnAuraUpdated -= HandleAuraUpdated;
+            playerStats.OnAcademicReputationUpdated -= HandleReputationUpdated;
         }
 
         StopAllFeedback();
@@ -90,25 +90,25 @@ public sealed class StatsHUD : MonoBehaviour
 
     // ── Event Handlers ─────────────────────────────────────────────────
 
-    private void HandleAuraChanged(float newAura)
+    private void HandleAuraUpdated(float newAura, StatUpdateSource source)
     {
         float delta = newAura - lastAura;
         lastAura = newAura;
         UpdateAuraDisplay(newAura);
 
-        if (Mathf.Abs(delta) > 0.001f)
+        if (source == StatUpdateSource.GameplayMutation && Mathf.Abs(delta) > 0.001f)
         {
             TriggerAuraFeedback(delta);
         }
     }
 
-    private void HandleReputationChanged(float newReputation)
+    private void HandleReputationUpdated(float newReputation, StatUpdateSource source)
     {
         float delta = newReputation - lastReputation;
         lastReputation = newReputation;
         UpdateReputationDisplay(newReputation);
 
-        if (Mathf.Abs(delta) > 0.001f)
+        if (source == StatUpdateSource.GameplayMutation && Mathf.Abs(delta) > 0.001f)
         {
             TriggerAcademicFeedback(delta);
         }
