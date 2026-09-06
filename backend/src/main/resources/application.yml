@@ -35,6 +35,7 @@ management:
 uiu:
   clerk:
     publishable-key: ${CLERK_PUBLISHABLE_KEY}
+    secret-key: ${CLERK_SECRET_KEY:}
     issuer: ${CLERK_ISSUER}
     jwks-url: ${CLERK_JWKS_URL}
     authorized-parties: ${CLERK_AUTHORIZED_PARTIES:http://localhost:8080}
