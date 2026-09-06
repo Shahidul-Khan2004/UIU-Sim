@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1227136766597432367}
   - component: {fileID: 4065487024800053782}
   - component: {fileID: 4921985342490370136}
+  - component: {fileID: 1938472918237461928}
   - component: {fileID: 4037660449622152626}
   - component: {fileID: 4561587381547158817}
   - component: {fileID: 8293740192847561928}
@@ -150,6 +151,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   initialAura: 50
   initialReputation: 50
+--- !u!114 &1938472918237461928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 772af73fdbc33b0f8b66866c0f4337f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UIU.Simulator.Gameplay.Player::PlayerProgressSync
 --- !u!114 &4037660449622152626
 MonoBehaviour:
   m_ObjectHideFlags: 0

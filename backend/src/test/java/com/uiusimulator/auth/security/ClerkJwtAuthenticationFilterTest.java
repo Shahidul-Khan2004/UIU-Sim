@@ -54,7 +54,7 @@ class ClerkJwtAuthenticationFilterTest {
         filter.doFilter(request, response, filterChain);
 
         assertThat(response.getStatus()).isEqualTo(401);
-        assertThat(response.getContentAsString()).contains("Invalid or expired");
+        assertThat(response.getContentAsString()).contains("Authentication token is invalid.");
         verify(filterChain, never()).doFilter(request, response);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
@@ -81,4 +81,114 @@ class ClerkJwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("user_ok");
     }
+
+    @Test
+    void wrongIssuer_returnsUnauthorized() throws Exception {
+        when(jwtDecoder.decode(anyString()))
+                .thenThrow(new JwtException("The iss claim is not valid"));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/players/me");
+        request.addHeader("Authorization", "Bearer wrong-issuer-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("Authentication token is invalid.");
+        verify(filterChain, never()).doFilter(request, response);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void wrongAzp_returnsUnauthorized() throws Exception {
+        when(clerkProperties.authorizedPartyList()).thenReturn(List.of("http://localhost:8080"));
+        Jwt jwt = new Jwt(
+                "token",
+                Instant.now(),
+                Instant.now().plusSeconds(60),
+                Map.of("alg", "RS256"),
+                Map.of("sub", "user_bad_azp", "azp", "https://evil-site.example.com")
+        );
+        when(jwtDecoder.decode("bad-azp-token")).thenReturn(jwt);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/players/me");
+        request.addHeader("Authorization", "Bearer bad-azp-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("Authentication token is invalid.");
+        verify(filterChain, never()).doFilter(request, response);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void missingAuthorizationHeader_leavesAuthenticationUnsetAndContinues() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/players/me");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(jwtDecoder, never()).decode(anyString());
+    }
+
+    @Test
+    void malformedToken_returnsUnauthorized() throws Exception {
+        when(jwtDecoder.decode(anyString()))
+                .thenThrow(new JwtException("An error occurred while attempting to decode the Jwt"));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/players/me");
+        request.addHeader("Authorization", "Bearer not.a.valid.jwt");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("Authentication token is invalid.");
+        verify(filterChain, never()).doFilter(request, response);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void devAuthBridgePath_bypassesFilterEvenWithInvalidToken() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/auth/dev/bridge/refresh");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtDecoder, never()).decode(anyString());
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void authLoginPath_bypassesFilter() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/auth/login");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtDecoder, never()).decode(anyString());
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void otherAuthPath_isNotBypassed() throws Exception {
+        when(jwtDecoder.decode(anyString())).thenThrow(new JwtException("Invalid token"));
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/auth/other");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        verify(filterChain, never()).doFilter(request, response);
+    }
 }
+

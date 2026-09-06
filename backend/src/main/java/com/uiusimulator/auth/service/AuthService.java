@@ -22,41 +22,12 @@ public class AuthService {
     public AuthLoginResponse login(Jwt jwt) {
         log.info("Authentication attempt started");
 
-        String clerkUserId = jwt.getSubject();
-        if (clerkUserId == null || clerkUserId.isBlank()) {
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
             throw new IllegalArgumentException("JWT subject (Clerk user id) is missing");
         }
 
-        String email = firstNonBlank(
-                jwt.getClaimAsString("email"),
-                claimAsString(jwt, "primary_email_address")
-        );
-        String username = firstNonBlank(
-                jwt.getClaimAsString("username"),
-                jwt.getClaimAsString("preferred_username"),
-                email,
-                clerkUserId
-        );
-
-        log.info("Clerk user validated clerkUserId={}", clerkUserId);
-        PlayerResponse player = playerService.findOrCreateFromClerk(clerkUserId, email, username);
+        log.info("Clerk user validated clerkUserId={}", jwt.getSubject());
+        PlayerResponse player = playerService.login(jwt);
         return AuthLoginResponse.of(player);
-    }
-
-    private static String claimAsString(Jwt jwt, String name) {
-        Object value = jwt.getClaims().get(name);
-        return value == null ? null : String.valueOf(value);
-    }
-
-    private static String firstNonBlank(String... values) {
-        if (values == null) {
-            return null;
-        }
-        for (String value : values) {
-            if (value != null && !value.isBlank()) {
-                return value;
-            }
-        }
-        return null;
     }
 }

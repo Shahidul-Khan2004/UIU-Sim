@@ -43,7 +43,9 @@ class AuthControllerTest {
                 "player@uiu.edu",
                 "campus-explorer",
                 now,
-                now
+                now,
+                50,
+                50
         );
         when(authService.login(any(Jwt.class))).thenReturn(AuthLoginResponse.of(player));
 

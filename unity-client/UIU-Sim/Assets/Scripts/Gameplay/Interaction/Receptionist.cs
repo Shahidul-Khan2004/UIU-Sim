@@ -1,3 +1,5 @@
+using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
 
 /// <summary>
@@ -22,6 +24,14 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class Receptionist : MonoBehaviour, IInteractable
 {
+    private IPlayerProgressSync progressSync;
+
+    /// <summary>Explicit test seam for unit tests to inject a mock/fake progress sync.</summary>
+    public void SetProgressSyncForTesting(IPlayerProgressSync testSync)
+    {
+        progressSync = testSync;
+    }
+
     [Header("Interaction")]
     [Tooltip("Label shown to the player when looking at the receptionist.")]
     [SerializeField] private string prompt = "Talk to Receptionist";
@@ -32,7 +42,6 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
     // ── Lazy references ───────────────────────────────────────────────
 
     private PlayerInventory playerInventory;
-    private PlayerStats     playerStats;
 
     // ── IInteractable ─────────────────────────────────────────────────
 
@@ -87,6 +96,21 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
         return null;
     }
 
+    // ── Stat Persistence ──────────────────────────────────────────────
+
+    private void RequestAuraDelta(int delta)
+    {
+        if (progressSync != null)
+        {
+            progressSync.RequestStatDelta(delta, 0);
+        }
+        else
+        {
+            Debug.LogError("[Receptionist] PlayerProgressSync missing. Cannot persist Aura change.", this);
+            SystemNotificationUI.Show("Progress system unavailable.");
+        }
+    }
+
     // ── Choice callbacks ──────────────────────────────────────────────
 
     /// <summary>
@@ -95,9 +119,16 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
     /// </summary>
     private void OnForgotID()
     {
-        playerStats.ModifyAura(-5f);
-        playerInventory.AddTemporaryID();
-        Debug.Log("[Receptionist] Forgot ID chosen. Aura -5. Temporary ID issued. HasIDProblem remains true until scanned.");
+        RequestAuraDelta(-5);
+        if (playerInventory == null)
+        {
+            playerInventory = FindFirstObjectByType<PlayerInventory>();
+        }
+        if (playerInventory != null)
+        {
+            playerInventory.AddTemporaryID();
+        }
+        Debug.Log("[Receptionist] Forgot ID chosen. Aura -5 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
     }
 
     /// <summary>
@@ -106,15 +137,22 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
     /// </summary>
     private void OnLostID()
     {
-        playerStats.ModifyAura(-10f);
-        playerInventory.AddTemporaryID();
-        Debug.Log("[Receptionist] Lost ID chosen. Aura -10. Temporary ID issued. HasIDProblem remains true until scanned.");
+        RequestAuraDelta(-10);
+        if (playerInventory == null)
+        {
+            playerInventory = FindFirstObjectByType<PlayerInventory>();
+        }
+        if (playerInventory != null)
+        {
+            playerInventory.AddTemporaryID();
+        }
+        Debug.Log("[Receptionist] Lost ID chosen. Aura -10 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────
 
     /// <summary>
-    /// Lazily resolves PlayerInventory, PlayerStats, and DialogueUI.
+    /// Lazily resolves PlayerInventory, PlayerProgressSync, and DialogueUI.
     /// Mirrors the same pattern used by <see cref="IDScanner"/>.
     /// </summary>
     private bool EnsureReferences()
@@ -124,9 +162,9 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
             playerInventory = FindFirstObjectByType<PlayerInventory>();
         }
 
-        if (playerStats == null)
+        if (progressSync == null)
         {
-            playerStats = FindFirstObjectByType<PlayerStats>();
+            progressSync = FindFirstObjectByType<PlayerProgressSync>();
         }
 
         if (playerInventory == null)
@@ -134,15 +172,6 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
             Debug.LogError(
                 "[Receptionist] PlayerInventory not found in scene. " +
                 "Ensure the Player prefab has a PlayerInventory component.",
-                this);
-            return false;
-        }
-
-        if (playerStats == null)
-        {
-            Debug.LogError(
-                "[Receptionist] PlayerStats not found in scene. " +
-                "Ensure the Player prefab has a PlayerStats component.",
                 this);
             return false;
         }

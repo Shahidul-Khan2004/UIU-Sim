@@ -2,6 +2,7 @@ package com.uiusimulator.common.exception;
 
 import com.uiusimulator.auth.exception.AuthenticationFailedException;
 import com.uiusimulator.common.response.ApiErrorResponse;
+import com.uiusimulator.player.exception.PlayerStatsNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,16 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.badRequest()
                 .body(ApiErrorResponse.of(ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(PlayerStatsNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePlayerStatsNotFound(
+            PlayerStatsNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        log.error("Data integrity error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiErrorResponse.of("Player state error", request.getRequestURI()));
     }
 
     @ExceptionHandler(DataAccessException.class)

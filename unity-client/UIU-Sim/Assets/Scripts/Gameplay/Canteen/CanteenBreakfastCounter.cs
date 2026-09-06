@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
 
 /// <summary>
@@ -29,6 +31,14 @@ public enum CanteenBreakfastState
 [RequireComponent(typeof(Collider))]
 public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 {
+    private IPlayerProgressSync progressSync;
+
+    /// <summary>Explicit test seam for unit tests to inject a mock/fake progress sync.</summary>
+    public void SetProgressSyncForTesting(IPlayerProgressSync testSync)
+    {
+        progressSync = testSync;
+    }
+
     [Header("Interaction")]
     [Tooltip("Label shown when the player looks at the counter.")]
     [SerializeField] private string prompt = "Order Breakfast";
@@ -82,7 +92,6 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     // Cached references for defensive restoration
     private PlayerMovement cachedPlayerMovement;
     private FirstPersonLook cachedFirstPersonLook;
-    private PlayerStats cachedPlayerStats;
     private CampusDayState cachedDayState;
     private InteractionFeedback feedback;
 
@@ -147,6 +156,21 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
         return null;
     }
 
+    // ── Stat Persistence ──────────────────────────────────────────────
+
+    private void RequestAuraDelta(int delta)
+    {
+        if (progressSync != null)
+        {
+            progressSync.RequestStatDelta(delta, 0);
+        }
+        else
+        {
+            Debug.LogError("[CanteenBreakfastCounter] PlayerProgressSync missing. Cannot persist Aura change.", this);
+            SystemNotificationUI.Show("Progress system unavailable.");
+        }
+    }
+
     // ── Choice Handlers ────────────────────────────────────────────────
 
     /// <summary>
@@ -162,14 +186,14 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 
         currentState = CanteenBreakfastState.Completed;
         cachedDayState.CompleteBreakfastEvent();
-        cachedPlayerStats.ModifyAura(5f);
+        RequestAuraDelta(5);
 
         if (feedback != null)
         {
             feedback.PlaySuccess();
         }
 
-        Debug.Log($"[CanteenBreakfastCounter] {riceChoiceLabel} chosen: Instant breakfast (+5 Aura). Reason: {riceSuccessReason}.");
+        Debug.Log($"[CanteenBreakfastCounter] {riceChoiceLabel} chosen: Instant breakfast (+5 Aura requested). Reason: {riceSuccessReason}.");
     }
 
     /// <summary>
@@ -272,14 +296,14 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 
         currentState = CanteenBreakfastState.Completed;
         cachedDayState?.CompleteBreakfastEvent();
-        cachedPlayerStats?.ModifyAura(-5f);
+        RequestAuraDelta(-5);
 
         if (feedback != null)
         {
             feedback.PlayFailure();
         }
 
-        Debug.Log($"[CanteenBreakfastCounter] Skip Breakfast chosen: Queue cancelled (-5 Aura). Reason: {skipBreakfastReason}.");
+        Debug.Log($"[CanteenBreakfastCounter] Skip Breakfast chosen: Queue cancelled (-5 Aura requested). Reason: {skipBreakfastReason}.");
     }
 
     /// <summary>
@@ -291,14 +315,14 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 
         currentState = CanteenBreakfastState.Completed;
         cachedDayState?.CompleteBreakfastEvent();
-        cachedPlayerStats?.ModifyAura(-10f);
+        RequestAuraDelta(-10);
 
         if (feedback != null)
         {
             feedback.PlaySuccess();
         }
 
-        Debug.Log($"[CanteenBreakfastCounter] Skip the Line chosen: Queue cancelled (-10 Aura). Reason: {skipLineReason}.");
+        Debug.Log($"[CanteenBreakfastCounter] Skip the Line chosen: Queue cancelled (-10 Aura requested). Reason: {skipLineReason}.");
     }
 
     // ── Centralized Idempotent Teardown ────────────────────────────────
@@ -394,9 +418,9 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
             cachedDayState = FindFirstObjectByType<CampusDayState>();
         }
 
-        if (cachedPlayerStats == null)
+        if (progressSync == null)
         {
-            cachedPlayerStats = FindFirstObjectByType<PlayerStats>();
+            progressSync = FindFirstObjectByType<PlayerProgressSync>();
         }
 
         if (cachedPlayerMovement == null)
@@ -417,12 +441,6 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
         if (cachedDayState == null)
         {
             Debug.LogError("[CanteenBreakfastCounter] CampusDayState not found in scene.", this);
-            return false;
-        }
-
-        if (cachedPlayerStats == null)
-        {
-            Debug.LogError("[CanteenBreakfastCounter] PlayerStats not found in scene.", this);
             return false;
         }
 

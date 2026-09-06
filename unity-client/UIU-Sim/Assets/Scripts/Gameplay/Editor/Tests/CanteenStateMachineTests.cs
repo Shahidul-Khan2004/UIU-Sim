@@ -3,6 +3,8 @@ using UnityEditor;
 #endif
 using System.Reflection;
 using NUnit.Framework;
+using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +35,33 @@ namespace UIU.Simulator.Gameplay.Tests
 
         private GameObject counterObject;
         private CanteenBreakfastCounter breakfastCounter;
+        private TestPlayerProgressSync fakeProgressSync;
+
+        private sealed class TestPlayerProgressSync : IPlayerProgressSync
+        {
+            private readonly PlayerStats stats;
+            public bool IsHydrated => true;
+            public bool IsMutationInFlight => false;
+            public int RequestedAuraDelta { get; private set; }
+            public int RequestedAcademicReputationDelta { get; private set; }
+            public int RequestCount { get; private set; }
+
+            public TestPlayerProgressSync(PlayerStats stats)
+            {
+                this.stats = stats;
+            }
+
+            public void RequestStatDelta(int auraDelta, int academicReputationDelta)
+            {
+                RequestedAuraDelta += auraDelta;
+                RequestedAcademicReputationDelta += academicReputationDelta;
+                RequestCount++;
+                if (stats != null)
+                {
+                    stats.ApplyServerState(stats.Aura + auraDelta, stats.AcademicReputation + academicReputationDelta, StatUpdateSource.GameplayMutation);
+                }
+            }
+        }
 
         [SetUp]
         public void SetUp()
@@ -43,9 +72,12 @@ namespace UIU.Simulator.Gameplay.Tests
             playerMovement = playerObject.AddComponent<PlayerMovement>();
             firstPersonLook = playerObject.AddComponent<FirstPersonLook>();
             playerStats = playerObject.AddComponent<PlayerStats>();
+            InvokeMethod(playerStats, "Awake");
             campusDayState = playerObject.AddComponent<CampusDayState>();
             dialogueUI = playerObject.AddComponent<DialogueUI>();
             canteenQueueUI = playerObject.AddComponent<CanteenQueueUI>();
+            InvokeMethod(dialogueUI, "Awake");
+            InvokeMethod(canteenQueueUI, "Awake");
 
             // Create counter object
             counterObject = new GameObject("TestBreakfastCounter");
@@ -53,7 +85,11 @@ namespace UIU.Simulator.Gameplay.Tests
             counterObject.AddComponent<AudioSource>();
             counterObject.AddComponent<InteractionFeedback>();
             breakfastCounter = counterObject.AddComponent<CanteenBreakfastCounter>();
+            InvokeMethod(breakfastCounter, "Awake");
             breakfastCounter.QueueDuration = 5f; // Fast test duration
+
+            fakeProgressSync = new TestPlayerProgressSync(playerStats);
+            breakfastCounter.SetProgressSyncForTesting(fakeProgressSync);
         }
 
         [TearDown]
@@ -62,6 +98,22 @@ namespace UIU.Simulator.Gameplay.Tests
             if (breakfastCounter != null && breakfastCounter.IsQueueActive)
             {
                 breakfastCounter.TeardownQueue(isDefensive: true);
+            }
+
+            if (DialogueUI.Instance != null && DialogueUI.IsOpen)
+            {
+                DialogueUI.Instance.Hide();
+            }
+
+            if (CanteenQueueUI.Instance != null && CanteenQueueUI.IsOpen)
+            {
+                CanteenQueueUI.Instance.Hide();
+            }
+
+            var notif = Object.FindFirstObjectByType<SystemNotificationUI>();
+            if (notif != null)
+            {
+                Object.DestroyImmediate(notif.gameObject);
             }
 
             if (counterObject != null)
@@ -100,6 +152,9 @@ namespace UIU.Simulator.Gameplay.Tests
         [Test]
         public void RiceRoute_SubsequentInteractionBlocked_ReturnsAlreadySortedMessage()
         {
+            if (DialogueUI.IsOpen) DialogueUI.Instance.Hide();
+            if (CanteenQueueUI.IsOpen) CanteenQueueUI.Instance.Hide();
+
             // Complete breakfast via Rice
             InvokeMethod(breakfastCounter, "OnSelectRice");
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
@@ -241,6 +296,7 @@ namespace UIU.Simulator.Gameplay.Tests
             Assert.That(skipLineCalled, Is.False, "Skip Line must NOT execute on opening frame.");
 
             // Simulate next frame input arming
+            SetField(canteenQueueUI, "openedFrame", Time.frameCount - 1);
             InvokeMethod(canteenQueueUI, "ArmInput");
 
             Assert.That(GetField<bool>(canteenQueueUI, "isArmed"), Is.True, "CanteenQueueUI should be armed after ArmInput.");
@@ -282,6 +338,9 @@ namespace UIU.Simulator.Gameplay.Tests
         [Test]
         public void BreakfastCounter_ConfigurableDialogueAndMessages()
         {
+            if (DialogueUI.IsOpen) DialogueUI.Instance.Hide();
+            if (CanteenQueueUI.IsOpen) CanteenQueueUI.Instance.Hide();
+
             SetField(breakfastCounter, "prompt", "Custom Breakfast Prompt");
             SetField(breakfastCounter, "workerName", "Custom Chef");
             SetField(breakfastCounter, "breakfastPrompt", "What would you like, student?");
@@ -298,6 +357,24 @@ namespace UIU.Simulator.Gameplay.Tests
             // Attempt interaction — should return custom already completed message
             string blockedMessage = breakfastCounter.Interact();
             Assert.That(blockedMessage, Is.EqualTo("You already ate today!"));
+        }
+
+        [Test]
+        public void MissingProgressSync_DoesNotMutateStats()
+        {
+            float initialAura = playerStats.Aura;
+
+            // Remove progress sync seam to simulate missing progress sync in misconfigured scene
+            breakfastCounter.SetProgressSyncForTesting(null);
+
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "[CanteenBreakfastCounter] PlayerProgressSync missing. Cannot persist Aura change.");
+
+            // Execute Rice selection
+            InvokeMethod(breakfastCounter, "OnSelectRice");
+
+            // Event completes, but persistent Aura must NOT be modified locally
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f), "Aura must NOT be mutated locally when PlayerProgressSync is missing.");
         }
 
         [Test]
@@ -396,10 +473,14 @@ namespace UIU.Simulator.Gameplay.Tests
                 tests.TearDown();
 
                 tests.SetUp();
+                tests.MissingProgressSync_DoesNotMutateStats();
+                tests.TearDown();
+
+                tests.SetUp();
                 tests.SideStore_ConfigurableDialogueAndMenuItems();
                 tests.TearDown();
 
-                Debug.Log("<color=green><b>[CanteenStateMachineTests] All 12 tests PASSED!</b></color>");
+                Debug.Log("<color=green><b>[CanteenStateMachineTests] All 13 tests PASSED!</b></color>");
             }
             catch (System.Exception ex)
             {

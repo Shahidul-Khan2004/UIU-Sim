@@ -13,6 +13,7 @@ namespace UIU.Simulator.Authentication
     {
         [SerializeField] private string backendBaseUrl = "http://localhost:8080";
         [SerializeField] private ApiClient apiClient;
+        [SerializeField] private AuthTokenProvider authTokenProvider;
         [SerializeField] private AuthCallbackHandler callbackHandler;
         [SerializeField] private bool restoreSessionOnStart;
         [Tooltip("When false (Unity auth testing), a valid JWT authenticates locally without calling Spring Boot.")]
@@ -33,13 +34,18 @@ namespace UIU.Simulator.Authentication
             ApiClient client,
             AuthCallbackHandler handler,
             bool restoreOnStart = false,
-            bool requireBackend = false)
+            bool requireBackend = false,
+            AuthTokenProvider tokenProvider = null)
         {
             backendBaseUrl = baseUrl;
             apiClient = client;
             callbackHandler = handler;
             restoreSessionOnStart = restoreOnStart;
             requireBackendValidation = requireBackend;
+            if (tokenProvider != null)
+            {
+                authTokenProvider = tokenProvider;
+            }
             callbackHandler?.Initialize(this);
         }
 
@@ -48,6 +54,11 @@ namespace UIU.Simulator.Authentication
             if (apiClient == null)
             {
                 apiClient = GetComponent<ApiClient>();
+            }
+
+            if (authTokenProvider == null)
+            {
+                authTokenProvider = GetComponent<AuthTokenProvider>();
             }
 
             if (callbackHandler == null)
@@ -117,9 +128,14 @@ namespace UIU.Simulator.Authentication
                 sessionId,
                 bridgePollTimeoutSeconds,
                 bridgePollIntervalSeconds,
-                onToken: token =>
+                onHandshake: (token, refreshSecret, bridgeSessionId) =>
                 {
-                    Debug.Log("[ClerkAuthManager] Auth bridge returned a token");
+                    Debug.Log("[ClerkAuthManager] Auth bridge returned token and refresh secret");
+                    Debug.Log($"[AuthDebug] ClerkAuthManager.PollAuthBridge handshake: tokenFp={AuthTokenProvider.Fingerprint(token)}, secretPresent={!string.IsNullOrEmpty(refreshSecret)}, bridgeId={bridgeSessionId}, providerNull={authTokenProvider == null}");
+                    if (authTokenProvider != null && !string.IsNullOrWhiteSpace(refreshSecret))
+                    {
+                        authTokenProvider.Initialize(token, bridgeSessionId, refreshSecret);
+                    }
                     HandleAuthCallbackToken(token);
                 },
                 onError: error =>
@@ -140,6 +156,7 @@ namespace UIU.Simulator.Authentication
                 bridgePollRoutine = null;
             }
 
+            authTokenProvider?.Clear();
             Session.Clear();
             SessionChanged?.Invoke(Session);
             Debug.Log("[ClerkAuthManager] Logged out");

@@ -28,6 +28,7 @@ namespace UIU.Simulator.Gameplay.Tests
             // Set up player
             playerObject = new GameObject("TestPlayer");
             playerInventory = playerObject.AddComponent<PlayerInventory>();
+            InvokeMethod(playerInventory, "Awake");
 
             // Set up scanner with required components
             scannerObject = new GameObject("TestScanner");
@@ -35,6 +36,13 @@ namespace UIU.Simulator.Gameplay.Tests
             scannerObject.AddComponent<AudioSource>();
             scannerObject.AddComponent<InteractionFeedback>();
             idScanner = scannerObject.AddComponent<IDScanner>();
+            InvokeMethod(idScanner, "Awake");
+        }
+
+        private static void InvokeMethod(object target, string methodName)
+        {
+            var method = target.GetType().GetMethod(methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+            method?.Invoke(target, null);
         }
 
         [TearDown]

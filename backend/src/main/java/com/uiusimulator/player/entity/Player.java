@@ -33,7 +33,14 @@ public class Player {
     protected Player() {
     }
 
-    public Player(UUID id, String clerkUserId, String email, String username, Instant createdAt, Instant lastLogin) {
+    public Player(
+            UUID id,
+            String clerkUserId,
+            String email,
+            String username,
+            Instant createdAt,
+            Instant lastLogin
+    ) {
         this.id = id;
         this.clerkUserId = clerkUserId;
         this.email = email;

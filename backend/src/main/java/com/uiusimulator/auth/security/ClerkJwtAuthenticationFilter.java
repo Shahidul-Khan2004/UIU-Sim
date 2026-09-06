@@ -36,6 +36,12 @@ public class ClerkJwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return "/auth/login".equals(path) || path.startsWith("/auth/dev/bridge/");
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -61,12 +67,13 @@ public class ClerkJwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("Clerk user validated clerkUserId={}", jwt.getSubject());
         } catch (JwtException | IllegalArgumentException ex) {
-            log.error("Invalid JWT: {}", ex.getMessage());
+            log.warn("JWT validation failed for {} {}: {}", request.getMethod(),
+                    request.getRequestURI(), ex.getMessage());
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write(
-                    "{\"success\":false,\"message\":\"Invalid or expired authentication token\",\"timestamp\":\""
+                    "{\"success\":false,\"message\":\"Authentication token is invalid.\",\"timestamp\":\""
                             + java.time.Instant.now()
                             + "\",\"path\":\""
                             + request.getRequestURI()
