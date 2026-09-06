@@ -17,6 +17,7 @@ namespace UIU.Simulator.Authentication
         public ClerkAuthManager AuthManager { get; private set; }
         public AuthCallbackHandler CallbackHandler { get; private set; }
         public ApiClient ApiClient { get; private set; }
+        public AuthTokenProvider TokenProvider { get; private set; }
 
         public static AuthHost EnsureExists()
         {
@@ -53,12 +54,18 @@ namespace UIU.Simulator.Authentication
 
         private void Initialize()
         {
+            if (TokenProvider == null)
+            {
+                TokenProvider = GetComponent<AuthTokenProvider>() ?? gameObject.AddComponent<AuthTokenProvider>();
+            }
+
             if (ApiClient == null)
             {
                 ApiClient = GetComponent<ApiClient>() ?? gameObject.AddComponent<ApiClient>();
             }
 
             ApiClient.BackendBaseUrl = backendBaseUrl;
+            ApiClient.ConfigureAuth(TokenProvider);
 
             if (CallbackHandler == null)
             {
@@ -70,7 +77,8 @@ namespace UIU.Simulator.Authentication
                 AuthManager = GetComponent<ClerkAuthManager>() ?? gameObject.AddComponent<ClerkAuthManager>();
             }
 
-            AuthManager.Configure(backendBaseUrl, ApiClient, CallbackHandler, restoreOnStart: false, requireBackendValidation);
+            AuthManager.Configure(backendBaseUrl, ApiClient, CallbackHandler, restoreOnStart: false, requireBackendValidation, TokenProvider);
+            TokenProvider.Configure(ApiClient, AuthManager.Session);
         }
     }
 }

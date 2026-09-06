@@ -195,10 +195,11 @@ public class AuthPageController {
                         return;
                       }
                       setStatus("Sending token to Unity…");
+                      const clerkSessionId = window.Clerk.session ? window.Clerk.session.id : undefined;
                       const response = await fetch("/auth/dev/bridge/" + encodeURIComponent(sessionId), {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token })
+                        body: JSON.stringify({ token, sessionId: clerkSessionId })
                       });
                       if (!response.ok) {
                         setStatus("Failed to send token to Unity bridge.", "error");

@@ -43,6 +43,9 @@ class ClerkFilterRegistrationTest {
     @MockitoBean
     private com.uiusimulator.auth.service.AuthService authService;
 
+    @MockitoBean
+    private com.uiusimulator.auth.service.DevAuthBridgeService devAuthBridgeService;
+
     @Test
     void clerkFilterRegistrationBean_isDisabled() {
         @SuppressWarnings("unchecked")

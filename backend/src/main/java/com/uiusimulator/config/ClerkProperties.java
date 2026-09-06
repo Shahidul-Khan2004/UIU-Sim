@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "uiu.clerk")
 public record ClerkProperties(
         String publishableKey,
+        String secretKey,
         String issuer,
         String jwksUrl,
         String authorizedParties

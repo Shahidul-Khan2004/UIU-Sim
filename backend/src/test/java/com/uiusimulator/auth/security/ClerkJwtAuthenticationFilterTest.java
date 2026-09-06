@@ -151,5 +151,44 @@ class ClerkJwtAuthenticationFilterTest {
         verify(filterChain, never()).doFilter(request, response);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
+
+    @Test
+    void devAuthBridgePath_bypassesFilterEvenWithInvalidToken() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/auth/dev/bridge/refresh");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtDecoder, never()).decode(anyString());
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void authLoginPath_bypassesFilter() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/auth/login");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtDecoder, never()).decode(anyString());
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void otherAuthPath_isNotBypassed() throws Exception {
+        when(jwtDecoder.decode(anyString())).thenThrow(new JwtException("Invalid token"));
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/auth/other");
+        request.addHeader("Authorization", "Bearer invalid-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        verify(filterChain, never()).doFilter(request, response);
+    }
 }
 

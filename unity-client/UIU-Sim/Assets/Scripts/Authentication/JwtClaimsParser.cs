@@ -25,14 +25,16 @@ namespace UIU.Simulator.Authentication
             public string username;
             public string preferred_username;
             public long exp;
+            public string sid;
         }
 
-        public static bool TryRead(string jwt, out string subject, out string email, out string username, out bool expired)
+        public static bool TryReadClaims(string jwt, out string subject, out string email, out string username, out long exp, out string sid)
         {
             subject = string.Empty;
             email = string.Empty;
             username = string.Empty;
-            expired = false;
+            exp = 0;
+            sid = string.Empty;
 
             if (string.IsNullOrWhiteSpace(jwt))
             {
@@ -57,12 +59,8 @@ namespace UIU.Simulator.Authentication
                 subject = payload.sub ?? string.Empty;
                 email = payload.email ?? string.Empty;
                 username = FirstNonEmpty(payload.username, payload.preferred_username, email, subject);
-
-                if (payload.exp > 0)
-                {
-                    long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    expired = payload.exp + ClockSkewSeconds < now;
-                }
+                exp = payload.exp;
+                sid = payload.sid ?? string.Empty;
 
                 return !string.IsNullOrWhiteSpace(subject);
             }
@@ -71,6 +69,35 @@ namespace UIU.Simulator.Authentication
                 Debug.LogWarning($"[JwtClaimsParser] Failed to parse JWT payload: {ex.Message}");
                 return false;
             }
+        }
+
+        public static bool TryReadExpiration(string jwt, out long exp)
+        {
+            exp = 0;
+            if (TryReadClaims(jwt, out _, out _, out _, out long parsedExp, out _))
+            {
+                exp = parsedExp;
+                return exp > 0;
+            }
+
+            return false;
+        }
+
+        public static bool TryRead(string jwt, out string subject, out string email, out string username, out bool expired)
+        {
+            expired = false;
+            if (!TryReadClaims(jwt, out subject, out email, out username, out long exp, out _))
+            {
+                return false;
+            }
+
+            if (exp > 0)
+            {
+                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                expired = exp + ClockSkewSeconds < now;
+            }
+
+            return true;
         }
 
         private static string FirstNonEmpty(params string[] values)
