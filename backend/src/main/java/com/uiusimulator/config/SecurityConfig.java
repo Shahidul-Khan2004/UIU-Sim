@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 @Configuration
 @EnableWebSecurity
@@ -58,5 +59,20 @@ public class SecurityConfig {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(clerkProperties.jwksUrl()).build();
         decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(clerkProperties.issuer()));
         return decoder;
+    }
+
+    /**
+     * Prevents Spring Boot from auto-registering {@link ClerkJwtAuthenticationFilter} as a
+     * servlet-container filter. The filter must run exclusively within the Spring Security
+     * chain (via {@code addFilterBefore}) so that {@code SecurityContextHolderFilter} properly
+     * manages the {@code SecurityContext} lifecycle.
+     */
+    @Bean
+    FilterRegistrationBean<ClerkJwtAuthenticationFilter> disableClerkFilterAutoRegistration(
+            ClerkJwtAuthenticationFilter filter) {
+        FilterRegistrationBean<ClerkJwtAuthenticationFilter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 }
