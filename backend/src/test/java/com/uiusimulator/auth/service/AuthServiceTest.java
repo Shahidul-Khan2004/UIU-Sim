@@ -2,7 +2,7 @@ package com.uiusimulator.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,14 +35,15 @@ class AuthServiceTest {
     void login_validClerkUser_returnsPlayer() {
         Jwt jwt = jwtWith("user_abc", "player@uiu.edu", "campus-explorer");
         PlayerResponse player = samplePlayer("user_abc", "player@uiu.edu", "campus-explorer");
-        when(playerService.findOrCreateFromClerk("user_abc", "player@uiu.edu", "campus-explorer"))
-                .thenReturn(player);
+        when(playerService.login(jwt)).thenReturn(player);
 
         AuthLoginResponse response = authService.login(jwt);
 
         assertThat(response.success()).isTrue();
         assertThat(response.player().clerkUserId()).isEqualTo("user_abc");
-        verify(playerService).findOrCreateFromClerk("user_abc", "player@uiu.edu", "campus-explorer");
+        assertThat(response.player().aura()).isEqualTo(50);
+        assertThat(response.player().academicReputation()).isEqualTo(50);
+        verify(playerService).login(jwt);
     }
 
     @Test
@@ -61,21 +62,19 @@ class AuthServiceTest {
     void login_delegatesNewPlayerCreation() {
         Jwt jwt = jwtWith("user_new", "new@uiu.edu", "newbie");
         PlayerResponse created = samplePlayer("user_new", "new@uiu.edu", "newbie");
-        when(playerService.findOrCreateFromClerk(eq("user_new"), eq("new@uiu.edu"), eq("newbie")))
-                .thenReturn(created);
+        when(playerService.login(jwt)).thenReturn(created);
 
         AuthLoginResponse response = authService.login(jwt);
 
         assertThat(response.player().id()).isEqualTo(created.id());
-        verify(playerService).findOrCreateFromClerk("user_new", "new@uiu.edu", "newbie");
+        verify(playerService).login(jwt);
     }
 
     @Test
     void login_existingPlayer_usesReturnedProfile() {
         Jwt jwt = jwtWith("user_old", "old@uiu.edu", "veteran");
         PlayerResponse existing = samplePlayer("user_old", "old@uiu.edu", "veteran");
-        when(playerService.findOrCreateFromClerk("user_old", "old@uiu.edu", "veteran"))
-                .thenReturn(existing);
+        when(playerService.login(jwt)).thenReturn(existing);
 
         AuthLoginResponse response = authService.login(jwt);
 
@@ -93,6 +92,6 @@ class AuthServiceTest {
 
     private static PlayerResponse samplePlayer(String clerkUserId, String email, String username) {
         Instant now = Instant.parse("2026-01-01T00:00:00Z");
-        return new PlayerResponse(UUID.randomUUID(), clerkUserId, email, username, now, now);
+        return new PlayerResponse(UUID.randomUUID(), clerkUserId, email, username, now, now, 50, 50);
     }
 }

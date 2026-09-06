@@ -30,21 +30,38 @@ public class Player {
     @Column(name = "last_login")
     private Instant lastLogin;
 
+    @Column(nullable = false)
+    private int aura;
+
+    @Column(name = "academic_reputation", nullable = false)
+    private int academicReputation;
+
     protected Player() {
     }
 
-    public Player(UUID id, String clerkUserId, String email, String username, Instant createdAt, Instant lastLogin) {
+    public Player(
+            UUID id,
+            String clerkUserId,
+            String email,
+            String username,
+            Instant createdAt,
+            Instant lastLogin,
+            int aura,
+            int academicReputation
+    ) {
         this.id = id;
         this.clerkUserId = clerkUserId;
         this.email = email;
         this.username = username;
         this.createdAt = createdAt;
         this.lastLogin = lastLogin;
+        this.aura = aura;
+        this.academicReputation = academicReputation;
     }
 
     public static Player createNew(String clerkUserId, String email, String username) {
         Instant now = Instant.now();
-        return new Player(UUID.randomUUID(), clerkUserId, email, username, now, now);
+        return new Player(UUID.randomUUID(), clerkUserId, email, username, now, now, 50, 50);
     }
 
     public void markLogin() {
@@ -58,6 +75,11 @@ public class Player {
         if (username != null && !username.isBlank()) {
             this.username = username;
         }
+    }
+
+    public void modifyStats(int auraDelta, int academicReputationDelta) {
+        this.aura = Math.max(0, Math.min(100, this.aura + auraDelta));
+        this.academicReputation = Math.max(0, Math.min(100, this.academicReputation + academicReputationDelta));
     }
 
     public UUID getId() {
@@ -82,5 +104,13 @@ public class Player {
 
     public Instant getLastLogin() {
         return lastLogin;
+    }
+
+    public int getAura() {
+        return aura;
+    }
+
+    public int getAcademicReputation() {
+        return academicReputation;
     }
 }
