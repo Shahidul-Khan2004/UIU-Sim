@@ -1,11 +1,16 @@
 package com.uiusimulator.player.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.uiusimulator.player.dto.PlayerResponse;
 import com.uiusimulator.player.entity.Player;
+import com.uiusimulator.player.entity.PlayerStats;
+import com.uiusimulator.player.exception.PlayerStatsNotFoundException;
 import com.uiusimulator.player.repository.PlayerRepository;
+import com.uiusimulator.player.repository.PlayerStatsRepository;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -24,6 +29,9 @@ class PlayerServiceTest {
     @Autowired
     private PlayerRepository playerRepository;
 
+    @Autowired
+    private PlayerStatsRepository playerStatsRepository;
+
     @Test
     void getOrProvisionPlayer_createsNewPlayerWithDefaultStats() {
         Jwt jwt = Jwt.withTokenValue("token")
@@ -38,11 +46,13 @@ class PlayerServiceTest {
         assertThat(player.getClerkUserId()).isEqualTo("user_lazy_new");
         assertThat(player.getEmail()).isEqualTo("student@uiu.edu");
         assertThat(player.getUsername()).isEqualTo("freshman");
-        assertThat(player.getAura()).isEqualTo(50);
-        assertThat(player.getAcademicReputation()).isEqualTo(50);
         assertThat(player.getCreatedAt()).isNotNull();
         assertThat(player.getLastLogin()).isEqualTo(player.getCreatedAt());
+
         assertThat(playerRepository.findByClerkUserId("user_lazy_new")).isPresent();
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        assertThat(stats.getAura()).isEqualTo(50);
+        assertThat(stats.getAcademicReputation()).isEqualTo(50);
     }
 
     @Test
@@ -57,24 +67,26 @@ class PlayerServiceTest {
         assertThat(player.getClerkUserId()).isEqualTo("user_noclaims");
         assertThat(player.getEmail()).isNull();
         assertThat(player.getUsername()).isNull();
-        assertThat(player.getAura()).isEqualTo(50);
-        assertThat(player.getAcademicReputation()).isEqualTo(50);
+
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        assertThat(stats.getAura()).isEqualTo(50);
+        assertThat(stats.getAcademicReputation()).isEqualTo(50);
     }
 
     @Test
     void getOrProvisionPlayer_existingPlayer_doesNotRewriteLastLogin() {
         Instant originalLogin = Instant.parse("2026-01-01T12:00:00Z");
         Player existing = new Player(
-                java.util.UUID.randomUUID(),
+                UUID.randomUUID(),
                 "user_persisted",
                 "old@uiu.edu",
                 "veteran",
                 originalLogin,
-                originalLogin,
-                70,
-                80
+                originalLogin
         );
-        playerRepository.saveAndFlush(existing);
+        Player saved = playerRepository.saveAndFlush(existing);
+        PlayerStats stats = new PlayerStats(saved, 70, 80);
+        playerStatsRepository.saveAndFlush(stats);
 
         Jwt jwt = Jwt.withTokenValue("token")
                 .header("alg", "none")
@@ -86,24 +98,26 @@ class PlayerServiceTest {
 
         assertThat(loaded.getId()).isEqualTo(existing.getId());
         assertThat(loaded.getLastLogin()).isEqualTo(originalLogin);
-        assertThat(loaded.getAura()).isEqualTo(70);
-        assertThat(loaded.getAcademicReputation()).isEqualTo(80);
+
+        PlayerStats loadedStats = playerStatsRepository.findByPlayerId(loaded.getId()).orElseThrow();
+        assertThat(loadedStats.getAura()).isEqualTo(70);
+        assertThat(loadedStats.getAcademicReputation()).isEqualTo(80);
     }
 
     @Test
     void login_existingPlayer_updatesLastLogin() {
         Instant originalLogin = Instant.parse("2026-01-01T12:00:00Z");
         Player existing = new Player(
-                java.util.UUID.randomUUID(),
+                UUID.randomUUID(),
                 "user_login_test",
                 "login@uiu.edu",
                 "login_user",
                 originalLogin,
-                originalLogin,
-                50,
-                50
+                originalLogin
         );
-        playerRepository.saveAndFlush(existing);
+        Player saved = playerRepository.saveAndFlush(existing);
+        PlayerStats stats = new PlayerStats(saved, 50, 50);
+        playerStatsRepository.saveAndFlush(stats);
 
         Jwt jwt = Jwt.withTokenValue("token")
                 .header("alg", "none")
@@ -115,6 +129,8 @@ class PlayerServiceTest {
 
         assertThat(response.id()).isEqualTo(existing.getId());
         assertThat(response.lastLogin()).isAfter(originalLogin);
+        assertThat(response.aura()).isEqualTo(50);
+        assertThat(response.academicReputation()).isEqualTo(50);
     }
 
     @Test
@@ -131,5 +147,28 @@ class PlayerServiceTest {
         assertThat(response.email()).isEqualTo("me@uiu.edu");
         assertThat(response.aura()).isEqualTo(50);
         assertThat(response.academicReputation()).isEqualTo(50);
+    }
+
+    @Test
+    void getOrProvisionPlayerResponse_missingStatsRow_throwsDataIntegrityException() {
+        Instant now = Instant.now();
+        Player orphan = new Player(
+                UUID.randomUUID(),
+                "user_orphan",
+                "orphan@uiu.edu",
+                "orphan",
+                now,
+                now
+        );
+        playerRepository.saveAndFlush(orphan);
+
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .subject("user_orphan")
+                .build();
+
+        assertThatThrownBy(() -> playerService.getOrProvisionPlayerResponse(jwt))
+                .isInstanceOf(PlayerStatsNotFoundException.class)
+                .hasMessageContaining(orphan.getId().toString());
     }
 }
