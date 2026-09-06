@@ -1,6 +1,7 @@
 package com.uiusimulator.player.dto;
 
 import com.uiusimulator.player.entity.Player;
+import com.uiusimulator.player.entity.PlayerStats;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ public record PlayerResponse(
         int aura,
         int academicReputation
 ) {
-    public static PlayerResponse from(Player player) {
+    public static PlayerResponse of(Player player, PlayerStats stats) {
         return new PlayerResponse(
                 player.getId(),
                 player.getClerkUserId(),
@@ -22,8 +23,8 @@ public record PlayerResponse(
                 player.getUsername(),
                 player.getCreatedAt(),
                 player.getLastLogin(),
-                player.getAura(),
-                player.getAcademicReputation()
+                stats.getAura(),
+                stats.getAcademicReputation()
         );
     }
 }

@@ -3,8 +3,9 @@ package com.uiusimulator.player.service;
 import com.uiusimulator.player.dto.PlayerStatsDeltaRequest;
 import com.uiusimulator.player.dto.PlayerStatsResponse;
 import com.uiusimulator.player.entity.Player;
-import com.uiusimulator.player.repository.PlayerRepository;
-import java.util.Optional;
+import com.uiusimulator.player.entity.PlayerStats;
+import com.uiusimulator.player.exception.PlayerStatsNotFoundException;
+import com.uiusimulator.player.repository.PlayerStatsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -17,18 +18,18 @@ public class PlayerStatsService {
     private static final Logger log = LoggerFactory.getLogger(PlayerStatsService.class);
 
     private final PlayerService playerService;
-    private final PlayerRepository playerRepository;
+    private final PlayerStatsRepository playerStatsRepository;
 
-    public PlayerStatsService(PlayerService playerService, PlayerRepository playerRepository) {
+    public PlayerStatsService(PlayerService playerService, PlayerStatsRepository playerStatsRepository) {
         this.playerService = playerService;
-        this.playerRepository = playerRepository;
+        this.playerStatsRepository = playerStatsRepository;
     }
 
     /**
      * Applies a persistent stat delta to the authenticated player's record.
-     * Concurrency-safe: acquires a pessimistic row lock (SELECT ... FOR UPDATE)
-     * inside the active transaction, lazily provisions if absent, applies clamped
-     * delta directly to the locked entity, persists, and commits.
+     * Concurrency-safe: resolves player, acquires a pessimistic row lock (SELECT ... FOR UPDATE)
+     * directly on the mutable player_stats row inside active transaction, applies clamped
+     * delta directly to that locked entity, persists, and commits.
      */
     @Transactional
     public PlayerStatsResponse applyStatDelta(Jwt jwt, PlayerStatsDeltaRequest request) {
@@ -49,32 +50,29 @@ public class PlayerStatsService {
             throw new IllegalArgumentException("Stat deltas must not be null");
         }
 
-        // 1. Acquire pessimistic write lock directly on the canonical row inside active transaction
-        Optional<Player> lockedOpt = playerRepository.findByClerkUserIdWithLock(clerkUserId);
-        Player lockedPlayer;
-
-        if (lockedOpt.isPresent()) {
-            lockedPlayer = lockedOpt.get();
+        // 1. Resolve or provision player identity
+        Player player;
+        if (jwt != null) {
+            player = playerService.getOrProvisionPlayer(jwt);
         } else {
-            // Player not yet provisioned: provision via centralized PlayerService
-            if (jwt != null) {
-                playerService.getOrProvisionPlayer(jwt);
-            } else {
-                playerService.getOrProvisionPlayer(clerkUserId, null, null);
-            }
-
-            // Acquire lock on newly provisioned row
-            lockedPlayer = playerRepository.findByClerkUserIdWithLock(clerkUserId)
-                    .orElseThrow(() -> new IllegalStateException("Player must exist after provisioning: " + clerkUserId));
+            player = playerService.getOrProvisionPlayer(clerkUserId, null, null);
         }
 
-        // 2. Apply delta directly to THAT locked entity with bounds clamping [0, 100]
-        int prevAura = lockedPlayer.getAura();
-        int prevReputation = lockedPlayer.getAcademicReputation();
-        lockedPlayer.modifyStats(request.auraDelta(), request.academicReputationDelta());
+        // 2. Lock mutable player_stats row with PESSIMISTIC_WRITE
+        PlayerStats lockedStats = playerStatsRepository.findByPlayerIdWithLock(player.getId())
+                .orElseThrow(() -> {
+                    log.error("Data integrity error: player_stats missing for playerId={}, clerkUserId={}",
+                            player.getId(), clerkUserId);
+                    return new PlayerStatsNotFoundException(player.getId());
+                });
 
-        // 3. Save and flush within active transaction
-        Player saved = playerRepository.saveAndFlush(lockedPlayer);
+        // 3. Apply delta directly to THAT locked entity with bounds clamping [0, 100]
+        int prevAura = lockedStats.getAura();
+        int prevReputation = lockedStats.getAcademicReputation();
+        lockedStats.modifyStats(request.auraDelta(), request.academicReputationDelta());
+
+        // 4. Save and flush within active transaction
+        PlayerStats saved = playerStatsRepository.saveAndFlush(lockedStats);
         log.info(
                 "Stat delta applied for clerkUserId={}: Aura {} -> {} (delta {}), Reputation {} -> {} (delta {})",
                 clerkUserId,

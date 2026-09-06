@@ -103,6 +103,8 @@ namespace UIU.Simulator.Gameplay.Player
                 yield break;
             }
 
+            Debug.Log($"[AuthDebug] PlayerProgressSync.HydrateInitialStatsRoutine: syncID={this.GetInstanceID()}, apiClientID={apiClient.GetInstanceID()}, sessionFp={(userSession != null ? AuthTokenProvider.Fingerprint(userSession.JwtToken) : "null")}");
+
             yield return apiClient.Get(
                 "api/players/me",
                 userSession.JwtToken,
@@ -174,6 +176,7 @@ namespace UIU.Simulator.Gameplay.Player
         private IEnumerator MutateStatsRoutine(int auraDelta, int academicReputationDelta)
         {
             isMutationInFlight = true;
+            Debug.Log($"[AuthDebug] PlayerProgressSync.MutateStatsRoutine: syncID={this.GetInstanceID()}, apiClientID={(apiClient != null ? apiClient.GetInstanceID().ToString() : "null")}, sessionFp={(userSession != null ? AuthTokenProvider.Fingerprint(userSession.JwtToken) : "null")}");
 
             ApiClient.PlayerStatsDeltaRequestDto requestDto = new ApiClient.PlayerStatsDeltaRequestDto(auraDelta, academicReputationDelta);
             string jsonBody = JsonUtility.ToJson(requestDto);

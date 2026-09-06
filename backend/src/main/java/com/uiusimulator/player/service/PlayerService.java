@@ -2,9 +2,13 @@ package com.uiusimulator.player.service;
 
 import com.uiusimulator.player.dto.PlayerResponse;
 import com.uiusimulator.player.entity.Player;
+import com.uiusimulator.player.entity.PlayerStats;
+import com.uiusimulator.player.exception.PlayerStatsNotFoundException;
 import com.uiusimulator.player.repository.PlayerRepository;
+import com.uiusimulator.player.repository.PlayerStatsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,14 +19,16 @@ public class PlayerService {
     private static final Logger log = LoggerFactory.getLogger(PlayerService.class);
 
     private final PlayerRepository playerRepository;
+    private final PlayerStatsRepository playerStatsRepository;
 
-    public PlayerService(PlayerRepository playerRepository) {
+    public PlayerService(PlayerRepository playerRepository, PlayerStatsRepository playerStatsRepository) {
         this.playerRepository = playerRepository;
+        this.playerStatsRepository = playerStatsRepository;
     }
 
     /**
      * Centralized player provisioning: returns existing player without rewriting last_login,
-     * or provisions a new player with default stats (Aura=50, Reputation=50) and first-contact last_login.
+     * or atomically provisions a new player with default stats (Aura=50, Reputation=50) and first-contact last_login.
      */
     @Transactional
     public Player getOrProvisionPlayer(Jwt jwt) {
@@ -44,25 +50,41 @@ public class PlayerService {
 
         return playerRepository.findByClerkUserId(clerkUserId)
                 .orElseGet(() -> {
-                    Player created = Player.createNew(clerkUserId, email, username);
-                    Player saved = playerRepository.save(created);
-                    log.info("Player profile lazily provisioned for clerkUserId={}", clerkUserId);
-                    return saved;
+                    try {
+                        return provisionNewPlayer(clerkUserId, email, username);
+                    } catch (DataIntegrityViolationException ex) {
+                        log.warn("Concurrent provisioning detected for clerkUserId={}, falling back to existing player", clerkUserId);
+                        return playerRepository.findByClerkUserId(clerkUserId)
+                                .orElseThrow(() -> ex);
+                    }
                 });
+    }
+
+    private Player provisionNewPlayer(String clerkUserId, String email, String username) {
+        Player created = Player.createNew(clerkUserId, email, username);
+        Player saved = playerRepository.save(created);
+        PlayerStats stats = PlayerStats.createDefault(saved);
+        playerStatsRepository.save(stats);
+        log.info("Player profile and stats atomically provisioned for clerkUserId={}", clerkUserId);
+        return saved;
     }
 
     @Transactional
     public PlayerResponse getOrProvisionPlayerResponse(Jwt jwt) {
         // Normal profile reads do NOT rewrite last_login
         Player player = getOrProvisionPlayer(jwt);
-        return PlayerResponse.from(player);
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId())
+                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
+        return PlayerResponse.of(player, stats);
     }
 
     @Transactional(readOnly = true)
     public PlayerResponse getByClerkUserId(String clerkUserId) {
         Player player = playerRepository.findByClerkUserId(clerkUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Player not found for clerk user"));
-        return PlayerResponse.from(player);
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId())
+                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
+        return PlayerResponse.of(player, stats);
     }
 
     /**
@@ -86,13 +108,15 @@ public class PlayerService {
                     return existing;
                 })
                 .orElseGet(() -> {
-                    Player created = Player.createNew(clerkUserId, email, username);
-                    Player saved = playerRepository.save(created);
+                    Player created = provisionNewPlayer(clerkUserId, email, username);
                     log.info("New player created during login for clerkUserId={}", clerkUserId);
-                    return saved;
+                    return created;
                 });
 
-        return PlayerResponse.from(player);
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId())
+                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
+
+        return PlayerResponse.of(player, stats);
     }
 
     @Transactional
@@ -105,12 +129,15 @@ public class PlayerService {
                     return existing;
                 })
                 .orElseGet(() -> {
-                    Player created = Player.createNew(clerkUserId, email, username);
-                    Player saved = playerRepository.save(created);
+                    Player created = provisionNewPlayer(clerkUserId, email, username);
                     log.info("Player profile created for clerkUserId={}", clerkUserId);
-                    return saved;
+                    return created;
                 });
-        return PlayerResponse.from(player);
+
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId())
+                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
+
+        return PlayerResponse.of(player, stats);
     }
 
     public static String extractEmail(Jwt jwt) {
