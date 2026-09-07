@@ -19,3 +19,9 @@ uiu:
     issuer: https://example.clerk.accounts.dev
     jwks-url: https://example.clerk.accounts.dev/.well-known/jwks.json
     authorized-parties: http://localhost:8080
+  gemini:
+    api-key: test-gemini-key
+    model: gemini-3.1-flash-lite
+    temperature: 0.2
+    max-output-tokens: 350
+    timeout-seconds: 15
