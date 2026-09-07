@@ -186,6 +186,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 
         currentState = CanteenBreakfastState.Completed;
         cachedDayState.CompleteBreakfastEvent();
+        SystemNotificationUI.Show(riceSuccessReason);
         RequestAuraDelta(5);
 
         if (feedback != null)
