@@ -71,6 +71,26 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("Player state error", request.getRequestURI()));
     }
 
+    @ExceptionHandler(com.uiusimulator.advisor.exception.AdvisorRateLimitException.class)
+    public ResponseEntity<ApiErrorResponse> handleAdvisorRateLimit(
+            com.uiusimulator.advisor.exception.AdvisorRateLimitException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Advisor rate limit: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiErrorResponse.of("The advisor is busy right now. Please try again shortly.", request.getRequestURI()));
+    }
+
+    @ExceptionHandler(com.uiusimulator.advisor.exception.AdvisorUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleAdvisorUnavailable(
+            com.uiusimulator.advisor.exception.AdvisorUnavailableException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Advisor unavailable: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiErrorResponse.of("Advisor is unavailable right now. Please try again.", request.getRequestURI()));
+    }
+
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiErrorResponse> handleDataAccess(
             DataAccessException ex,

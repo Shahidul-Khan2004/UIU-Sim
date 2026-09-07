@@ -39,6 +39,12 @@ uiu:
     issuer: ${CLERK_ISSUER}
     jwks-url: ${CLERK_JWKS_URL}
     authorized-parties: ${CLERK_AUTHORIZED_PARTIES:http://localhost:8080}
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
+    temperature: ${GEMINI_TEMPERATURE:0.2}
+    max-output-tokens: ${GEMINI_MAX_OUTPUT_TOKENS:350}
+    timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:15}
 
 logging:
   level:
