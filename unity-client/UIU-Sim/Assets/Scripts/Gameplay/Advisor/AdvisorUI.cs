@@ -35,7 +35,9 @@ namespace UIU.Simulator.Gameplay.Advisor
 
         private AdvisorClient advisorClient;
         private PlayerMovement cachedPlayerMovement;
+        private FirstPersonLook cachedFirstPersonLook;
         private bool wasMovementEnabled = true;
+        private bool wasLookEnabled = true;
 
         // Cursor state backup
         private CursorLockMode previousLockMode;
@@ -128,12 +130,19 @@ namespace UIU.Simulator.Gameplay.Advisor
             IsOpen = true;
             panelRoot.SetActive(true);
 
-            // Lock FPS movement so typing does not move character
+            // Lock FPS movement and look so typing/clicking does not move or rotate character
             cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
             if (cachedPlayerMovement != null)
             {
                 wasMovementEnabled = cachedPlayerMovement.enabled;
                 cachedPlayerMovement.enabled = false;
+            }
+
+            cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
+            if (cachedFirstPersonLook != null)
+            {
+                wasLookEnabled = cachedFirstPersonLook.enabled;
+                cachedFirstPersonLook.enabled = false;
             }
 
             // Unlock and show cursor
@@ -168,14 +177,29 @@ namespace UIU.Simulator.Gameplay.Advisor
             }
 
             // Restore movement
+            if (cachedPlayerMovement == null)
+            {
+                cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
+            }
             if (cachedPlayerMovement != null)
             {
                 cachedPlayerMovement.enabled = wasMovementEnabled;
             }
 
-            // Restore cursor
-            Cursor.lockState = previousLockMode;
-            Cursor.visible = previousCursorVisible;
+            // Restore look
+            if (cachedFirstPersonLook == null)
+            {
+                cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
+            }
+            if (cachedFirstPersonLook != null)
+            {
+                cachedFirstPersonLook.SuppressEscapeThisFrame();
+                cachedFirstPersonLook.enabled = wasLookEnabled;
+            }
+
+            // Restore cursor for first-person gameplay
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
 
             Debug.Log("[AdvisorUI] Closed advisor panel and restored player controls.");
         }
@@ -232,17 +256,22 @@ namespace UIU.Simulator.Gameplay.Advisor
 
         public void SendUserMessage(string text)
         {
+            SendAdvisorMessage(text);
+        }
+
+        private void SendAdvisorMessage(string prompt)
+        {
             if (isRequestInFlight)
             {
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(prompt))
             {
                 return;
             }
 
-            string trimmed = text.Trim();
+            string trimmed = prompt.Trim();
             if (trimmed.Length > MaxMessageLength)
             {
                 trimmed = trimmed.Substring(0, MaxMessageLength);
@@ -428,7 +457,7 @@ namespace UIU.Simulator.Gameplay.Advisor
             panelVLG.spacing = 10f;
             panelVLG.childAlignment = TextAnchor.UpperCenter;
             panelVLG.childControlWidth = true;
-            panelVLG.childControlHeight = false;
+            panelVLG.childControlHeight = true;
             panelVLG.childForceExpandWidth = true;
             panelVLG.childForceExpandHeight = false;
 
@@ -444,6 +473,11 @@ namespace UIU.Simulator.Gameplay.Advisor
             // ── Status Line ──
             GameObject statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(panelRoot.transform, false);
+            LayoutElement statusLE = statusGo.AddComponent<LayoutElement>();
+            statusLE.preferredHeight = 18f;
+            statusLE.minHeight = 18f;
+            statusLE.flexibleHeight = 0f;
+            statusLE.flexibleWidth = 1f;
             statusLabel = statusGo.AddComponent<TextMeshProUGUI>();
             statusLabel.fontSize = 13f;
             statusLabel.fontStyle = FontStyles.Italic;
@@ -466,6 +500,12 @@ namespace UIU.Simulator.Gameplay.Advisor
 
             RectTransform headerRect = headerGo.AddComponent<RectTransform>();
             headerRect.sizeDelta = new Vector2(0, 48f);
+
+            LayoutElement headerLE = headerGo.AddComponent<LayoutElement>();
+            headerLE.preferredHeight = 48f;
+            headerLE.minHeight = 48f;
+            headerLE.flexibleHeight = 0f;
+            headerLE.flexibleWidth = 1f;
 
             HorizontalLayoutGroup hlg = headerGo.AddComponent<HorizontalLayoutGroup>();
             hlg.childControlWidth = true;
@@ -539,7 +579,9 @@ namespace UIU.Simulator.Gameplay.Advisor
             scrollGo.transform.SetParent(parent, false);
 
             LayoutElement scrollLE = scrollGo.AddComponent<LayoutElement>();
-            scrollLE.preferredHeight = 360f;
+            scrollLE.minHeight = 260f;
+            scrollLE.preferredHeight = 380f;
+            scrollLE.flexibleHeight = 1f;
             scrollLE.flexibleWidth = 1f;
 
             Image scrollBg = scrollGo.AddComponent<Image>();
@@ -596,9 +638,12 @@ namespace UIU.Simulator.Gameplay.Advisor
             glg.spacing = new Vector2(10f, 6f);
             glg.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             glg.constraintCount = 2;
+            glg.childAlignment = TextAnchor.UpperCenter;
 
             LayoutElement qaLE = qaGo.AddComponent<LayoutElement>();
-            qaLE.preferredHeight = 82f;
+            qaLE.preferredHeight = 78f;
+            qaLE.minHeight = 78f;
+            qaLE.flexibleHeight = 0f;
             qaLE.flexibleWidth = 1f;
 
             AddQuickActionButton(qaGo.transform, "1. Improve Academically", QuickAction1Prompt);
@@ -621,7 +666,7 @@ namespace UIU.Simulator.Gameplay.Advisor
 
             btn.onClick.AddListener(() =>
             {
-                SendUserMessage(prompt);
+                SendAdvisorMessage(prompt);
             });
 
             GameObject textGo = new GameObject("Label");
@@ -649,6 +694,8 @@ namespace UIU.Simulator.Gameplay.Advisor
 
             LayoutElement rowLE = inputRow.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 44f;
+            rowLE.minHeight = 44f;
+            rowLE.flexibleHeight = 0f;
             rowLE.flexibleWidth = 1f;
 
             HorizontalLayoutGroup hlg = inputRow.AddComponent<HorizontalLayoutGroup>();
@@ -718,7 +765,7 @@ namespace UIU.Simulator.Gameplay.Advisor
             {
                 if (!string.IsNullOrWhiteSpace(text))
                 {
-                    SendUserMessage(text);
+                    SendAdvisorMessage(text);
                 }
             });
 
@@ -740,7 +787,7 @@ namespace UIU.Simulator.Gameplay.Advisor
             {
                 if (inputField != null && !string.IsNullOrWhiteSpace(inputField.text))
                 {
-                    SendUserMessage(inputField.text);
+                    SendAdvisorMessage(inputField.text);
                 }
             });
 
@@ -765,6 +812,8 @@ namespace UIU.Simulator.Gameplay.Advisor
             go.transform.SetParent(parent, false);
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.preferredHeight = 1f;
+            le.minHeight = 1f;
+            le.flexibleHeight = 0f;
             le.flexibleWidth = 1f;
             go.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
         }
