@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.Advisor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -93,7 +94,8 @@ public class FirstPersonLook : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked &&
             Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
-            !UIU.Simulator.Gameplay.Elevator.ElevatorUI.IsOpen)
+            !UIU.Simulator.Gameplay.Elevator.ElevatorUI.IsOpen &&
+            !AdvisorUI.IsOpen)
         {
             LockCursor();
         }
