@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.Advisor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -97,8 +98,8 @@ public sealed class InteractionController : MonoBehaviour
         IInteractable previousTarget = currentTarget;
         currentTarget = null;
 
-        // Block interaction targeting while a dialogue panel or queue UI is open.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen)
+        // Block interaction targeting while a dialogue panel, queue UI, or advisor panel is open.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen)
         {
             if (previousTarget != null)
             {
@@ -152,9 +153,8 @@ public sealed class InteractionController : MonoBehaviour
             return;
         }
 
-        // Block interaction input while a dialogue panel or queue UI is open.
-        // DialogueUI.IsOpen is set by DialogueUI; CanteenQueueUI.IsOpen is set by CanteenQueueUI.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen)
+        // Block interaction input while a dialogue panel, queue UI, or advisor panel is open.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen)
         {
             return;
         }

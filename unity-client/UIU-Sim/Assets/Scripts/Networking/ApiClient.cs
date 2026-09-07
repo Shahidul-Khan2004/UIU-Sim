@@ -345,6 +345,46 @@ namespace UIU.Simulator.Networking
             );
         }
 
+        public IEnumerator Post(
+            string relativePath,
+            string jsonBody,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
+            return Post(relativePath, jsonBody, null, onSuccess, onError);
+        }
+
+        public IEnumerator Post(
+            string relativePath,
+            string jsonBody,
+            string jwtToken,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
+            string url = $"{BackendBaseUrl}/{relativePath.TrimStart('/')}";
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody ?? string.Empty);
+
+            yield return ExecuteRequestWithAuthRetry(
+                token =>
+                {
+                    UnityWebRequest req = new UnityWebRequest(url, "POST");
+                    req.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                    req.downloadHandler = new DownloadHandlerBuffer();
+                    req.SetRequestHeader("Content-Type", "application/json");
+                    req.SetRequestHeader("Accept", "application/json");
+                    if (!string.IsNullOrWhiteSpace(token))
+                    {
+                        req.SetRequestHeader("Authorization", $"Bearer {token}");
+                    }
+                    return req;
+                },
+                jwtToken,
+                $"POST {relativePath}",
+                onSuccess,
+                onError
+            );
+        }
+
         private IEnumerator ExecuteRequestWithAuthRetry(
             Func<string, UnityWebRequest> requestFactory,
             string initialToken,
