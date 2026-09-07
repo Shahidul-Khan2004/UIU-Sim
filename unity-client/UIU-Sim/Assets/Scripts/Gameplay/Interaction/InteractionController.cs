@@ -1,4 +1,5 @@
 using UIU.Simulator.Gameplay.Advisor;
+using UIU.Simulator.Gameplay.Elevator;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -98,8 +99,8 @@ public sealed class InteractionController : MonoBehaviour
         IInteractable previousTarget = currentTarget;
         currentTarget = null;
 
-        // Block interaction targeting while a dialogue panel, queue UI, or advisor panel is open.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen)
+        // Block interaction targeting while a dialogue panel, queue UI, advisor panel, or elevator UI is open.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen)
         {
             if (previousTarget != null)
             {
@@ -153,8 +154,8 @@ public sealed class InteractionController : MonoBehaviour
             return;
         }
 
-        // Block interaction input while a dialogue panel, queue UI, or advisor panel is open.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen)
+        // Block interaction input while a dialogue panel, queue UI, advisor panel, or elevator UI is open.
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen)
         {
             return;
         }

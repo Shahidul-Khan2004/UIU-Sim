@@ -18,6 +18,16 @@ public class FirstPersonLook : MonoBehaviour
 
     private InputAction lookAction;
     private float pitch;
+    private int suppressEscapeFrame = -1;
+
+    /// <summary>
+    /// Suppresses cursor unlocking from an Escape key press on this frame.
+    /// Used when a modal UI (such as ElevatorUI) consumes Escape to close.
+    /// </summary>
+    public void SuppressEscapeThisFrame()
+    {
+        suppressEscapeFrame = Time.frameCount;
+    }
 
     private void Awake()
     {
@@ -68,9 +78,24 @@ public class FirstPersonLook : MonoBehaviour
 
     private void HandleCursorToggle()
     {
+        if (Time.frameCount == suppressEscapeFrame)
+        {
+            return;
+        }
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             UnlockCursor();
+            return;
+        }
+
+        // Allow clicking into the game window to re-lock cursor if no modal UI is open
+        if (Cursor.lockState != CursorLockMode.Locked &&
+            Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame &&
+            !UIU.Simulator.Gameplay.Elevator.ElevatorUI.IsOpen)
+        {
+            LockCursor();
         }
     }
 
@@ -118,5 +143,23 @@ public class FirstPersonLook : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    /// <summary>Current camera pitch in degrees.</summary>
+    public float Pitch => pitch;
+
+    /// <summary>
+    /// Synchronizes player yaw with the target rotation and resets camera pitch to neutral (level view).
+    /// Ensures internal pitch/yaw state and actual transforms agree after teleport.
+    /// </summary>
+    public void SetFacingRotation(Quaternion rotation)
+    {
+        Vector3 euler = rotation.eulerAngles;
+        transform.rotation = Quaternion.Euler(0f, euler.y, 0f);
+        pitch = 0f;
+        if (cameraTransform != null)
+        {
+            cameraTransform.localRotation = Quaternion.identity;
+        }
     }
 }
