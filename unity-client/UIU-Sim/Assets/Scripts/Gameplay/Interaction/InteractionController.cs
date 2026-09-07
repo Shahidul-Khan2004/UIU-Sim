@@ -127,7 +127,7 @@ public sealed class InteractionController : MonoBehaviour
 
         // Check the hit object and its parents for an IInteractable.
         IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
-        if (interactable == null)
+        if (interactable == null || (interactable is Behaviour behaviour && !behaviour.isActiveAndEnabled))
         {
             if (previousTarget != null)
             {

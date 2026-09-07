@@ -30,6 +30,10 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
     [Tooltip("Probability (0.0 to 1.0) that a normal permanent ID scan fails and triggers a new ID problem. Default is 0.10 (10%).")]
     [SerializeField, Range(0f, 1f)] private float permanentFailChance = 0.1f;
 
+    [Header("Gate")]
+    [Tooltip("Optional gate controller to open upon successful scan.")]
+    [SerializeField] private GateController gateToOpen;
+
     // ── Cached references ──────────────────────────────────────────────
 
     private InteractionFeedback feedback;
@@ -46,6 +50,15 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
     {
         get => permanentFailChance;
         set => permanentFailChance = Mathf.Clamp01(value);
+    }
+
+    /// <summary>
+    /// Optional gate controller opened when a scan succeeds.
+    /// </summary>
+    public GateController GateToOpen
+    {
+        get => gateToOpen;
+        set => gateToOpen = value;
     }
 
     // ── IInteractable ──────────────────────────────────────────────────
@@ -155,6 +168,7 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
         {
             scannerVisuals.ShowSuccess();
         }
+        gateToOpen?.Open();
     }
 
     private void OnScanFailed()
