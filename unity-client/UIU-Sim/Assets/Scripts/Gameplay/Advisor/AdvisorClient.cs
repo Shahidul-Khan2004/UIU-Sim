@@ -11,7 +11,7 @@ namespace UIU.Simulator.Gameplay.Advisor
     /// Interacts strictly through ApiClient, knowing nothing of Clerk token internals, JWTs, or secrets.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class AdvisorClient : MonoBehaviour
+    public class AdvisorClient : MonoBehaviour
     {
         [SerializeField] private ApiClient apiClient;
 
@@ -84,7 +84,7 @@ namespace UIU.Simulator.Gameplay.Advisor
             }
         }
 
-        public void SendChat(
+        public virtual void SendChat(
             AdvisorChatRequestDto request,
             Action<AdvisorChatResponseDto> onSuccess,
             Action<string, long> onError)
