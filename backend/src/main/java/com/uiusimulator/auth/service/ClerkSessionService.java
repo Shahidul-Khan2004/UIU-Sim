@@ -90,12 +90,25 @@ public class ClerkSessionService {
     }
 
     /**
-     * Mints a fresh session token from Clerk Backend API for an active session.
+     * Mints a fresh session token from Clerk Backend API for an active session
+     * using the configured game-token TTL.
      * The token is signed with Clerk's official RS256 key.
      */
     public String createSessionToken(String clerkSessionId) {
+        return createSessionToken(clerkSessionId, clerkProperties.effectiveGameTokenTtlSeconds());
+    }
+
+    /**
+     * Mints a fresh session token from Clerk Backend API for an active session
+     * with an explicit TTL in seconds.
+     * The token is signed with Clerk's official RS256 key.
+     */
+    public String createSessionToken(String clerkSessionId, int expiresInSeconds) {
         if (clerkSessionId == null || clerkSessionId.isBlank()) {
             throw new AuthenticationFailedException("Clerk session ID is missing");
+        }
+        if (expiresInSeconds <= 0) {
+            throw new AuthenticationFailedException("Token TTL must be a positive number of seconds");
         }
         String secretKey = clerkProperties.secretKey();
         if (secretKey == null || secretKey.isBlank()) {
@@ -103,7 +116,7 @@ public class ClerkSessionService {
         }
 
         try {
-            String requestBody = "{\"expires_in_seconds\":60}";
+            String requestBody = "{\"expires_in_seconds\":" + expiresInSeconds + "}";
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(CLERK_API_BASE_URL + "/sessions/" + clerkSessionId + "/tokens"))
                     .header("Authorization", "Bearer " + secretKey)
@@ -126,7 +139,8 @@ public class ClerkSessionService {
                 throw new AuthenticationFailedException("Clerk returned empty session token");
             }
 
-            log.info("Successfully minted fresh Clerk session token for sessionId={}", maskId(clerkSessionId));
+            log.info("Successfully minted fresh Clerk session token (ttl={}s) for sessionId={}",
+                    expiresInSeconds, maskId(clerkSessionId));
             return jwt;
         } catch (AuthenticationFailedException ex) {
             throw ex;

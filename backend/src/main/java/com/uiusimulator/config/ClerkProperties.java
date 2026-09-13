@@ -10,8 +10,21 @@ public record ClerkProperties(
         String secretKey,
         String issuer,
         String jwksUrl,
-        String authorizedParties
+        String authorizedParties,
+        Integer gameTokenTtlSeconds
 ) {
+    private static final int DEFAULT_GAME_TOKEN_TTL_SECONDS = 60;
+
+    /**
+     * Returns the effective game-token TTL in seconds.
+     * Falls back to 60 s (Clerk's standard lifetime) when unconfigured or non-positive.
+     */
+    public int effectiveGameTokenTtlSeconds() {
+        return (gameTokenTtlSeconds != null && gameTokenTtlSeconds > 0)
+                ? gameTokenTtlSeconds
+                : DEFAULT_GAME_TOKEN_TTL_SECONDS;
+    }
+
     public List<String> authorizedPartyList() {
         if (authorizedParties == null || authorizedParties.isBlank()) {
             return List.of();

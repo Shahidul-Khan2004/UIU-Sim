@@ -15,6 +15,7 @@ import java.net.http.HttpResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -88,6 +89,7 @@ class ClerkSessionServiceTest {
     @Test
     void createSessionToken_success_returnsMintedJwt() throws Exception {
         when(clerkProperties.secretKey()).thenReturn("sk_test_123");
+        when(clerkProperties.effectiveGameTokenTtlSeconds()).thenReturn(60);
         @SuppressWarnings("unchecked")
         HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(200);
@@ -100,6 +102,51 @@ class ClerkSessionServiceTest {
     }
 
     @Test
+    void createSessionToken_withExplicitTtl_sendsConfiguredTtlToClerk() throws Exception {
+        when(clerkProperties.secretKey()).thenReturn("sk_test_123");
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> response = mock(HttpResponse.class);
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn("{\"jwt\":\"long-lived.session.jwt\"}");
+
+        ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(requestCaptor.capture(), any(HttpResponse.BodyHandler.class))).thenReturn(response);
+
+        String jwt = clerkSessionService.createSessionToken("sess_123", 3600);
+
+        assertThat(jwt).isEqualTo("long-lived.session.jwt");
+        // Verify the HTTP request URI targets the correct session
+        HttpRequest capturedRequest = requestCaptor.getValue();
+        assertThat(capturedRequest.uri().toString()).contains("/sessions/sess_123/tokens");
+    }
+
+    @Test
+    void createSessionToken_defaultOverload_usesConfiguredTtl() throws Exception {
+        when(clerkProperties.secretKey()).thenReturn("sk_test_123");
+        when(clerkProperties.effectiveGameTokenTtlSeconds()).thenReturn(3600);
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> response = mock(HttpResponse.class);
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn("{\"jwt\":\"configured.ttl.jwt\"}");
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
+
+        String jwt = clerkSessionService.createSessionToken("sess_123");
+
+        assertThat(jwt).isEqualTo("configured.ttl.jwt");
+    }
+
+    @Test
+    void createSessionToken_nonPositiveTtl_throwsAuthenticationFailedException() {
+        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123", 0))
+                .isInstanceOf(AuthenticationFailedException.class)
+                .hasMessageContaining("Token TTL must be a positive number of seconds");
+
+        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123", -1))
+                .isInstanceOf(AuthenticationFailedException.class)
+                .hasMessageContaining("Token TTL must be a positive number of seconds");
+    }
+
+    @Test
     void createSessionToken_httpError_throwsAuthenticationFailedException() throws Exception {
         when(clerkProperties.secretKey()).thenReturn("sk_test_123");
         @SuppressWarnings("unchecked")
@@ -107,7 +154,7 @@ class ClerkSessionServiceTest {
         when(response.statusCode()).thenReturn(401);
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(response);
 
-        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123"))
+        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123", 60))
                 .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Failed to mint Clerk session token");
     }
@@ -116,7 +163,7 @@ class ClerkSessionServiceTest {
     void createSessionToken_missingConfig_throwsAuthenticationFailedException() {
         when(clerkProperties.secretKey()).thenReturn("");
 
-        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123"))
+        assertThatThrownBy(() -> clerkSessionService.createSessionToken("sess_123", 60))
                 .isInstanceOf(AuthenticationFailedException.class)
                 .hasMessageContaining("Clerk secret key is not configured");
     }
