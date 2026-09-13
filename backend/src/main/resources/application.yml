@@ -39,6 +39,7 @@ uiu:
     issuer: ${CLERK_ISSUER}
     jwks-url: ${CLERK_JWKS_URL}
     authorized-parties: ${CLERK_AUTHORIZED_PARTIES:http://localhost:8080}
+    game-token-ttl-seconds: ${CLERK_GAME_TOKEN_TTL_SECONDS:60}
   gemini:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.1-flash-lite}

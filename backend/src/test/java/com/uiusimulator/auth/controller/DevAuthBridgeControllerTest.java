@@ -85,7 +85,7 @@ class DevAuthBridgeControllerTest {
     @Test
     void refresh_validCredentials_returnsNewTokenAndRotatedSecret() throws Exception {
         when(bridgeService.refreshAndRotate(eq("bridge-123"), eq("secret-old")))
-                .thenReturn(Optional.of(new DevAuthBridgeService.RefreshResult("new.jwt.token", "secret-new", 60)));
+                .thenReturn(Optional.of(new DevAuthBridgeService.RefreshResult("new.jwt.token", "secret-new", 3600)));
 
         var body = new DevAuthBridgeController.RefreshRequest("bridge-123", "secret-old");
 
@@ -96,7 +96,7 @@ class DevAuthBridgeControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.token").value("new.jwt.token"))
                 .andExpect(jsonPath("$.refreshSecret").value("secret-new"))
-                .andExpect(jsonPath("$.expiresInSeconds").value(60));
+                .andExpect(jsonPath("$.expiresInSeconds").value(3600));
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.uiusimulator.auth.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uiusimulator.config.ClerkProperties;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -34,10 +35,13 @@ public class DevAuthBridgeService {
     private final SecureRandom secureRandom = new SecureRandom();
     private final ConcurrentHashMap<String, BridgeSession> sessions = new ConcurrentHashMap<>();
     private final ClerkSessionService clerkSessionService;
+    private final ClerkProperties clerkProperties;
     private final ObjectMapper objectMapper;
 
-    public DevAuthBridgeService(ClerkSessionService clerkSessionService, ObjectMapper objectMapper) {
+    public DevAuthBridgeService(ClerkSessionService clerkSessionService, ClerkProperties clerkProperties,
+                                ObjectMapper objectMapper) {
         this.clerkSessionService = clerkSessionService;
+        this.clerkProperties = clerkProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -85,7 +89,14 @@ public class DevAuthBridgeService {
     }
 
     /**
-     * Poll endpoint called by Unity. Consumes the initial JWT and delivers the initial refreshSecret.
+     * Poll endpoint called by Unity. Validates the pending bridge session, mints a fresh
+     * Clerk game JWT with the configured TTL (instead of passing through the short-lived
+     * browser-issued token), then consumes the bridge handshake and delivers the
+     * game JWT + initial refreshSecret.
+     *
+     * <p>Ordering preserves recoverability: the bridge session is only consumed <b>after</b>
+     * the Clerk token has been minted successfully. A transient Clerk API failure leaves
+     * the bridge session intact so Unity can retry the poll.
      */
     public Optional<InitialHandshake> consumeInitialToken(String bridgeSessionId) {
         purgeExpired();
@@ -103,6 +114,19 @@ public class DevAuthBridgeService {
             return Optional.empty();
         }
 
+        // Mint a fresh game JWT with the configured TTL before consuming the bridge.
+        // If this fails (transient Clerk error), the bridge session remains intact for retry.
+        int ttl = clerkProperties.effectiveGameTokenTtlSeconds();
+        String gameJwt;
+        try {
+            gameJwt = clerkSessionService.createSessionToken(session.clerkSessionId(), ttl);
+        } catch (Exception ex) {
+            log.warn("Failed to mint initial game JWT for bridgeSessionId={}: {}",
+                    maskId(bridgeSessionId), ex.getMessage());
+            return Optional.empty();
+        }
+
+        // Minting succeeded — now finalize the one-time consumption.
         // Generate a fresh secret for the consumer to ensure single-delivery
         String secretForClient = generateSecureSecret();
         byte[] newHash = sha256(secretForClient);
@@ -119,8 +143,9 @@ public class DevAuthBridgeService {
         );
         sessions.put(bridgeSessionId, updated);
 
-        log.info("Initial bridge token consumed for bridgeSessionId={}", maskId(bridgeSessionId));
-        return Optional.of(new InitialHandshake(session.initialToken(), secretForClient));
+        log.info("Initial bridge token consumed (gameJwt ttl={}s) for bridgeSessionId={}",
+                ttl, maskId(bridgeSessionId));
+        return Optional.of(new InitialHandshake(gameJwt, secretForClient));
     }
 
     /**
@@ -166,8 +191,9 @@ public class DevAuthBridgeService {
             return Optional.empty();
         }
 
-        // Mint a fresh Clerk session JWT
-        String freshJwt = clerkSessionService.createSessionToken(session.clerkSessionId());
+        // Mint a fresh Clerk session JWT with the configured game-token TTL
+        int ttl = clerkProperties.effectiveGameTokenTtlSeconds();
+        String freshJwt = clerkSessionService.createSessionToken(session.clerkSessionId(), ttl);
 
         // Rotate secret: generate Secret B, store SHA-256(B), invalidate Secret A
         String nextSecret = generateSecureSecret();
@@ -184,9 +210,10 @@ public class DevAuthBridgeService {
         );
 
         sessions.put(bridgeSessionId, rotated);
-        log.info("Token successfully refreshed and secret rotated for bridgeSessionId={}", maskId(bridgeSessionId));
+        log.info("Token successfully refreshed (ttl={}s) and secret rotated for bridgeSessionId={}",
+                ttl, maskId(bridgeSessionId));
 
-        return Optional.of(new RefreshResult(freshJwt, nextSecret, 60));
+        return Optional.of(new RefreshResult(freshJwt, nextSecret, ttl));
     }
 
     public boolean isPending(String bridgeSessionId) {
