@@ -1,0 +1,14 @@
+# SimpleBench materials
+newmtl GreyMetal
+Ka 0.18 0.18 0.18
+Kd 0.54 0.57 0.59
+Ks 0.20 0.20 0.20
+Ns 100.0
+illum 2
+
+newmtl OrangePaintedMetal
+Ka 0.12 0.05 0.02
+Kd 0.70 0.28 0.09
+Ks 0.12 0.12 0.12
+Ns 70.0
+illum 2
