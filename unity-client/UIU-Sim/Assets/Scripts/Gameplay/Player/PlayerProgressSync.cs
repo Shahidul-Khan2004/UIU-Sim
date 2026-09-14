@@ -11,7 +11,9 @@ namespace UIU.Simulator.Gameplay.Player
     /// Centralized component managing persistent Player Aura and Academic Reputation.
     /// Responsibilities:
     /// - Hydrates initial canonical stats via GET /api/players/me
+    /// - Syncs one-time initial ID tutorial pending flag into PlayerInventory
     /// - Sends single-attempt PATCH /api/players/me/stats for confirmed deltas
+    /// - Atomically consumes initial ID tutorial via POST /api/players/me/initial-id-tutorial/consume
     /// - Guarantees only one in-flight mutation at a time
     /// - Guards against mutations before initial hydration completes
     /// - Emits sync failure messages via SystemNotificationUI
@@ -22,12 +24,14 @@ namespace UIU.Simulator.Gameplay.Player
     public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync
     {
         private PlayerStats playerStats;
+        private PlayerInventory playerInventory;
         private ApiClient apiClient;
         private UserSession userSession;
 
         private bool isHydrated;
         private bool isMutationInFlight;
         private bool isHydrating;
+        private bool isTutorialConsumeInFlight;
 
         public bool IsHydrated => isHydrated;
         public bool IsMutationInFlight => isMutationInFlight;
@@ -38,6 +42,7 @@ namespace UIU.Simulator.Gameplay.Player
         private void Awake()
         {
             playerStats = GetComponent<PlayerStats>();
+            playerInventory = GetComponent<PlayerInventory>();
         }
 
         private void Start()
@@ -61,6 +66,11 @@ namespace UIU.Simulator.Gameplay.Player
             if (playerStats == null)
             {
                 playerStats = GetComponent<PlayerStats>();
+            }
+
+            if (playerInventory == null)
+            {
+                playerInventory = GetComponent<PlayerInventory>();
             }
 
             if (apiClient == null || userSession == null)
@@ -117,8 +127,13 @@ namespace UIU.Simulator.Gameplay.Player
                         {
                             isHydrated = true;
                             playerStats.ApplyServerState(dto.aura, dto.academicReputation, StatUpdateSource.InitialHydration);
+                            // pending=true means tutorial not yet consumed → local "triggered" is false
+                            if (playerInventory != null)
+                            {
+                                playerInventory.SetTriggeredInitialIDFailure(!dto.initialIdTutorialPending);
+                            }
                             OnHydrated?.Invoke(dto.aura, dto.academicReputation);
-                            Debug.Log($"[PlayerProgressSync] Hydrated canonical stats from server: Aura={dto.aura}, Reputation={dto.academicReputation}");
+                            Debug.Log($"[PlayerProgressSync] Hydrated canonical stats from server: Aura={dto.aura}, Reputation={dto.academicReputation}, initialIdTutorialPending={dto.initialIdTutorialPending}");
                         }
                     }
                     catch (Exception ex)
@@ -136,6 +151,63 @@ namespace UIU.Simulator.Gameplay.Player
             );
 
             isHydrating = false;
+        }
+
+        /// <summary>
+        /// Persistently consumes the one-time initial ID tutorial flag. Idempotent on the server.
+        /// </summary>
+        public void RequestConsumeInitialIdTutorial()
+        {
+            if (isTutorialConsumeInFlight)
+            {
+                return;
+            }
+
+            EnsureDependencies();
+            if (userSession == null || !userSession.HasToken || apiClient == null)
+            {
+                Debug.LogWarning("[PlayerProgressSync] Cannot consume initial ID tutorial: missing auth or ApiClient.");
+                return;
+            }
+
+            StartCoroutine(ConsumeInitialIdTutorialRoutine());
+        }
+
+        private IEnumerator ConsumeInitialIdTutorialRoutine()
+        {
+            isTutorialConsumeInFlight = true;
+
+            yield return apiClient.Post(
+                "api/players/me/initial-id-tutorial/consume",
+                "{}",
+                userSession.JwtToken,
+                onSuccess: json =>
+                {
+                    isTutorialConsumeInFlight = false;
+                    try
+                    {
+                        ApiClient.InitialIdTutorialConsumeResponseDto response =
+                            JsonUtility.FromJson<ApiClient.InitialIdTutorialConsumeResponseDto>(json);
+                        if (response != null)
+                        {
+                            if (playerInventory != null)
+                            {
+                                playerInventory.SetTriggeredInitialIDFailure(true);
+                            }
+                            Debug.Log($"[PlayerProgressSync] Initial ID tutorial consume result: consumed={response.consumed}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[PlayerProgressSync] Failed to parse tutorial consume response: {ex.Message}");
+                    }
+                },
+                onError: (error, code) =>
+                {
+                    isTutorialConsumeInFlight = false;
+                    Debug.LogWarning($"[PlayerProgressSync] Initial ID tutorial consume failed (HTTP {code}): {error}");
+                }
+            );
         }
 
         public void RequestStatDelta(int auraDelta, int academicReputationDelta)
