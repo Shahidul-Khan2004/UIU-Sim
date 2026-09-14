@@ -1,0 +1,15 @@
+# Materials for WoodSlottedCafeChair.obj
+newmtl Wood
+Ka 0.20 0.11 0.04
+Kd 0.72 0.43 0.14
+Ks 0.18 0.18 0.18
+Ns 96.0
+illum 2
+map_Kd ../Textures/Wood_BaseColor.png
+
+newmtl Chrome
+Ka 0.20 0.20 0.20
+Kd 0.68 0.70 0.74
+Ks 1.00 1.00 1.00
+Ns 420.0
+illum 2
