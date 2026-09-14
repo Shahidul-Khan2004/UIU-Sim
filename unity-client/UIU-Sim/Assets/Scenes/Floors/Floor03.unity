@@ -81118,8 +81118,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1222866729}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1222866728 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1222866727}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1222866729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222866728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1224849857
 Mesh:
   m_ObjectHideFlags: 0
