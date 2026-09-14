@@ -116,7 +116,7 @@ namespace UIU.Simulator.Gameplay.Tests
         [Test]
         public void FailedScan_WithAssignedGate_DoesNotOpenGate()
         {
-            // First permanent scan always fails (tutorial failure)
+            // Pending tutorial on a fresh inventory forces the first permanent scan to fail
             Assert.That(playerInventory.HasTriggeredInitialIDFailure, Is.False);
             Assert.That(gateController.IsBusy, Is.False);
 

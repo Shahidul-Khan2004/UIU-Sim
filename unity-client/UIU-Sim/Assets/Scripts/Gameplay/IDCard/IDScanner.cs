@@ -1,4 +1,5 @@
 using UnityEngine;
+using UIU.Simulator.Gameplay.Player;
 
 /// <summary>
 /// Campus security scanner. The player presents an ID card by pressing the Interact
@@ -6,7 +7,7 @@ using UnityEngine;
 /// <para>
 /// Scan rules:
 /// <list type="bullet">
-///   <item>First scan with a permanent ID always fails and triggers the ID problem state.</item>
+///   <item>While the one-time initial ID tutorial is still pending (server-backed), the first permanent ID scan fails and triggers the ID problem state.</item>
 ///   <item>While the ID problem state is active, every permanent ID scan continues to fail.</item>
 ///   <item>Temporary ID scans always succeed, have no random failure, and are consumed after scanning.</item>
 ///   <item>Consuming a temporary ID clears the ID problem.</item>
@@ -39,6 +40,7 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
     private InteractionFeedback feedback;
     private ScannerVisuals scannerVisuals;  // Optional — may be null.
     private PlayerInventory playerInventory;
+    private PlayerProgressSync progressSync;
 
     // ── Public API ─────────────────────────────────────────────────────
 
@@ -118,11 +120,12 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
             return "You don't have an id card, go see the receptionist";
         }
 
-        // 2. First-ever permanent ID scan always fails and triggers the player's initial ID problem state (tutorial beat).
+        // 2. One-time initial ID tutorial (server-backed pending flag mirrored into PlayerInventory).
         if (!playerInventory.HasTriggeredInitialIDFailure)
         {
-            Debug.Log("[IDScanner] Scan FAILED: First permanent ID scan failed (tutorial). Activating ID problem state.", this);
+            Debug.Log("[IDScanner] Scan FAILED: Initial ID tutorial pending. Activating ID problem state.", this);
             playerInventory.TriggerInitialIDFailure();
+            EnsureProgressSync()?.RequestConsumeInitialIdTutorial();
             OnScanFailed();
             return "You don't have an id card, go see the receptionist";
         }
@@ -202,5 +205,25 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
         }
 
         return true;
+    }
+
+    private PlayerProgressSync EnsureProgressSync()
+    {
+        if (progressSync != null)
+        {
+            return progressSync;
+        }
+
+        if (playerInventory != null)
+        {
+            progressSync = playerInventory.GetComponent<PlayerProgressSync>();
+        }
+
+        if (progressSync == null)
+        {
+            progressSync = FindFirstObjectByType<PlayerProgressSync>();
+        }
+
+        return progressSync;
     }
 }

@@ -98,7 +98,7 @@ public sealed class PlayerInventory : MonoBehaviour
 
     /// <summary>
     /// Sets whether the initial tutorial ID failure has occurred.
-    /// Used for testing and future backend persistence synchronization.
+    /// Used for tests and server hydration of <c>initialIdTutorialPending</c>.
     /// </summary>
     public void SetTriggeredInitialIDFailure(bool value)
     {

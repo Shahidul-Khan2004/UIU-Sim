@@ -92,6 +92,6 @@ class AuthServiceTest {
 
     private static PlayerResponse samplePlayer(String clerkUserId, String email, String username) {
         Instant now = Instant.parse("2026-01-01T00:00:00Z");
-        return new PlayerResponse(UUID.randomUUID(), clerkUserId, email, username, now, now, 50, 50);
+        return new PlayerResponse(UUID.randomUUID(), clerkUserId, email, username, now, now, 50, 50, true);
     }
 }

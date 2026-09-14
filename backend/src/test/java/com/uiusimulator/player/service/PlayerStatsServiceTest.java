@@ -196,6 +196,38 @@ class PlayerStatsServiceTest {
                 .hasMessageContaining("Stat deltas must not be null");
     }
 
+    @Test
+    void consumeInitialIdTutorial_firstCall_returnsTrueAndClearsFlag() {
+        Jwt jwt = jwtWith("user_tutorial_new");
+        playerService.getOrProvisionPlayer(jwt);
+
+        var first = playerStatsService.consumeInitialIdTutorial(jwt);
+        assertThat(first.consumed()).isTrue();
+
+        Player saved = playerRepository.findByClerkUserId("user_tutorial_new").orElseThrow();
+        PlayerStats stats = playerStatsRepository.findByPlayerId(saved.getId()).orElseThrow();
+        assertThat(stats.isInitialIdTutorialPending()).isFalse();
+
+        var second = playerStatsService.consumeInitialIdTutorial(jwt);
+        assertThat(second.consumed()).isFalse();
+        assertThat(playerStatsRepository.findByPlayerId(saved.getId()).orElseThrow()
+                .isInitialIdTutorialPending()).isFalse();
+    }
+
+    @Test
+    void consumeInitialIdTutorial_existingPlayerAlreadyFalse_returnsFalse() {
+        Player existing = Player.createNew("user_tutorial_old", null, null);
+        Player saved = playerRepository.saveAndFlush(existing);
+        playerStatsRepository.saveAndFlush(new PlayerStats(saved, 50, 50, false));
+
+        Jwt jwt = jwtWith("user_tutorial_old");
+        var result = playerStatsService.consumeInitialIdTutorial(jwt);
+
+        assertThat(result.consumed()).isFalse();
+        assertThat(playerStatsRepository.findByPlayerId(saved.getId()).orElseThrow()
+                .isInitialIdTutorialPending()).isFalse();
+    }
+
     private static Jwt jwtWith(String subject) {
         return Jwt.withTokenValue("token")
                 .header("alg", "none")

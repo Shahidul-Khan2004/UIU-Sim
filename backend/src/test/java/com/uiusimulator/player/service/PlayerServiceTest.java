@@ -53,6 +53,7 @@ class PlayerServiceTest {
         PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
         assertThat(stats.getAura()).isEqualTo(50);
         assertThat(stats.getAcademicReputation()).isEqualTo(50);
+        assertThat(stats.isInitialIdTutorialPending()).isTrue();
     }
 
     @Test
@@ -147,6 +148,7 @@ class PlayerServiceTest {
         assertThat(response.email()).isEqualTo("me@uiu.edu");
         assertThat(response.aura()).isEqualTo(50);
         assertThat(response.academicReputation()).isEqualTo(50);
+        assertThat(response.initialIdTutorialPending()).isTrue();
     }
 
     @Test

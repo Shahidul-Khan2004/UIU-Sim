@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +14,7 @@ import com.uiusimulator.auth.security.ClerkJwtAuthenticationFilter;
 import com.uiusimulator.common.exception.GlobalExceptionHandler;
 import com.uiusimulator.config.ClerkProperties;
 import com.uiusimulator.config.SecurityConfig;
+import com.uiusimulator.player.dto.InitialIdTutorialConsumeResponse;
 import com.uiusimulator.player.dto.PlayerResponse;
 import com.uiusimulator.player.dto.PlayerStatsDeltaRequest;
 import com.uiusimulator.player.dto.PlayerStatsResponse;
@@ -65,7 +67,8 @@ class PlayerControllerTest {
                 now,
                 now,
                 65,
-                75
+                75,
+                true
         );
         when(playerService.getOrProvisionPlayerResponse(any(Jwt.class))).thenReturn(player);
 
@@ -74,7 +77,8 @@ class PlayerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clerkUserId").value("user_me"))
                 .andExpect(jsonPath("$.aura").value(65))
-                .andExpect(jsonPath("$.academicReputation").value(75));
+                .andExpect(jsonPath("$.academicReputation").value(75))
+                .andExpect(jsonPath("$.initialIdTutorialPending").value(true));
     }
 
     @Test
@@ -117,6 +121,23 @@ class PlayerControllerTest {
         mockMvc.perform(patch("/api/players/me/stats")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void consumeInitialIdTutorial_authenticated_returnsConsumedFlag() throws Exception {
+        when(playerStatsService.consumeInitialIdTutorial(any(Jwt.class)))
+                .thenReturn(InitialIdTutorialConsumeResponse.of(true));
+
+        mockMvc.perform(post("/api/players/me/initial-id-tutorial/consume")
+                        .with(jwt().jwt(j -> j.subject("user_me"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.consumed").value(true));
+    }
+
+    @Test
+    void consumeInitialIdTutorial_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(post("/api/players/me/initial-id-tutorial/consume"))
                 .andExpect(status().isUnauthorized());
     }
 }

@@ -34,6 +34,9 @@ public class PlayerStats implements Persistable<UUID> {
     @Column(name = "academic_reputation", nullable = false)
     private int academicReputation;
 
+    @Column(name = "initial_id_tutorial_pending", nullable = false)
+    private boolean initialIdTutorialPending;
+
     @Transient
     private boolean isNew = true;
 
@@ -41,15 +44,20 @@ public class PlayerStats implements Persistable<UUID> {
     }
 
     public PlayerStats(Player player, int aura, int academicReputation) {
+        this(player, aura, academicReputation, false);
+    }
+
+    public PlayerStats(Player player, int aura, int academicReputation, boolean initialIdTutorialPending) {
         this.player = Objects.requireNonNull(player, "player must not be null");
         this.playerId = player.getId();
         this.aura = Math.max(0, Math.min(100, aura));
         this.academicReputation = Math.max(0, Math.min(100, academicReputation));
+        this.initialIdTutorialPending = initialIdTutorialPending;
         this.isNew = true;
     }
 
     public static PlayerStats createDefault(Player player) {
-        return new PlayerStats(player, 50, 50);
+        return new PlayerStats(player, 50, 50, true);
     }
 
     @Override
@@ -73,6 +81,18 @@ public class PlayerStats implements Persistable<UUID> {
         this.academicReputation = Math.max(0, Math.min(100, this.academicReputation + academicReputationDelta));
     }
 
+    /**
+     * Atomically consumes the one-time initial ID tutorial flag.
+     * @return true if this call flipped pending from true to false; false if already consumed
+     */
+    public boolean consumeInitialIdTutorial() {
+        if (!initialIdTutorialPending) {
+            return false;
+        }
+        initialIdTutorialPending = false;
+        return true;
+    }
+
     public UUID getPlayerId() {
         return playerId;
     }
@@ -87,5 +107,9 @@ public class PlayerStats implements Persistable<UUID> {
 
     public int getAcademicReputation() {
         return academicReputation;
+    }
+
+    public boolean isInitialIdTutorialPending() {
+        return initialIdTutorialPending;
     }
 }
