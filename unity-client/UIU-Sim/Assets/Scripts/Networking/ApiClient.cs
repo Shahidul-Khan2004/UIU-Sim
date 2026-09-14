@@ -46,6 +46,13 @@ namespace UIU.Simulator.Networking
             public string lastLogin;
             public int aura;
             public int academicReputation;
+            public bool initialIdTutorialPending;
+        }
+
+        [Serializable]
+        public class InitialIdTutorialConsumeResponseDto
+        {
+            public bool consumed;
         }
 
         [Serializable]

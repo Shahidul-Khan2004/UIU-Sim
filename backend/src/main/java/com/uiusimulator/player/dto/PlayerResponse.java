@@ -13,7 +13,8 @@ public record PlayerResponse(
         Instant createdAt,
         Instant lastLogin,
         int aura,
-        int academicReputation
+        int academicReputation,
+        boolean initialIdTutorialPending
 ) {
     public static PlayerResponse of(Player player, PlayerStats stats) {
         return new PlayerResponse(
@@ -24,7 +25,8 @@ public record PlayerResponse(
                 player.getCreatedAt(),
                 player.getLastLogin(),
                 stats.getAura(),
-                stats.getAcademicReputation()
+                stats.getAcademicReputation(),
+                stats.isInitialIdTutorialPending()
         );
     }
 }

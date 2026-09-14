@@ -1,5 +1,6 @@
 package com.uiusimulator.player.service;
 
+import com.uiusimulator.player.dto.InitialIdTutorialConsumeResponse;
 import com.uiusimulator.player.dto.PlayerStatsDeltaRequest;
 import com.uiusimulator.player.dto.PlayerStatsResponse;
 import com.uiusimulator.player.entity.Player;
@@ -85,5 +86,36 @@ public class PlayerStatsService {
         );
 
         return PlayerStatsResponse.from(saved);
+    }
+
+    /**
+     * Atomically consumes the one-time initial ID tutorial flag for the authenticated player.
+     * Uses the same pessimistic row lock pattern as stat mutations.
+     * Returns consumed=true only on the first successful consume; thereafter always false.
+     */
+    @Transactional
+    public InitialIdTutorialConsumeResponse consumeInitialIdTutorial(Jwt jwt) {
+        String clerkUserId = jwt.getSubject();
+        if (clerkUserId == null || clerkUserId.isBlank()) {
+            throw new IllegalArgumentException("JWT subject (Clerk user id) is missing");
+        }
+
+        Player player = playerService.getOrProvisionPlayer(jwt);
+        PlayerStats lockedStats = playerStatsRepository.findByPlayerIdWithLock(player.getId())
+                .orElseThrow(() -> {
+                    log.error("Data integrity error: player_stats missing for playerId={}, clerkUserId={}",
+                            player.getId(), clerkUserId);
+                    return new PlayerStatsNotFoundException(player.getId());
+                });
+
+        boolean consumed = lockedStats.consumeInitialIdTutorial();
+        if (consumed) {
+            playerStatsRepository.saveAndFlush(lockedStats);
+            log.info("Initial ID tutorial consumed for clerkUserId={}", clerkUserId);
+        } else {
+            log.debug("Initial ID tutorial already consumed for clerkUserId={}", clerkUserId);
+        }
+
+        return InitialIdTutorialConsumeResponse.of(consumed);
     }
 }

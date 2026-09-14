@@ -45,7 +45,8 @@ class AuthControllerTest {
                 now,
                 now,
                 50,
-                50
+                50,
+                true
         );
         when(authService.login(any(Jwt.class))).thenReturn(AuthLoginResponse.of(player));
 
