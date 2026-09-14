@@ -1,6 +1,6 @@
 ﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UIU.Simulator.Building.EditorTests.csproj" />
   <Project Path="UIU.Simulator.Building.Data.csproj" />
   <Project Path="Unity.ProBuilder.Examples.csproj" />
