@@ -1,5 +1,6 @@
 package com.uiusimulator.player.controller;
 
+import com.uiusimulator.player.dto.InitialIdTutorialConsumeResponse;
 import com.uiusimulator.player.dto.PlayerResponse;
 import com.uiusimulator.player.dto.PlayerStatsDeltaRequest;
 import com.uiusimulator.player.dto.PlayerStatsResponse;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,5 +40,12 @@ public class PlayerController {
             @Valid @RequestBody PlayerStatsDeltaRequest request
     ) {
         return ResponseEntity.ok(playerStatsService.applyStatDelta(jwt, request));
+    }
+
+    @PostMapping("/me/initial-id-tutorial/consume")
+    public ResponseEntity<InitialIdTutorialConsumeResponse> consumeInitialIdTutorial(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(playerStatsService.consumeInitialIdTutorial(jwt));
     }
 }

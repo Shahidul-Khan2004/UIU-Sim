@@ -8,11 +8,12 @@ namespace UIU.Simulator.Gameplay.Tests
 {
     /// <summary>
     /// Unit tests verifying the ID-card state machine rules across PlayerInventory and IDScanner:
-    /// 1. Guaranteed first permanent-ID scan failure (tutorial beat).
+    /// 1. Pending initial ID tutorial forces a one-time permanent-ID scan failure.
     /// 2. Persistent failure while HasIDProblem is true.
     /// 3. Reception-issued temporary ID resolution and card consumption.
     /// 4. Post-tutorial recurring 10% failure triggering new HasIDProblem state.
-    /// 5. Deterministic testability via configurable PermanentFailChance.
+    /// 5. Existing accounts (tutorial already consumed) skip forced failure and use percentage path.
+    /// 6. Deterministic testability via configurable PermanentFailChance.
     /// </summary>
     [TestFixture]
     public sealed class IDCardStateMachineTests
@@ -71,13 +72,27 @@ namespace UIU.Simulator.Gameplay.Tests
         }
 
         [Test]
-        public void FirstPermanentScan_AlwaysFails_TriggersInitialFailureAndIDProblem()
+        public void PendingTutorial_FirstPermanentScan_FailsAndTriggersIDProblem()
         {
             string message = idScanner.Interact();
 
             Assert.That(message, Is.EqualTo("You don't have an id card, go see the receptionist"));
             Assert.That(playerInventory.HasTriggeredInitialIDFailure, Is.True);
             Assert.That(playerInventory.HasIDProblem, Is.True);
+        }
+
+        [Test]
+        public void ExistingAccount_TutorialAlreadyConsumed_UsesPercentagePathImmediately()
+        {
+            // Simulate hydration of an existing account: tutorial already consumed on server.
+            playerInventory.SetTriggeredInitialIDFailure(true);
+            idScanner.PermanentFailChance = 0f;
+
+            string message = idScanner.Interact();
+
+            Assert.That(message, Is.EqualTo("Access granted. Welcome!"));
+            Assert.That(playerInventory.HasIDProblem, Is.False);
+            Assert.That(playerInventory.HasTriggeredInitialIDFailure, Is.True);
         }
 
         [Test]
@@ -201,7 +216,11 @@ namespace UIU.Simulator.Gameplay.Tests
                 tests.TearDown();
 
                 tests.SetUp();
-                tests.FirstPermanentScan_AlwaysFails_TriggersInitialFailureAndIDProblem();
+                tests.PendingTutorial_FirstPermanentScan_FailsAndTriggersIDProblem();
+                tests.TearDown();
+
+                tests.SetUp();
+                tests.ExistingAccount_TutorialAlreadyConsumed_UsesPercentagePathImmediately();
                 tests.TearDown();
 
                 tests.SetUp();
@@ -224,7 +243,7 @@ namespace UIU.Simulator.Gameplay.Tests
                 tests.PostTutorial_RecurringProblem_RecoversViaNewTemporaryID();
                 tests.TearDown();
 
-                Debug.Log("<color=green><b>[IDCardStateMachineTests] All 7 tests PASSED!</b></color>");
+                Debug.Log("<color=green><b>[IDCardStateMachineTests] All 8 tests PASSED!</b></color>");
             }
             catch (System.Exception ex)
             {
