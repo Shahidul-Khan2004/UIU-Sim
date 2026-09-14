@@ -4226,6 +4226,10 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (17)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3.110142
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
       value: 91.524
       objectReference: {fileID: 0}
@@ -4235,7 +4239,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -11.03
+      value: -10.966
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4268,8 +4272,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 47153230}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &47153229 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 47153228}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &47153230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47153229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &52069828
 Mesh:
   m_ObjectHideFlags: 0
@@ -7897,13 +7924,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 106327294}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &106327292 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2971204134639910594, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 106327291}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &106327293 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 106327291}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &106327294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 106327293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &109085448
 GameObject:
   m_ObjectHideFlags: 0
@@ -22077,6 +22127,10 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (5)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
       value: 111.18
       objectReference: {fileID: 0}
@@ -22086,7 +22140,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 107.251
+      value: 107.17
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -22119,8 +22173,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 313759743}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &313759742 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 313759741}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &313759743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313759742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &319542074
 GameObject:
   m_ObjectHideFlags: 0
@@ -25385,8 +25462,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (14)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 84.523
+      value: 84.47
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -25394,7 +25475,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -76.892
+      value: -76.89
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -25427,8 +25508,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 373030300}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &373030299 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 373030298}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &373030300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373030299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &377992054
 Mesh:
   m_ObjectHideFlags: 0
@@ -40953,8 +41057,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (10)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.25
+      value: 7.142
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -40962,7 +41070,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -52.58
+      value: -52.592
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -40995,8 +41103,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 597853785}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &597853784 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 597853783}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &597853785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 597853784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &599826086
 GameObject:
   m_ObjectHideFlags: 0
@@ -45999,11 +46130,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.993922
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -69.789
+      value: -69.87
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -46011,7 +46142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 127.071144
+      value: 127.065
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -46044,13 +46175,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 663437272}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &663437270 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 663437269}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &663437271 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 663437269}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &663437272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663437271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &665876340
 GameObject:
   m_ObjectHideFlags: 0
@@ -48556,8 +48710,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (13)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 84.56
+      value: 84.49
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -48565,7 +48723,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -70.318
+      value: -70.33
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -48598,8 +48756,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 687829415}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &687829414 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 687829413}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &687829415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 687829414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &688038781
 GameObject:
   m_ObjectHideFlags: 0
@@ -49121,7 +49302,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
       insertIndex: 2
       addedObject: {fileID: 688038782}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 703068539}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &703068536 stripped
 Transform:
@@ -49133,6 +49317,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 703068535}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &703068538 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 703068535}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &703068539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 703068538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &704016705
 GameObject:
   m_ObjectHideFlags: 0
@@ -53240,8 +53444,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (6)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -23.043
+      value: -23.1
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -53249,7 +53457,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -51.116
+      value: -51.11
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -53282,8 +53490,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 745757159}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &745757158 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 745757157}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &745757159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 745757158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &746307100
 Mesh:
   m_ObjectHideFlags: 0
@@ -55616,11 +55847,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.9937705
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -69.894
+      value: -69.939995
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -55628,11 +55859,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 129.42783
+      value: 129.43082
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.74660355
+      value: 0.75982654
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.x
@@ -55640,7 +55871,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.66526926
+      value: -0.6501259
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.z
@@ -55652,7 +55883,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -83.406
+      value: -81.102
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -55661,13 +55892,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 770666113}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &770666111 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 770666110}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &770666112 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 770666110}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &770666113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 770666112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &774040292
 Mesh:
   m_ObjectHideFlags: 0
@@ -64809,8 +65063,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 919461054}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+--- !u!1 &919461053 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 919461052}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &919461054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919461053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &926300726
 Mesh:
   m_ObjectHideFlags: 0
@@ -65400,8 +65677,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 948781425}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &948781424 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 948781423}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &948781425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 948781424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &950123202
 Mesh:
   m_ObjectHideFlags: 0
@@ -70195,7 +70495,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
       insertIndex: 2
       addedObject: {fileID: 1326839639}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1025251953}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1025251950 stripped
 Transform:
@@ -70207,6 +70510,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1025251949}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1025251952 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1025251949}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1025251953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1025251952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1030421980
 Mesh:
   m_ObjectHideFlags: 0
@@ -70982,13 +71305,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1033613419}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1033613417 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2971204134639910594, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1033613416}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1033613418 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1033613416}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1033613419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033613418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1001 &1037241031
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -71429,11 +71775,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.9937705
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -69.015
+      value: -69.05
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -71441,11 +71787,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -5.635
+      value: -5.634
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.74660355
+      value: 0.7710187
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.x
@@ -71453,7 +71799,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.66526926
+      value: -0.63681257
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.z
@@ -71465,7 +71811,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -83.406
+      value: -79.109
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -71474,13 +71820,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1046182629}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1046182627 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1046182626}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1046182628 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1046182626}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1046182629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046182628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1049519073
 Mesh:
   m_ObjectHideFlags: 0
@@ -72740,8 +73109,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (4)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 72.146
+      value: 72.24
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -72749,7 +73122,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 155.558
+      value: 155.55
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -72782,8 +73155,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1070016629}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1070016628 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1070016627}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1070016629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1070016628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1077581194
 Mesh:
   m_ObjectHideFlags: 0
@@ -72980,11 +73376,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.9941103
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.075
+      value: -5.970095
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -72992,11 +73388,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 131.47069
+      value: 131.48032
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.74553263
+      value: 0.7621392
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.x
@@ -73004,7 +73400,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.66646916
+      value: 0.6474133
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.z
@@ -73016,7 +73412,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 83.59
+      value: 80.694
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -73025,13 +73421,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1079293839}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1079293837 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1079293836}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1079293838 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1079293836}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1079293839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1079293838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1083643798
 Mesh:
   m_ObjectHideFlags: 0
@@ -73223,8 +73642,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (1)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 27.738
+      value: 27.75
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -73232,7 +73655,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 143.602
+      value: 143.6
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -73265,8 +73688,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1095302982}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1095302981 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1095302980}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1095302982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095302981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1097298475
 GameObject:
   m_ObjectHideFlags: 0
@@ -75292,13 +75738,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1116279789}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1116279787 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2971204134639910594, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1116279786}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1116279788 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1116279786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1116279789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116279788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1121351154
 Mesh:
   m_ObjectHideFlags: 0
@@ -75846,8 +76315,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (8)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -25.14
+      value: -25.23
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -75855,7 +76328,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -70.2
+      value: -70.19
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -75888,8 +76361,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1127131522}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1127131521 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1127131520}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1127131522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127131521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1131586232
 GameObject:
   m_ObjectHideFlags: 0
@@ -79823,7 +80319,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
       insertIndex: 2
       addedObject: {fileID: 112583922}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1204003825}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1204003822 stripped
 Transform:
@@ -79835,6 +80334,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1204003821}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1204003824 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1204003821}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1204003825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1204003824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1001 &1204474798
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -79848,8 +80367,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 27.733
+      value: 27.81
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -79857,7 +80380,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 150.129
+      value: 150.12
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -79890,8 +80413,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1204474800}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1204474799 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1204474798}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1204474800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1204474799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1208751607
 Mesh:
   m_ObjectHideFlags: 0
@@ -83583,13 +84129,36 @@ PrefabInstance:
     - {fileID: 9038466634078320202, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
     - {fileID: 7381848814069662274, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1250542989}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1250542987 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2971204134639910594, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1250542986}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1250542988 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1250542986}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1250542989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250542988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1252533044
 GameObject:
   m_ObjectHideFlags: 0
@@ -84854,8 +85423,12 @@ PrefabInstance:
       value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 69.31
+      value: 69.12
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -84863,7 +85436,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 128.571
+      value: 128.531
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -84896,13 +85469,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1278464008}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1278464006 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1278464005}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1278464007 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1278464005}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1278464008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1278464007}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1279250671
 GameObject:
   m_ObjectHideFlags: 0
@@ -88267,8 +88863,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (3)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 22.44
+      value: 22.42
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -88276,7 +88876,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 165.32
+      value: 165.49
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -88309,8 +88909,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1337703797}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1337703796 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1337703795}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1337703797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1337703796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1338920113
 Mesh:
   m_ObjectHideFlags: 0
@@ -90104,8 +90727,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (9)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -19.213
+      value: -19.19
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -90113,7 +90740,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -76.848
+      value: -76.85
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -90146,8 +90773,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1355610700}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1355610699 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1355610698}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1355610700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1355610699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1366777708
 Mesh:
   m_ObjectHideFlags: 0
@@ -93234,8 +93884,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (15)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 91.196
+      value: 91.28
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -93243,7 +93897,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -71.399
+      value: -71.39
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -93276,8 +93930,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1388272013}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1388272012 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1388272011}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1388272013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1388272012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1388537731
 GameObject:
   m_ObjectHideFlags: 0
@@ -96007,8 +96684,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1408328045}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+--- !u!1 &1408328044 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1408328043}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1408328045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408328044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1408804984
 GameObject:
   m_ObjectHideFlags: 0
@@ -99053,11 +99753,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.9931102
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -31.61
+      value: -31.63
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -99065,11 +99765,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 147.25844
+      value: 147.13
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.66302115
+      value: 0.63581043
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.x
@@ -99077,7 +99777,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.74860066
+      value: -0.7718453
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.z
@@ -99089,7 +99789,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -96.939
+      value: -101.04
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -99098,13 +99798,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1429500854}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1429500852 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1429500851}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1429500853 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1429500851}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1429500854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429500853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1429579132
 GameObject:
   m_ObjectHideFlags: 0
@@ -103076,8 +103799,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1477795787}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1477795786 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1477795785}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1477795787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477795786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1478263594
 Mesh:
   m_ObjectHideFlags: 0
@@ -110058,8 +110804,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (12)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 82.693
+      value: 82.525
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -110067,7 +110817,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -52.714
+      value: -52.732
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -110100,8 +110850,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1591801158}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1591801157 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1591801156}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1591801158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591801157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1594662618
 GameObject:
   m_ObjectHideFlags: 0
@@ -113664,13 +114437,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1638049412}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1638049410 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2971204134639910594, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1638049409}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1638049411 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1638049409}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1638049412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1638049411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &1639452887
 GameObject:
   m_ObjectHideFlags: 0
@@ -117479,7 +118275,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
       insertIndex: 1
       addedObject: {fileID: 1937572599}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1700820585}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &1700820582 stripped
 Transform:
@@ -117491,6 +118290,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 1700820581}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1700820584 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 1700820581}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1700820585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1700820584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1702841811
 Mesh:
   m_ObjectHideFlags: 0
@@ -126669,8 +127488,12 @@ PrefabInstance:
       value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 69.203
+      value: 69.13
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -126678,7 +127501,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 132.532
+      value: 132.524
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -126711,13 +127534,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1846992624}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1846992622 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1846992621}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1846992623 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1846992621}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1846992624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1846992623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1847899085
 Mesh:
   m_ObjectHideFlags: 0
@@ -133190,11 +134036,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.993922
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -68.907
+      value: -68.99
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -133202,7 +134048,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -8.11
+      value: -8.116
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -133235,13 +134081,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1951571849}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &1951571847 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 1951571846}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1951571848 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1951571846}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1951571849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951571848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &1952504830
 Mesh:
   m_ObjectHideFlags: 0
@@ -138738,8 +139607,12 @@ PrefabInstance:
       value: PF_UniversityDoor_MVP (11)
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 28.781
+      value: 28.83
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -138747,7 +139620,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -52.483
+      value: -52.49
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
@@ -138780,8 +139653,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1996383102}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+--- !u!1 &1996383101 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 1996383100}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1996383102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1996383101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!43 &2001397181
 Mesh:
   m_ObjectHideFlags: 0
@@ -146008,8 +146904,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2049116128}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+--- !u!1 &2049116127 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 2049116126}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2049116128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2049116127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &2057613465
 GameObject:
   m_ObjectHideFlags: 0
@@ -147331,7 +148250,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
       insertIndex: 2
       addedObject: {fileID: 561689881}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2073329747}
   m_SourcePrefab: {fileID: 100100000, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
 --- !u!4 &2073329744 stripped
 Transform:
@@ -147343,6 +148265,26 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9018650187726221812, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
   m_PrefabInstance: {fileID: 2073329743}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2073329746 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8676289568670189891, guid: 491c93b3c2ee4d617959ff0cf0f69f0b, type: 3}
+  m_PrefabInstance: {fileID: 2073329743}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2073329747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2073329746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &2077619880
 GameObject:
   m_ObjectHideFlags: 0
@@ -150209,11 +151151,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.99353755
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -8.675
+      value: -8.560057
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.y
@@ -150221,11 +151163,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 150.61833
+      value: 150.59879
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.6644643
+      value: 0.6430291
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.x
@@ -150233,7 +151175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.74732
+      value: 0.7658418
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalRotation.z
@@ -150245,7 +151187,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 96.718
+      value: 99.964
       objectReference: {fileID: 0}
     - target: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -150254,13 +151196,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2117979129}
   m_SourcePrefab: {fileID: 100100000, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
 --- !u!4 &2117979127 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6771323634351103018, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
   m_PrefabInstance: {fileID: 2117979126}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2117979128 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4492378205934916541, guid: 0afff0fe4157d4521b33ae37f6027a66, type: 3}
+  m_PrefabInstance: {fileID: 2117979126}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2117979129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117979128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0441b666977f40da8601af0be842026d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Doors.DoorTeleportInteractable
+  interactionPrompt: Use Door
+  exitDistance: 1.1
+  interactionCooldown: 0.3
 --- !u!1 &2119814715
 GameObject:
   m_ObjectHideFlags: 0
