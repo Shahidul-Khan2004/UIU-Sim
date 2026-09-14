@@ -1,0 +1,49 @@
+Unity Editor version:    6000.3.23f1 (09d2ecc7fb28)
+Branch:                  6000.3/staging
+Build type:              Release
+Batch mode:              YES
+System name:             Linux
+Distro version:          #31~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Aug 10 09:38:02 UTC 2
+Kernel version:          7.0.0-31-generic
+Architecture:            x86_64
+Available memory:        15910 MB
+Date:                    2026-09-13T18:54:48Z
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Initialize udev device monitor.
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-shahidul" at "2026-09-13T18:54:48.598112Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+
+COMMAND LINE ARGUMENTS:
+/home/shahidul/Unity/Hub/Editor/6000.3.23f1/Editor/Unity
+-batchmode
+-nographics
+-projectPath
+/mnt/shared/Code/UIU-Sim/unity-client/UIU-Sim
+-runTests
+-testPlatform
+EditMode
+-testFilter
+UIU.Simulator.Gameplay.Editor.Tests.PlayerMovementTests
+-testResults
+/mnt/shared/Code/UIU-Sim/unity-client/UIU-Sim/TestResults-PlayerMovement.xml
+-logFile
+/mnt/shared/Code/UIU-Sim/unity-client/UIU-Sim/PlayerMovement-Test.log
+Successfully changed project path to: /mnt/shared/Code/UIU-Sim/unity-client/UIU-Sim
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              aad93cffcb1e479da632e0e44d11070c
+  Correlation Id:          76b202aa7b8f4ae2a5f9c81f15c44009
+  External correlation Id: 2046732486637821946
+  Machine Id:              va3Y9/CI10SspB0G7H+TnZwkcOw=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-shahidul" (connect: 0.00s, validation: 0.01s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-shahidul-notifications" at "2026-09-13T18:54:48.60392Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 18968480021033-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+/mnt/shared/Code/UIU-Sim/unity-client/UIU-Sim
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Module] Licensing Background thread has ended after 0.01s

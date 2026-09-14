@@ -2,12 +2,15 @@
 
 ## `PlayerMovement.cs`
 
-Moves the persistent Main-scene player with Unity's `CharacterController` component.
+MVP first-person movement on Unity's `CharacterController` (kept; not Rigidbody).
 
-- `W`, `A`, `S`, and `D` move relative to the camera's horizontal direction.
-- `Space` jumps when the character is grounded.
-- Gravity is applied every frame.
-- The character turns smoothly toward its movement direction.
+- `W` / `A` / `S` / `D` move relative to player yaw (`transform.forward` / `transform.right` from `FirstPersonLook`).
+- Hold **Left Shift** to sprint; release to walk.
+- **Space** jumps with coyote time + jump buffer (reliable grounded jumps).
+- One `CharacterController.Move` per frame; explicit gravity and grounded stick velocity.
+- Modal UIs disable this component; elevator travel may disable the `CharacterController` temporarily.
+
+Tunable in the Inspector: walk/sprint speeds, accel/decel, jump height, gravity, coyote/buffer times.
 
 ### Attach it
 
@@ -29,7 +32,7 @@ The Main Camera is already configured in `UIU_Main.unity`.
 
 1. Open `Assets/Scenes/Main/UIU_Main.unity`.
 2. Enter Play mode; `GroundFloor` loads additively.
-3. Click the Game view if needed, then use WASD, mouse, and Space.
+3. Click the Game view if needed, then use WASD, mouse, Shift (sprint), and Space.
 
 The scripts use the installed Unity Input System package directly. Active Input Handling is already set to **Input System Package (New)**.
 
