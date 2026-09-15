@@ -283,6 +283,37 @@ namespace UIU.Simulator.Advisor.Tests
         }
 
         [Test]
+        public void ClassifyErrorMessage_401_ShowsSessionExpired()
+        {
+            string message = InvokeClassifyErrorMessage(401, "Authentication failed");
+            Assert.That(message, Is.EqualTo("Your session has expired. Please sign in again."));
+        }
+
+        [Test]
+        public void ClassifyErrorMessage_503_DoesNotClaimSessionExpired()
+        {
+            string message = InvokeClassifyErrorMessage(503, "Advisor unavailable");
+            Assert.That(message, Does.Not.Contain("session has expired"));
+            Assert.That(message, Is.EqualTo("Advisor is unavailable right now. Please try again."));
+        }
+
+        [Test]
+        public void ClassifyErrorMessage_TransportFailure_DoesNotClaimSessionExpired()
+        {
+            string message = InvokeClassifyErrorMessage(0, "Cannot connect to host");
+            Assert.That(message, Does.Not.Contain("session has expired"));
+        }
+
+        private static string InvokeClassifyErrorMessage(long code, string rawError)
+        {
+            MethodInfo method = typeof(AdvisorUI).GetMethod(
+                "ClassifyErrorMessage",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.That(method, Is.Not.Null, "ClassifyErrorMessage must exist on AdvisorUI.");
+            return (string)method.Invoke(null, new object[] { code, rawError });
+        }
+
+        [Test]
         public void Requirement8_AllFourQuickActions_UseSameSendPath_KeepModalOpen()
         {
             advisorUI.Show();
