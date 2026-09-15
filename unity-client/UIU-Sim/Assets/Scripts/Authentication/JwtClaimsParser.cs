@@ -12,10 +12,11 @@ namespace UIU.Simulator.Authentication
     {
         /// <summary>
         /// Allowed clock skew in seconds when checking JWT expiry.
-        /// Clerk tokens are short-lived (~60 s) so client clock drift can
-        /// cause false "JWT expired" errors without a tolerance window.
+        /// iat/exp are Unix timestamps in UTC seconds; compare only against UTC Unix time.
+        /// Keep this small so a valid one-hour game JWT is not treated as expired early,
+        /// and already-expired tokens are not given a long grace period.
         /// </summary>
-        private const long ClockSkewSeconds = 60;
+        public const long ClockSkewSeconds = 15;
 
         [Serializable]
         private class JwtPayload
@@ -24,15 +25,29 @@ namespace UIU.Simulator.Authentication
             public string email;
             public string username;
             public string preferred_username;
+            public long iat;
             public long exp;
             public string sid;
         }
 
         public static bool TryReadClaims(string jwt, out string subject, out string email, out string username, out long exp, out string sid)
         {
+            return TryReadClaims(jwt, out subject, out email, out username, out _, out exp, out sid);
+        }
+
+        public static bool TryReadClaims(
+            string jwt,
+            out string subject,
+            out string email,
+            out string username,
+            out long iat,
+            out long exp,
+            out string sid)
+        {
             subject = string.Empty;
             email = string.Empty;
             username = string.Empty;
+            iat = 0;
             exp = 0;
             sid = string.Empty;
 
@@ -59,6 +74,7 @@ namespace UIU.Simulator.Authentication
                 subject = payload.sub ?? string.Empty;
                 email = payload.email ?? string.Empty;
                 username = FirstNonEmpty(payload.username, payload.preferred_username, email, subject);
+                iat = payload.iat;
                 exp = payload.exp;
                 sid = payload.sid ?? string.Empty;
 
@@ -73,14 +89,37 @@ namespace UIU.Simulator.Authentication
 
         public static bool TryReadExpiration(string jwt, out long exp)
         {
+            return TryReadTiming(jwt, out _, out exp);
+        }
+
+        public static bool TryReadTiming(string jwt, out long iat, out long exp)
+        {
+            iat = 0;
             exp = 0;
-            if (TryReadClaims(jwt, out _, out _, out _, out long parsedExp, out _))
+            if (TryReadClaims(jwt, out _, out _, out _, out long parsedIat, out long parsedExp, out _))
             {
+                iat = parsedIat;
                 exp = parsedExp;
                 return exp > 0;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// True when the JWT <c>exp</c> claim is still in the future (UTC Unix seconds),
+        /// allowing a small clock-skew window. Does not invent extra lifetime.
+        /// </summary>
+        public static bool IsExpiredUtc(long expUnixSeconds, long clockSkewSeconds = ClockSkewSeconds)
+        {
+            if (expUnixSeconds <= 0)
+            {
+                return true;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long skew = clockSkewSeconds < 0 ? 0 : clockSkewSeconds;
+            return now >= (expUnixSeconds + skew);
         }
 
         public static bool TryRead(string jwt, out string subject, out string email, out string username, out bool expired)
@@ -93,8 +132,7 @@ namespace UIU.Simulator.Authentication
 
             if (exp > 0)
             {
-                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                expired = exp + ClockSkewSeconds < now;
+                expired = IsExpiredUtc(exp);
             }
 
             return true;

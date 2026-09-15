@@ -136,6 +136,10 @@ namespace UIU.Simulator.Authentication
                     {
                         authTokenProvider.Initialize(token, bridgeSessionId, refreshSecret);
                     }
+                    else
+                    {
+                        authTokenProvider?.HydrateAccessToken(token);
+                    }
                     HandleAuthCallbackToken(token);
                 },
                 onError: error =>
@@ -178,6 +182,7 @@ namespace UIU.Simulator.Authentication
 
             Debug.Log("[ClerkAuthManager] Auth callback token received");
             Session.ApplyToken(jwtToken);
+            authTokenProvider?.HydrateAccessToken(jwtToken);
             Session.SetAuthenticating();
 
             if (requireBackendValidation)

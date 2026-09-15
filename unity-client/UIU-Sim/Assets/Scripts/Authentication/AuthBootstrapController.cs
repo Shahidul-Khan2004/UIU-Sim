@@ -17,6 +17,7 @@ namespace UIU.Simulator.Authentication
 
             if (session.IsAuthenticated || session.TryRestoreAuthenticatedSession())
             {
+                host.TokenProvider?.HydrateAccessToken(session.JwtToken);
                 Debug.Log("[AuthBootstrap] Authenticated — loading Main.");
                 SceneManager.LoadScene(AuthSceneNames.Main);
                 return;

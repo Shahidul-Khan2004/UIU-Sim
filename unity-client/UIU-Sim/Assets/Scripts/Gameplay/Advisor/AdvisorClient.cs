@@ -67,19 +67,25 @@ namespace UIU.Simulator.Gameplay.Advisor
 
         private void EnsureApiClient()
         {
-            if (apiClient == null)
+            // Always bind to the persistent AuthHost client so Advisor never uses a
+            // stale/unauthenticated ApiClient after Play Mode restore or floor loads.
+            if (AuthHost.Instance != null && AuthHost.Instance.ApiClient != null)
             {
-                if (AuthHost.Instance != null)
+                apiClient = AuthHost.Instance.ApiClient;
+                return;
+            }
+
+            if (apiClient != null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                AuthHost host = AuthHost.EnsureExists();
+                if (host != null)
                 {
-                    apiClient = AuthHost.Instance.ApiClient;
-                }
-                else if (Application.isPlaying)
-                {
-                    AuthHost host = AuthHost.EnsureExists();
-                    if (host != null)
-                    {
-                        apiClient = host.ApiClient;
-                    }
+                    apiClient = host.ApiClient;
                 }
             }
         }

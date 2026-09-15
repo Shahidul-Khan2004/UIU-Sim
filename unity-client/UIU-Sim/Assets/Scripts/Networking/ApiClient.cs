@@ -402,7 +402,12 @@ namespace UIU.Simulator.Networking
             string effectiveToken = initialToken;
             Debug.Log($"[AuthDebug] ApiClient.ExecuteRequestWithAuthRetry start: clientID={this.GetInstanceID()}, action={actionDescription}, initialFp={AuthTokenProvider.Fingerprint(initialToken)}, providerNull={authTokenProvider == null}, providerDetails={(authTokenProvider != null ? authTokenProvider.DiagnosticSummary() : "null")}");
 
-            if (authTokenProvider != null && authTokenProvider.HasCredentials)
+            MaybeHydrateProvider(initialToken);
+
+            bool providerCanSupplyToken = authTokenProvider != null &&
+                (authTokenProvider.HasCredentials || authTokenProvider.HasAccessToken);
+
+            if (providerCanSupplyToken)
             {
                 string resolvedToken = null;
                 string resolveErr = null;
@@ -421,7 +426,19 @@ namespace UIU.Simulator.Networking
                     yield break;
                 }
             }
+
+            if (string.IsNullOrWhiteSpace(effectiveToken))
+            {
+                effectiveToken = ResolveSessionJwt();
+            }
+
             Debug.Log($"[AuthDebug] ApiClient.ExecuteRequestWithAuthRetry token resolved: effectiveFp={AuthTokenProvider.Fingerprint(effectiveToken)}");
+
+            if (string.IsNullOrWhiteSpace(effectiveToken))
+            {
+                onError?.Invoke("No authentication credentials available.", 401);
+                yield break;
+            }
 
             using (UnityWebRequest req = requestFactory(effectiveToken))
             {
@@ -508,6 +525,47 @@ namespace UIU.Simulator.Networking
             }
 
             return $"HTTP {(int)request.responseCode}";
+        }
+
+        private void MaybeHydrateProvider(string initialToken)
+        {
+            if (authTokenProvider == null || authTokenProvider.HasAccessToken)
+            {
+                return;
+            }
+
+            string candidate = initialToken;
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                candidate = ResolveSessionJwt();
+            }
+
+            if (!string.IsNullOrWhiteSpace(candidate))
+            {
+                authTokenProvider.HydrateAccessToken(candidate);
+            }
+        }
+
+        private static string ResolveSessionJwt()
+        {
+            if (AuthHost.Instance == null || AuthHost.Instance.AuthManager == null)
+            {
+                return null;
+            }
+
+            UserSession session = AuthHost.Instance.AuthManager.Session;
+            if (session == null || string.IsNullOrWhiteSpace(session.JwtToken))
+            {
+                return null;
+            }
+
+            if (JwtClaimsParser.TryReadTiming(session.JwtToken, out _, out long exp) &&
+                JwtClaimsParser.IsExpiredUtc(exp))
+            {
+                return null;
+            }
+
+            return session.JwtToken;
         }
     }
 }
