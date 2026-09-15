@@ -413,11 +413,49 @@ namespace UIU.Simulator.Gameplay.Advisor
             {
                 return "The advisor is busy right now. Please try again shortly.";
             }
-            if (code == 401)
+
+            if (IsUnrecoverableAuthFailure(code, rawError))
             {
                 return "Your session has expired. Please sign in again.";
             }
+
             return "Advisor is unavailable right now. Please try again.";
+        }
+
+        /// <summary>
+        /// Session-expired is shown only after ApiClient exhausted auth recovery
+        /// (one refresh + one retry) or no usable access token remains.
+        /// Transport/5xx/busy failures must not claim the session expired.
+        /// </summary>
+        private static bool IsUnrecoverableAuthFailure(long code, string rawError)
+        {
+            if (code != 401)
+            {
+                return false;
+            }
+
+            if (IsTransportFailure(rawError))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsTransportFailure(string rawError)
+        {
+            if (string.IsNullOrWhiteSpace(rawError))
+            {
+                return false;
+            }
+
+            string lower = rawError.ToLowerInvariant();
+            return lower.Contains("cannot connect")
+                || lower.Contains("timeout")
+                || lower.Contains("timed out")
+                || lower.Contains("resolution")
+                || lower.Contains("connection refused")
+                || lower.Contains("network");
         }
 
         // ── UI Construction ───────────────────────────────────────────────
