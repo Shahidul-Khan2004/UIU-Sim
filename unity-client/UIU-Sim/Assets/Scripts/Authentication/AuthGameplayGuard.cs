@@ -22,6 +22,7 @@ namespace UIU.Simulator.Authentication
 
             if (session.TryRestoreAuthenticatedSession())
             {
+                host.TokenProvider?.HydrateAccessToken(session.JwtToken);
                 return;
             }
 

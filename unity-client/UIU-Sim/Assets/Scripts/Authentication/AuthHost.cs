@@ -79,6 +79,57 @@ namespace UIU.Simulator.Authentication
 
             AuthManager.Configure(backendBaseUrl, ApiClient, CallbackHandler, restoreOnStart: false, requireBackendValidation, TokenProvider);
             TokenProvider.Configure(ApiClient, AuthManager.Session);
+            HookSessionHydration();
+        }
+
+        private bool sessionHydrationHooked;
+
+        private void HookSessionHydration()
+        {
+            if (AuthManager == null || TokenProvider == null)
+            {
+                return;
+            }
+
+            if (!sessionHydrationHooked)
+            {
+                AuthManager.SessionChanged += OnSessionChanged;
+                sessionHydrationHooked = true;
+            }
+
+            HydrateProviderFromSession(AuthManager.Session);
+        }
+
+        private void OnSessionChanged(UserSession session)
+        {
+            HydrateProviderFromSession(session);
+        }
+
+        private void HydrateProviderFromSession(UserSession session)
+        {
+            if (TokenProvider == null || session == null || !session.HasToken)
+            {
+                return;
+            }
+
+            if (!TokenProvider.HasAccessToken)
+            {
+                TokenProvider.HydrateAccessToken(session.JwtToken);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (sessionHydrationHooked && AuthManager != null)
+            {
+                AuthManager.SessionChanged -= OnSessionChanged;
+                sessionHydrationHooked = false;
+            }
+
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
     }
 }

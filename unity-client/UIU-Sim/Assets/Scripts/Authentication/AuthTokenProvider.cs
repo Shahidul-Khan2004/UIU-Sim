@@ -35,8 +35,10 @@ namespace UIU.Simulator.Authentication
         public string CurrentToken => currentJwtToken;
         public long CurrentExp => currentJwtExp;
 
+        public bool HasAccessToken => !string.IsNullOrWhiteSpace(currentJwtToken);
+
         public bool HasCredentials =>
-            !string.IsNullOrWhiteSpace(currentJwtToken) &&
+            HasAccessToken &&
             !string.IsNullOrWhiteSpace(currentRefreshSecret) &&
             !string.IsNullOrWhiteSpace(bridgeSessionId);
 
@@ -68,19 +70,31 @@ namespace UIU.Simulator.Authentication
             currentJwtToken = jwt ?? string.Empty;
             bridgeSessionId = bridgeId ?? string.Empty;
             currentRefreshSecret = refreshSecret ?? string.Empty;
-
-            if (JwtClaimsParser.TryReadExpiration(currentJwtToken, out long exp))
-            {
-                currentJwtExp = exp;
-                long remaining = currentJwtExp - DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                Debug.Log($"[AuthTokenProvider] Initialized token lifecycle. Token expires in ~{remaining}s. Refresh secret stored in-memory.");
-            }
-            else
-            {
-                currentJwtExp = 0;
-                Debug.LogWarning("[AuthTokenProvider] Initialized token without parseable expiration claim.");
-            }
+            ApplyParsedExpiration(currentJwtToken, "Initialized token lifecycle. Refresh secret stored in-memory.");
             Debug.Log($"[AuthDebug] AuthTokenProvider.Initialize: {DiagnosticSummary()}");
+        }
+
+        /// <summary>
+        /// Stores a still-valid access JWT without inventing refresh credentials.
+        /// Used when UserSession is restored from PlayerPrefs after Play Mode / scene restart.
+        /// Does not overwrite an existing refresh secret.
+        /// </summary>
+        public void HydrateAccessToken(string jwt)
+        {
+            if (string.IsNullOrWhiteSpace(jwt))
+            {
+                return;
+            }
+
+            if (!JwtClaimsParser.TryReadTiming(jwt, out _, out long exp) || JwtClaimsParser.IsExpiredUtc(exp))
+            {
+                Debug.LogWarning("[AuthTokenProvider] Refusing to hydrate an unreadable or expired access token.");
+                return;
+            }
+
+            currentJwtToken = jwt;
+            ApplyParsedExpiration(currentJwtToken, "Hydrated access token from restored session (no refresh secret).");
+            Debug.Log($"[AuthDebug] AuthTokenProvider.HydrateAccessToken: {DiagnosticSummary()}");
         }
 
         public void Clear()
@@ -115,15 +129,16 @@ namespace UIU.Simulator.Authentication
             Debug.Log($"[AuthDebug] AuthTokenProvider.GetValidTokenRoutine called: {DiagnosticSummary()}");
             if (!HasCredentials)
             {
-                // Fallback: If we have a JWT (e.g. restored from PlayerPrefs) but no refresh secret:
-                if (!string.IsNullOrWhiteSpace(currentJwtToken))
+                // Restored gameplay sessions keep the access JWT but not the in-memory refresh secret.
+                // Use the JWT until its actual exp claim; do not invent a 60s local timeout.
+                if (HasAccessToken && !JwtClaimsParser.IsExpiredUtc(currentJwtExp))
                 {
-                    if (!IsTokenExpiring(TokenExpiryBufferSeconds))
-                    {
-                        onTokenReady?.Invoke(currentJwtToken);
-                        yield break;
-                    }
+                    onTokenReady?.Invoke(currentJwtToken);
+                    yield break;
+                }
 
+                if (HasAccessToken)
+                {
                     onError?.Invoke("Session token has expired. Please sign in again.");
                     yield break;
                 }
@@ -241,17 +256,15 @@ namespace UIU.Simulator.Authentication
                 currentJwtToken = freshToken;
                 currentRefreshSecret = rotatedSecret; // Credential rotated! Old secret is invalidated.
 
-                if (JwtClaimsParser.TryReadExpiration(currentJwtToken, out long exp))
-                {
-                    currentJwtExp = exp;
-                }
-                else if (expiresIn > 0)
+                ApplyParsedExpiration(currentJwtToken, "Token refreshed and secret rotated successfully.");
+                if (currentJwtExp <= 0 && expiresIn > 0)
                 {
                     currentJwtExp = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + expiresIn;
+                    Debug.Log($"[AuthTokenProvider] Refreshed token exp claim missing; using expiresInSeconds metadata as fallback ({expiresIn}s).");
                 }
 
                 userSession?.ApplyToken(currentJwtToken);
-                Debug.Log($"[AuthTokenProvider] Token refreshed and secret rotated successfully. New exp in {currentJwtExp - DateTimeOffset.UtcNow.ToUnixTimeSeconds()}s.");
+                Debug.Log($"[AuthTokenProvider] Token refreshed. New remaining={currentJwtExp - DateTimeOffset.UtcNow.ToUnixTimeSeconds()}s.");
                 Debug.Log($"[AuthDebug] AuthTokenProvider.ExecuteRefreshRoutine success: {DiagnosticSummary()}");
 
                 isRefreshInFlight = false;
@@ -307,6 +320,23 @@ namespace UIU.Simulator.Authentication
                 {
                     Debug.LogError($"[AuthTokenProvider] Error in pending callback: {ex.Message}");
                 }
+            }
+        }
+
+        private void ApplyParsedExpiration(string jwt, string logMessage)
+        {
+            if (JwtClaimsParser.TryReadTiming(jwt, out long iat, out long exp))
+            {
+                currentJwtExp = exp;
+                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                long duration = (iat > 0 && exp > iat) ? (exp - iat) : 0;
+                long remaining = exp - now;
+                Debug.Log($"[AuthTokenProvider] {logMessage} iat={iat} exp={exp} now={now} duration={duration}s remaining={remaining}s.");
+            }
+            else
+            {
+                currentJwtExp = 0;
+                Debug.LogWarning("[AuthTokenProvider] Token without parseable iat/exp claims.");
             }
         }
 
