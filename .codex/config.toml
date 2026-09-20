@@ -1,0 +1,5 @@
+[mcp_servers.clerk]
+url = "https://mcp.clerk.com/mcp"
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp"
