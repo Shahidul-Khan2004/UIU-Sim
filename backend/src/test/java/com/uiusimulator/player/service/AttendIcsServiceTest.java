@@ -214,7 +214,7 @@ class AttendIcsServiceTest {
                     assertThat(a.outcome()).isEqualTo("COMPLETED");
                     assertThat(a.academicReputationDelta()).isEqualTo(12);
                 });
-        assertThat(summary.academicReputation()).isEqualTo(62);
+        assertThat(summary.academicReputation()).isEqualTo(52);
     }
 
     @Test
@@ -303,7 +303,7 @@ class AttendIcsServiceTest {
                 });
         assertThat(first.aura()).isEqualTo(50); // breakfast also auto-missed −5 → 50? wait 55-5=50
         assertThat(second.aura()).isEqualTo(first.aura());
-        assertThat(second.academicReputation()).isEqualTo(50);
+        assertThat(second.academicReputation()).isEqualTo(40);
     }
 
     @Test
@@ -322,7 +322,7 @@ class AttendIcsServiceTest {
                     assertThat(a.academicReputationDelta()).isEqualTo(-5);
                     assertThat(a.auraDelta()).isEqualTo(0);
                 });
-        assertThat(summary.academicReputation()).isEqualTo(45);
+        assertThat(summary.academicReputation()).isEqualTo(35);
     }
 
     @Test
@@ -340,8 +340,8 @@ class AttendIcsServiceTest {
                 .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
                 .first()
                 .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(3));
-        assertThat(first.academicReputation()).isEqualTo(53);
-        assertThat(second.academicReputation()).isEqualTo(53);
+        assertThat(first.academicReputation()).isEqualTo(43);
+        assertThat(second.academicReputation()).isEqualTo(43);
     }
 
     @Test
@@ -373,7 +373,7 @@ class AttendIcsServiceTest {
                 .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
                 .first()
                 .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(-1));
-        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-1);
+        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-11);
     }
 
     @Test
@@ -474,18 +474,247 @@ class AttendIcsServiceTest {
         ).orElseThrow().getOutcome()).isEqualTo("COMPLETED");
     }
 
+    @Test
+    void englishAndDm_completeIndependently_andDoNotShareMilestones() {
+        Jwt jwt = jwtWith("classrooms_independent");
+        createCseStudent(jwt);
+
+        attendIcsService.startLecture(jwt, "ATTEND_ENGLISH");
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+        mutableClock.advanceSeconds(30);
+        attendIcsService.claimMilestone(jwt, "ATTEND_ENGLISH", new AttendIcsMilestoneRequest(30));
+
+        var playerId = playerRepository.findByClerkUserId("classrooms_independent").orElseThrow().getId();
+        var english = playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ENGLISH").orElseThrow();
+        var dm = playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow();
+
+        assertThat(english.getMilestoneSeconds()).isEqualTo(30);
+        assertThat(english.getReputationDelta()).isEqualTo(4);
+        assertThat(dm.getMilestoneSeconds()).isEqualTo(0);
+        assertThat(dm.getReputationDelta()).isEqualTo(0);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ICS")).isEmpty();
+
+        claimThrough(jwt, "ATTEND_DM", 90);
+        claimThrough(jwt, "ATTEND_ENGLISH", 90);
+
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ENGLISH").orElseThrow()
+                .getReputationDelta()).isEqualTo(12);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow()
+                .getOutcome()).isEqualTo("COMPLETED");
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(74);
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAura()).isEqualTo(50);
+    }
+
+    @Test
+    void proxyEnglish_doesNotResolveDm_andCannotBeRepeated() {
+        Jwt jwt = jwtWith("classrooms_proxy");
+        createCseStudent(jwt);
+
+        AttendIcsSessionResponse first = attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH");
+        AttendIcsSessionResponse second = attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH");
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+
+        assertThat(first.outcome()).isEqualTo("PROXY");
+        assertThat(first.auraDelta()).isEqualTo(5);
+        assertThat(first.reputationDelta()).isEqualTo(0);
+        assertThat(second.alreadyApplied()).isTrue();
+        assertThat(second.aura()).isEqualTo(55);
+
+        var playerId = playerRepository.findByClerkUserId("classrooms_proxy").orElseThrow().getId();
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow()
+                .getOutcome()).isEqualTo("ATTENDING");
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ICS")).isEmpty();
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_ENGLISH".equals(a.activityId()))
+                .first()
+                .satisfies(a -> {
+                    assertThat(a.outcome()).isEqualTo("PROXY");
+                    assertThat(a.academicReputationDelta()).isEqualTo(0);
+                    assertThat(a.auraDelta()).isEqualTo(5);
+                });
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_DM".equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.outcome()).isEqualTo("LEFT_EARLY"));
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_ICS".equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.outcome()).isEqualTo("SKIPPED"));
+
+        int reputation = summary.academicReputation();
+        assertThat(playerDayService.finalizeCurrentDay(jwt).academicReputation()).isEqualTo(reputation);
+    }
+
+    @Test
+    void skipOnlyUnresolvedCourse_whenOthersAreComplete() {
+        Jwt jwt = jwtWith("classrooms_skip_one");
+        createCseStudent(jwt);
+        attendIcsService.startLecture(jwt);
+        claimThrough(jwt, 90);
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+        claimThrough(jwt, "ATTEND_DM", 90);
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_ICS".equals(a.activityId()))
+                .first()
+                .satisfies(a -> {
+                    assertThat(a.outcome()).isEqualTo("COMPLETED");
+                    assertThat(a.academicReputationDelta()).isEqualTo(12);
+                });
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_DM".equals(a.activityId()))
+                .first()
+                .satisfies(a -> {
+                    assertThat(a.outcome()).isEqualTo("COMPLETED");
+                    assertThat(a.academicReputationDelta()).isEqualTo(12);
+                });
+        assertThat(summary.activities())
+                .filteredOn(a -> "ATTEND_ENGLISH".equals(a.activityId()))
+                .first()
+                .satisfies(a -> {
+                    assertThat(a.outcome()).isEqualTo("SKIPPED");
+                    assertThat(a.academicReputationDelta()).isEqualTo(-5);
+                });
+        assertThat(summary.academicReputation()).isEqualTo(69);
+        assertThat(playerDayService.finalizeCurrentDay(jwt).academicReputation()).isEqualTo(69);
+    }
+
+    @Test
+    void earlyLeave_isOncePerCourse() {
+        Jwt jwt = jwtWith("classrooms_leave");
+        createCseStudent(jwt);
+        attendIcsService.startLecture(jwt, "ATTEND_ENGLISH");
+        mutableClock.advanceSeconds(30);
+        attendIcsService.claimMilestone(jwt, "ATTEND_ENGLISH", new AttendIcsMilestoneRequest(30));
+        AttendIcsSessionResponse left = attendIcsService.leaveEarly(jwt, "ATTEND_ENGLISH");
+        AttendIcsSessionResponse again = attendIcsService.leaveEarly(jwt, "ATTEND_ENGLISH");
+
+        assertThat(left.outcome()).isEqualTo("LEFT_EARLY");
+        assertThat(left.reputationDelta()).isEqualTo(-1);
+        assertThat(again.alreadyApplied()).isTrue();
+
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+        AttendIcsSessionResponse dmLeave = attendIcsService.leaveEarly(jwt, "ATTEND_DM");
+        assertThat(dmLeave.reputationDelta()).isEqualTo(-5);
+
+        var playerId = playerRepository.findByClerkUserId("classrooms_leave").orElseThrow().getId();
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(44);
+    }
+
+    @Test
+    void bbaAndFaculty_cannotReceiveCseClassroomRewards() {
+        Jwt bba = jwtWith("classrooms_bba");
+        playerSaveService.createSave(
+                bba,
+                new PlayerSaveCreateRequest(PlayerRole.STUDENT, "BBA Student", bbaDepartment().getId(), "22110001")
+        );
+        assertThatThrownBy(() -> attendIcsService.startLecture(bba, "ATTEND_ENGLISH"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSE students");
+        assertThatThrownBy(() -> attendIcsService.punchProxy(bba, "ATTEND_DM"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSE students");
+
+        Jwt faculty = jwtWith("classrooms_faculty");
+        playerSaveService.createSave(
+                faculty,
+                new PlayerSaveCreateRequest(PlayerRole.FACULTY, "Faculty", cse.getId(), "F22110001")
+        );
+        assertThatThrownBy(() -> attendIcsService.claimMilestone(
+                faculty,
+                "ATTEND_DM",
+                new AttendIcsMilestoneRequest(30)
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSE students");
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(bba);
+        assertThat(summary.activities())
+                .filteredOn(a -> a.activityId().startsWith("ATTEND_"))
+                .isEmpty();
+        assertThat(summary.academicReputation()).isEqualTo(50);
+    }
+
+    @Test
+    void unknownActivity_cannotMintReputation() {
+        Jwt jwt = jwtWith("classrooms_unknown");
+        createCseStudent(jwt);
+
+        assertThatThrownBy(() -> attendIcsService.startLecture(jwt, "ATTEND_CLASS"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unknown classroom activity");
+        assertThatThrownBy(() -> attendIcsService.claimMilestone(
+                jwt,
+                "ATTEND_WHATEVER",
+                new AttendIcsMilestoneRequest(30)
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(playerStatsRepository.findByPlayerId(
+                playerRepository.findByClerkUserId("classrooms_unknown").orElseThrow().getId()
+        ).orElseThrow().getAcademicReputation()).isEqualTo(50);
+    }
+
+    @Test
+    void day2_doesNotPenalizeUnscheduledClassrooms() {
+        Jwt jwt = jwtWith("classrooms_day2");
+        createCseStudent(jwt);
+        playerActivityService.resolveActivity(
+                jwt,
+                new com.uiusimulator.player.dto.ActivityResolveRequest("BREAKFAST", "RICE")
+        );
+        attendIcsService.punchProxy(jwt);
+        attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH");
+        attendIcsService.punchProxy(jwt, "ATTEND_DM");
+        playerDayService.finalizeCurrentDay(jwt);
+        playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1));
+
+        DayFinalizeResponse day2 = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(day2.day()).isEqualTo(2);
+        assertThat(day2.activities())
+                .filteredOn(a -> a.activityId().startsWith("ATTEND_"))
+                .isEmpty();
+    }
+
+    @Test
+    void duplicateMilestone_cannotFarmEnglish() {
+        Jwt jwt = jwtWith("classrooms_farm");
+        createCseStudent(jwt);
+        attendIcsService.startLecture(jwt, "ATTEND_ENGLISH");
+        mutableClock.advanceSeconds(30);
+
+        AttendIcsSessionResponse first = attendIcsService.claimMilestone(
+                jwt, "ATTEND_ENGLISH", new AttendIcsMilestoneRequest(30));
+        AttendIcsSessionResponse second = attendIcsService.claimMilestone(
+                jwt, "ATTEND_ENGLISH", new AttendIcsMilestoneRequest(30));
+
+        assertThat(first.alreadyApplied()).isFalse();
+        assertThat(second.alreadyApplied()).isTrue();
+        assertThat(second.academicReputation()).isEqualTo(54);
+    }
+
+    private Department bbaDepartment() {
+        return bba;
+    }
+
     private void claimThrough(Jwt jwt, int targetMilestone) {
+        claimThrough(jwt, AttendIcsDefinition.ACTIVITY_ID, targetMilestone);
+    }
+
+    private void claimThrough(Jwt jwt, String activityId, int targetMilestone) {
         if (targetMilestone >= 30) {
             mutableClock.advanceSeconds(30);
-            attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(30));
+            attendIcsService.claimMilestone(jwt, activityId, new AttendIcsMilestoneRequest(30));
         }
         if (targetMilestone >= 60) {
             mutableClock.advanceSeconds(30);
-            attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(60));
+            attendIcsService.claimMilestone(jwt, activityId, new AttendIcsMilestoneRequest(60));
         }
         if (targetMilestone >= 90) {
             mutableClock.advanceSeconds(30);
-            attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(90));
+            attendIcsService.claimMilestone(jwt, activityId, new AttendIcsMilestoneRequest(90));
         }
     }
 
