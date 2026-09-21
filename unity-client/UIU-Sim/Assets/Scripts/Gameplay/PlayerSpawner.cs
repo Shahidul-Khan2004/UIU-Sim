@@ -55,7 +55,8 @@ public sealed class PlayerSpawner : MonoBehaviour
     /// <summary>
     /// Moves the existing player to the primary outdoor <see cref="PlayerSpawnPoint"/>
     /// (GroundFloor). Does not instantiate a second player or touch save/stats/ID ownership.
-    /// Ensures GroundFloor is loaded before reading its spawn transform.
+    /// Ensures GroundFloor is loaded, teleports, then unloads other gameplay floors via
+    /// <see cref="FloorSceneLoader"/> (same ownership rules as elevator/stair travel).
     /// </summary>
     public IEnumerator RespawnExistingPlayerAtPrimarySpawnRoutine(
         Action onComplete = null,
@@ -110,6 +111,9 @@ public sealed class PlayerSpawner : MonoBehaviour
 
         spawnedPlayer = player.gameObject;
 
+        // Player must not remain owned by a floor scene that is about to unload.
+        EnsurePlayerInPersistentScene(player.gameObject);
+
         PlayerSpawnPoint spawnPoint = FindSpawnPoint(groundScene);
         Vector3 position;
         Quaternion rotation;
@@ -133,10 +137,51 @@ public sealed class PlayerSpawner : MonoBehaviour
         if (loader != null)
         {
             loader.CurrentFloorNumber = 0;
+
+            bool unloadFailed = false;
+            string unloadError = null;
+            yield return loader.UnloadOtherGameplayFloorsRoutine(
+                keepFloorNumber: 0,
+                onComplete: null,
+                onError: err =>
+                {
+                    unloadFailed = true;
+                    unloadError = err;
+                });
+
+            if (unloadFailed)
+            {
+                string error = unloadError
+                    ?? "Day advanced and player respawned, but previous floor scenes could not be unloaded.";
+                Debug.LogError($"[PlayerSpawner] {error}", this);
+                onError?.Invoke(error);
+                yield break;
+            }
         }
 
         Debug.Log($"[PlayerSpawner] Respawned existing player at primary spawn in '{groundScene.name}'.");
         onComplete?.Invoke();
+    }
+
+    private void EnsurePlayerInPersistentScene(GameObject playerObject)
+    {
+        if (playerObject == null)
+        {
+            return;
+        }
+
+        Scene persistentScene = gameObject.scene;
+        if (!persistentScene.IsValid() || !persistentScene.isLoaded)
+        {
+            return;
+        }
+
+        if (playerObject.scene == persistentScene)
+        {
+            return;
+        }
+
+        SceneManager.MoveGameObjectToScene(playerObject, persistentScene);
     }
 
     /// <summary>EditMode/test seam: teleport without scene loading.</summary>

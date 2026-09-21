@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using TMPro;
+using UIU.Simulator.Building.Generation;
 using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
@@ -382,6 +385,90 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             {
                 Object.DestroyImmediate(spawnGo);
             }
+        }
+
+        [Test]
+        public void NextDayCleanup_UnloadsFloor04_WhenKeepingGroundFloor()
+        {
+            var loaded = new HashSet<int> { 0, 4 };
+            var toUnload = new List<int>();
+
+            FloorSceneLoader.CollectOtherLoadedGameplayFloorNumbers(
+                keepFloorNumber: 0,
+                isFloorLoaded: floor => loaded.Contains(floor),
+                results: toUnload);
+
+            Assert.That(toUnload, Is.EqualTo(new[] { 4 }));
+            Assert.That(FloorSceneLoader.GetDefaultFloorSceneName(4), Is.EqualTo("Floor04"));
+        }
+
+        [Test]
+        public void NextDayCleanup_UnloadsFloor07_WhenKeepingGroundFloor()
+        {
+            var loaded = new HashSet<int> { 0, 7 };
+            var toUnload = new List<int>();
+
+            FloorSceneLoader.CollectOtherLoadedGameplayFloorNumbers(
+                keepFloorNumber: 0,
+                isFloorLoaded: floor => loaded.Contains(floor),
+                results: toUnload);
+
+            Assert.That(toUnload, Is.EqualTo(new[] { 7 }));
+            Assert.That(FloorSceneLoader.GetDefaultFloorSceneName(7), Is.EqualTo("Floor07"));
+        }
+
+        [Test]
+        public void NextDayCleanup_GroundFloorOnly_DoesNotScheduleUnloadOrReload()
+        {
+            var loaded = new HashSet<int> { 0 };
+            var toUnload = new List<int>();
+
+            FloorSceneLoader.CollectOtherLoadedGameplayFloorNumbers(
+                keepFloorNumber: 0,
+                isFloorLoaded: floor => loaded.Contains(floor),
+                results: toUnload);
+
+            Assert.That(toUnload, Is.Empty,
+                "Already on GroundFloor: no other gameplay floors should be unloaded or reloaded.");
+        }
+
+        [Test]
+        public void NextDayCleanup_UnloadsOnlyKnownGameplayFloors_NotSupportScenes()
+        {
+            // Simulate Floor04 + Floor07 loaded; UIU_Main / auth are not in the 0..10 map.
+            var loaded = new HashSet<int> { 4, 7 };
+            var toUnload = new List<int>();
+
+            FloorSceneLoader.CollectOtherLoadedGameplayFloorNumbers(
+                keepFloorNumber: 0,
+                isFloorLoaded: floor => loaded.Contains(floor),
+                results: toUnload);
+
+            Assert.That(toUnload, Is.EquivalentTo(new[] { 4, 7 }));
+            Assert.That(toUnload, Does.Not.Contain(0));
+        }
+
+        [Test]
+        public void NextDayCleanup_UsesFloorSceneLoaderUnloadOtherGameplayFloorsRoutine()
+        {
+            MethodInfo unloadMethod = typeof(FloorSceneLoader).GetMethod(
+                "UnloadOtherGameplayFloorsRoutine",
+                new[]
+                {
+                    typeof(int),
+                    typeof(System.Action),
+                    typeof(System.Action<string>)
+                });
+
+            Assert.That(
+                unloadMethod,
+                Is.Not.Null,
+                "Next Day must unload via FloorSceneLoader.UnloadOtherGameplayFloorsRoutine.");
+
+            MethodInfo respawnMethod = typeof(PlayerSpawner).GetMethod(
+                "RespawnExistingPlayerAtPrimarySpawnRoutine",
+                new[] { typeof(System.Action), typeof(System.Action<string>) });
+            Assert.That(respawnMethod, Is.Not.Null);
         }
 
         [Test]
