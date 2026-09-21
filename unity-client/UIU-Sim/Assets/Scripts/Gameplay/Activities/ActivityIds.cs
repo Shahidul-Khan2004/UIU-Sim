@@ -4,5 +4,6 @@ namespace UIU.Simulator.Gameplay.Activities
     public static class ActivityIds
     {
         public const string Breakfast = "BREAKFAST";
+        public const string GetIdCard = "GET_ID_CARD";
     }
 }

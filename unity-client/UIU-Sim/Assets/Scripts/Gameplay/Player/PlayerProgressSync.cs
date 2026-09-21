@@ -226,17 +226,17 @@ namespace UIU.Simulator.Gameplay.Player
             }
 
             bool breakfastFound = false;
+            bool getIdCardFound = false;
             if (dto.activities != null)
             {
                 for (int i = 0; i < dto.activities.Length; i++)
                 {
                     ApiClient.ActivityStateDto activity = dto.activities[i];
-                    if (activity == null || activity.activityId != ActivityIds.Breakfast)
+                    if (activity == null || string.IsNullOrWhiteSpace(activity.activityId))
                     {
                         continue;
                     }
 
-                    breakfastFound = true;
                     ActivityStatus status = ParseActivityStatus(activity.status);
                     ActivityRecord record = new ActivityRecord(
                         activity.activityId,
@@ -246,6 +246,19 @@ namespace UIU.Simulator.Gameplay.Player
                         activity.reputationDelta,
                         activity.dayNumber > 0 ? activity.dayNumber : dto.dayNumber);
 
+                    if (activity.activityId == ActivityIds.GetIdCard)
+                    {
+                        getIdCardFound = true;
+                        dailyActivityState?.ApplyServerActivity(record);
+                        continue;
+                    }
+
+                    if (activity.activityId != ActivityIds.Breakfast)
+                    {
+                        continue;
+                    }
+
+                    breakfastFound = true;
                     dailyActivityState?.ApplyServerActivity(record);
                     if (record.IsResolved)
                     {
@@ -256,14 +269,16 @@ namespace UIU.Simulator.Gameplay.Player
 
             if (!breakfastFound && dailyActivityState != null && dto.dayNumber > 0)
             {
-                // Explicit pending for the current journey day.
+                // Explicit pending for the current journey day (preserves GET_ID_CARD).
                 if (dailyActivityState.BreakfastStatus != ActivityStatus.Pending)
                 {
                     dailyActivityState.ResetForNewDay(dto.dayNumber);
                 }
             }
 
-            Debug.Log($"[PlayerProgressSync] Hydrated activities for day={dto.dayNumber}, breakfastResolved={breakfastFound}");
+            Debug.Log(
+                $"[PlayerProgressSync] Hydrated activities for day={dto.dayNumber}, " +
+                $"getIdCardResolved={getIdCardFound}, breakfastResolved={breakfastFound}");
         }
 
         /// <summary>
@@ -476,7 +491,7 @@ namespace UIU.Simulator.Gameplay.Player
                             response.dayNumber);
 
                         dailyActivityState?.ApplyServerActivity(record);
-                        if (record.IsResolved)
+                        if (record.IsResolved && record.ActivityId == ActivityIds.Breakfast)
                         {
                             campusDayState?.CompleteBreakfastEvent();
                         }

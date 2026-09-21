@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UIU.Simulator.Authentication;
 using UIU.Simulator.Core;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
@@ -596,6 +597,9 @@ namespace UIU.Simulator.UI
                 newGameRoutine = null;
                 yield break;
             }
+
+            DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
+            activityState?.ResetForNewGame();
 
             isNavigating = true;
             AuthUiUtility.ShowUiCursor();

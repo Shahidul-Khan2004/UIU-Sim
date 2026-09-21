@@ -8,7 +8,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Minimal screen-space HUD displaying the player's Aura, Academic Reputation,
-/// and stacked objectives (ID card first, then breakfast).
+/// and stacked objectives driven by <see cref="DailyActivityState"/>
+/// (GET_ID_CARD first, then BREAKFAST).
 /// Built at runtime — no canvas prefab required.
 /// Attach to the Player prefab root alongside <see cref="PlayerStats"/>.
 /// </summary>
@@ -30,7 +31,7 @@ public sealed class StatsHUD : MonoBehaviour
     [SerializeField] private string idCardObjectiveTitle = "Get Your ID Card";
 
     [SerializeField, TextArea]
-    private string idCardObjectiveDescription = "Talk to the receptionist to take your ID card.";
+    private string idCardObjectiveDescription = "Visit the receptionist to receive your university ID card.";
 
     [Header("Objective Copy — Breakfast")]
     [SerializeField] private string breakfastObjectiveTitle = "Have Breakfast";
@@ -47,7 +48,6 @@ public sealed class StatsHUD : MonoBehaviour
 
     private PlayerStats playerStats;
     private DailyActivityState dailyActivityState;
-    private PlayerSaveState playerSaveState;
 
     private GameObject panelRoot;
     private TextMeshProUGUI auraText;
@@ -93,8 +93,6 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState = FindFirstObjectByType<DailyActivityState>();
         }
 
-        BindSaveState();
-
         if (playerStats != null)
         {
             lastAura = playerStats.Aura;
@@ -109,6 +107,7 @@ public sealed class StatsHUD : MonoBehaviour
 
         if (dailyActivityState != null)
         {
+            dailyActivityState.OnGetIdCardStatusChanged += RefreshObjectiveDisplay;
             dailyActivityState.OnBreakfastStatusChanged += RefreshObjectiveDisplay;
             dailyActivityState.OnActivitiesReset += RefreshObjectiveDisplay;
         }
@@ -126,44 +125,12 @@ public sealed class StatsHUD : MonoBehaviour
 
         if (dailyActivityState != null)
         {
+            dailyActivityState.OnGetIdCardStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnBreakfastStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnActivitiesReset -= RefreshObjectiveDisplay;
         }
 
-        UnbindSaveState();
         StopAllFeedback();
-    }
-
-    private void BindSaveState()
-    {
-        UnbindSaveState();
-
-        playerSaveState = PlayerSaveState.Instance != null
-            ? PlayerSaveState.Instance
-            : FindFirstObjectByType<PlayerSaveState>();
-
-        if (playerSaveState == null)
-        {
-            playerSaveState = PlayerSaveState.EnsureExists();
-        }
-
-        if (playerSaveState != null)
-        {
-            playerSaveState.OnHydrated += RefreshObjectiveDisplay;
-            playerSaveState.OnAdmissionCompleted += RefreshObjectiveDisplay;
-        }
-    }
-
-    private void UnbindSaveState()
-    {
-        if (playerSaveState == null)
-        {
-            return;
-        }
-
-        playerSaveState.OnHydrated -= RefreshObjectiveDisplay;
-        playerSaveState.OnAdmissionCompleted -= RefreshObjectiveDisplay;
-        playerSaveState = null;
     }
 
     private void HandleAuraUpdated(float newAura, StatUpdateSource source)
@@ -213,16 +180,23 @@ public sealed class StatsHUD : MonoBehaviour
             return;
         }
 
-        bool idPending = IsIdCardObjectivePending();
+        string idTitle = dailyActivityState != null ? dailyActivityState.GetIdCardTitle : idCardObjectiveTitle;
+        string idDescription = dailyActivityState != null
+            ? dailyActivityState.GetIdCardDescription
+            : idCardObjectiveDescription;
+        ActivityStatus idStatus = dailyActivityState != null
+            ? dailyActivityState.GetIdCardStatus
+            : ActivityStatus.Pending;
+
         ApplyObjectiveVisual(
-            idPending ? ActivityStatus.Pending : ActivityStatus.Completed,
-            idCardObjectiveTitle,
-            idCardObjectiveDescription,
+            idStatus,
+            idTitle,
+            idDescription,
             idMarkerText,
             idTitleText,
             idDescriptionText);
 
-        bool showBreakfast = !idPending;
+        bool showBreakfast = idStatus != ActivityStatus.Pending;
         if (breakfastObjectiveRoot != null)
         {
             breakfastObjectiveRoot.SetActive(showBreakfast);
@@ -248,23 +222,6 @@ public sealed class StatsHUD : MonoBehaviour
             breakfastMarkerText,
             breakfastTitleText,
             breakfastDescriptionText);
-    }
-
-    private bool IsIdCardObjectivePending()
-    {
-        if (playerSaveState == null)
-        {
-            playerSaveState = PlayerSaveState.Instance != null
-                ? PlayerSaveState.Instance
-                : FindFirstObjectByType<PlayerSaveState>();
-        }
-
-        if (playerSaveState == null || !playerSaveState.IsHydrated)
-        {
-            return true;
-        }
-
-        return playerSaveState.NeedsAdmission;
     }
 
     private static void ApplyObjectiveVisual(

@@ -109,7 +109,10 @@ namespace UIU.Simulator.Gameplay.Tests
                     1);
 
                 activityState?.ApplyServerActivity(record);
-                dayState?.CompleteBreakfastEvent();
+                if (record.IsResolved && activityId == ActivityIds.Breakfast)
+                {
+                    dayState?.CompleteBreakfastEvent();
+                }
                 stats?.ApplyServerState(newAura, reputation, StatUpdateSource.GameplayMutation);
 
                 onSuccess?.Invoke(new ActivityResolveResult(record, false, newAura, reputation));
@@ -293,6 +296,61 @@ namespace UIU.Simulator.Gameplay.Tests
             Assert.That(playerMovement.enabled, Is.True);
             Assert.That(firstPersonLook.enabled, Is.True);
             Assert.That(CanteenQueueUI.IsOpen, Is.False);
+        }
+
+        [Test]
+        public void DailyActivityState_GetIdCard_StartsPendingAndCompletesOnce()
+        {
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.IsGetIdCardResolved, Is.False);
+
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(dailyActivityState.IsGetIdCardResolved, Is.True);
+            Assert.That(dailyActivityState.GetIdCardOutcome, Is.EqualTo("COMPLETED"));
+        }
+
+        [Test]
+        public void DailyActivityState_ResetForNewDay_PreservesGetIdCard()
+        {
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 5);
+
+            dailyActivityState.ResetForNewDay(2);
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.DayNumber, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void DailyActivityState_ResetForNewGame_ClearsGetIdCard()
+        {
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+
+            dailyActivityState.ResetForNewGame();
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
         }
 
         [Test]
@@ -482,6 +540,9 @@ namespace UIU.Simulator.Gameplay.Tests
                 Run(tests.PorottaRoute_SkipBreakfast_MissesActivity_Deducts5Aura);
                 Run(tests.PorottaRoute_SkipLine_Completes_Deducts10Aura);
                 Run(tests.DefensiveTeardown_RestoresControls_DoesNotCompleteEvent_NoAuraDelta);
+                Run(tests.DailyActivityState_GetIdCard_StartsPendingAndCompletesOnce);
+                Run(tests.DailyActivityState_ResetForNewDay_PreservesGetIdCard);
+                Run(tests.DailyActivityState_ResetForNewGame_ClearsGetIdCard);
                 Run(tests.BeginCampusDay_ResetsBreakfastEvent_AllowsInteractionAgain);
                 Run(tests.VisitingNeptuneWithoutChoice_DoesNotResolveBreakfast);
                 Run(tests.NetworkFailure_DoesNotAwardAuraOrResolveActivity);

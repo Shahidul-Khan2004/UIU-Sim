@@ -1,4 +1,5 @@
 using System.Collections;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
@@ -404,12 +405,15 @@ namespace UIU.Simulator.Authentication
             infoText.color = UiTheme.Grey;
             ApplySaveUi();
 
-            // Clear any cached admission state so Main loads as an unregistered visitor.
+            // Clear any cached admission / activity state so Main loads as an unregistered visitor.
             PlayerSaveState existingState = PlayerSaveState.Instance;
             if (existingState != null)
             {
                 existingState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false, markHydrated: true);
             }
+
+            DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
+            activityState?.ResetForNewGame();
 
             Debug.Log("[SaveSelection] New Game reset complete — loading Main as unregistered visitor.");
             SceneManager.LoadScene(AuthSceneNames.Main);
