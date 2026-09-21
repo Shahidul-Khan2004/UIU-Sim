@@ -50,6 +50,9 @@ class ClerkFilterRegistrationTest {
     private com.uiusimulator.player.service.PlayerDayService playerDayService;
 
     @MockitoBean
+    private com.uiusimulator.player.service.AttendIcsService attendIcsService;
+
+    @MockitoBean
     private com.uiusimulator.auth.service.AuthService authService;
 
     @MockitoBean

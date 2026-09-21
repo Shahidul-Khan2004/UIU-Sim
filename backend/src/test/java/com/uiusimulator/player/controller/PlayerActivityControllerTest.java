@@ -54,7 +54,7 @@ class PlayerActivityControllerTest {
         when(playerActivityService.listCurrentDayActivities(any())).thenReturn(
                 ActivityListResponse.of(
                         1,
-                        List.of(new ActivityStateResponse("BREAKFAST", "COMPLETED", "RICE", 5, 0, 1))
+                        List.of(new ActivityStateResponse("BREAKFAST", "COMPLETED", "RICE", 5, 0, 1, 0))
                 )
         );
 
