@@ -92,6 +92,21 @@
                 "value": "{\"m_Value\":false}"
             },
             {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "meshImporter.quads",
+                "value": "{\"m_Value\":true}"
+            },
+            {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "meshImporter.smoothing",
+                "value": "{\"m_Value\":true}"
+            },
+            {
+                "type": "System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "editor.autoUpdatePreview",
+                "value": "{\"m_Value\":false}"
+            },
+            {
                 "type": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "ShapeBuilder.ActiveShapeIndex",
                 "value": "{\"m_Value\":4}"
@@ -99,17 +114,7 @@
             {
                 "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "key": "ShapeBuilder.LastSize.Cube",
-                "value": "{\"m_Value\":{\"x\":8.748344421386719,\"y\":0.3339269161224365,\"z\":8.122027397155762}}"
-            },
-            {
-                "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.LastSize.Cone",
-                "value": "{\"m_Value\":{\"x\":1.0,\"y\":1.0,\"z\":1.0}}"
-            },
-            {
-                "type": "UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.LastSize.Plane",
-                "value": "{\"m_Value\":{\"x\":1.0,\"y\":1.0,\"z\":1.0}}"
+                "value": "{\"m_Value\":{\"x\":166.75604248046876,\"y\":1.8242312669754029,\"z\":109.986083984375}}"
             },
             {
                 "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
@@ -117,29 +122,9 @@
                 "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
             },
             {
-                "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.LastRotation.Cone",
-                "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
-            },
-            {
-                "type": "UnityEngine.Quaternion, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.LastRotation.Plane",
-                "value": "{\"m_Value\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}"
-            },
-            {
                 "type": "UnityEngine.ProBuilder.PivotLocation, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
                 "key": "ShapeBuilder.PivotLocation.Cube",
                 "value": "{\"m_Value\":1}"
-            },
-            {
-                "type": "UnityEngine.ProBuilder.PivotLocation, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.PivotLocation.Cone",
-                "value": "{\"m_Value\":0}"
-            },
-            {
-                "type": "UnityEngine.ProBuilder.PivotLocation, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
-                "key": "ShapeBuilder.PivotLocation.Plane",
-                "value": "{\"m_Value\":0}"
             },
             {
                 "type": "UnityEngine.ProBuilder.Shapes.Shape, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
@@ -175,6 +160,11 @@
                 "type": "System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
                 "key": "uv.uvEditorGridSnapIncrement",
                 "value": "{\"m_Value\":0.125}"
+            },
+            {
+                "type": "System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                "key": "meshImporter.smoothingAngle",
+                "value": "{\"m_Value\":1.0}"
             },
             {
                 "type": "UnityEngine.ProBuilder.RectSelectMode, Unity.ProBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
