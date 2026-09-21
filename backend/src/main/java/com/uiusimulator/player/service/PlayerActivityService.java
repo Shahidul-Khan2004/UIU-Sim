@@ -4,7 +4,9 @@ import com.uiusimulator.player.dto.ActivityListResponse;
 import com.uiusimulator.player.dto.ActivityResolveRequest;
 import com.uiusimulator.player.dto.ActivityResolveResponse;
 import com.uiusimulator.player.dto.ActivityStateResponse;
+import com.uiusimulator.player.entity.ActivityOutcomeDefinition;
 import com.uiusimulator.player.entity.BreakfastOutcome;
+import com.uiusimulator.player.entity.GetIdCardOutcome;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
 import com.uiusimulator.player.entity.PlayerSave;
@@ -87,24 +89,24 @@ public class PlayerActivityService {
             return ActivityResolveResponse.of(existing.get(), lockedStats, true);
         }
 
-        BreakfastOutcome breakfastOutcome = resolveBreakfastOutcome(activityId, outcomeRaw);
+        ActivityOutcomeDefinition outcome = resolveOutcome(activityId, outcomeRaw);
 
         PlayerDayActivity created = PlayerDayActivity.resolve(
                 player,
                 activityId,
                 save.getCurrentDay(),
-                breakfastOutcome.status(),
-                breakfastOutcome.name(),
-                breakfastOutcome.auraDelta(),
-                breakfastOutcome.reputationDelta()
+                outcome.status(),
+                outcome.outcomeName(),
+                outcome.auraDelta(),
+                outcome.reputationDelta()
         );
 
         // player_stats row lock above serializes concurrent resolves for this player,
         // so the unique (player_id, activity_id) insert cannot double-apply Aura.
         playerDayActivityRepository.saveAndFlush(created);
 
-        if (breakfastOutcome.auraDelta() != 0 || breakfastOutcome.reputationDelta() != 0) {
-            lockedStats.modifyStats(breakfastOutcome.auraDelta(), breakfastOutcome.reputationDelta());
+        if (outcome.auraDelta() != 0 || outcome.reputationDelta() != 0) {
+            lockedStats.modifyStats(outcome.auraDelta(), outcome.reputationDelta());
             playerStatsRepository.saveAndFlush(lockedStats);
         }
 
@@ -112,25 +114,45 @@ public class PlayerActivityService {
                 "Activity resolved for clerkUserId={} activityId={} outcome={} status={} auraDelta={} aura={}",
                 player.getClerkUserId(),
                 activityId,
-                breakfastOutcome.name(),
-                breakfastOutcome.status(),
-                breakfastOutcome.auraDelta(),
+                outcome.outcomeName(),
+                outcome.status(),
+                outcome.auraDelta(),
                 lockedStats.getAura()
         );
 
         return ActivityResolveResponse.of(created, lockedStats, false);
     }
 
-    private static BreakfastOutcome resolveBreakfastOutcome(String activityId, String outcomeRaw) {
-        if (!BreakfastOutcome.ACTIVITY_ID.equals(activityId)) {
-            throw new IllegalArgumentException("Unsupported activityId: " + activityId);
+    private static ActivityOutcomeDefinition resolveOutcome(String activityId, String outcomeRaw) {
+        if (BreakfastOutcome.ACTIVITY_ID.equals(activityId)) {
+            try {
+                BreakfastOutcome breakfastOutcome = BreakfastOutcome.valueOf(outcomeRaw);
+                return new ActivityOutcomeDefinition(
+                        breakfastOutcome.status(),
+                        breakfastOutcome.name(),
+                        breakfastOutcome.auraDelta(),
+                        breakfastOutcome.reputationDelta()
+                );
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Unsupported breakfast outcome: " + outcomeRaw);
+            }
         }
 
-        try {
-            return BreakfastOutcome.valueOf(outcomeRaw);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Unsupported breakfast outcome: " + outcomeRaw);
+        if (GetIdCardOutcome.ACTIVITY_ID.equals(activityId)) {
+            try {
+                GetIdCardOutcome getIdCardOutcome = GetIdCardOutcome.valueOf(outcomeRaw);
+                return new ActivityOutcomeDefinition(
+                        getIdCardOutcome.status(),
+                        getIdCardOutcome.name(),
+                        getIdCardOutcome.auraDelta(),
+                        getIdCardOutcome.reputationDelta()
+                );
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Unsupported GET_ID_CARD outcome: " + outcomeRaw);
+            }
         }
+
+        throw new IllegalArgumentException("Unsupported activityId: " + activityId);
     }
 
     private static String normalize(String value) {

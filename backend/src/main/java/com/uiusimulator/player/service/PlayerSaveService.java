@@ -4,7 +4,9 @@ import com.uiusimulator.player.dto.PlayerSaveCreateRequest;
 import com.uiusimulator.player.dto.PlayerSaveResponse;
 import com.uiusimulator.player.dto.PlayerSaveStatusResponse;
 import com.uiusimulator.player.entity.Department;
+import com.uiusimulator.player.entity.GetIdCardOutcome;
 import com.uiusimulator.player.entity.Player;
+import com.uiusimulator.player.entity.PlayerDayActivity;
 import com.uiusimulator.player.entity.PlayerSave;
 import com.uiusimulator.player.entity.PlayerStats;
 import com.uiusimulator.player.exception.PlayerSaveAlreadyExistsException;
@@ -87,8 +89,20 @@ public class PlayerSaveService {
 
         try {
             PlayerSave saved = playerSaveRepository.saveAndFlush(created);
+            // One-time ID card objective uses the shared activity table (not a separate objective store).
+            // Unity still POSTs /activities/resolve after admission; that call is idempotent.
+            GetIdCardOutcome issued = GetIdCardOutcome.COMPLETED;
+            playerDayActivityRepository.saveAndFlush(PlayerDayActivity.resolve(
+                    player,
+                    GetIdCardOutcome.ACTIVITY_ID,
+                    saved.getCurrentDay(),
+                    issued.status(),
+                    issued.name(),
+                    issued.auraDelta(),
+                    issued.reputationDelta()
+            ));
             log.info(
-                    "Player save created for clerkUserId={} role={} department={}",
+                    "Player save created for clerkUserId={} role={} department={} getIdCardCompleted=true",
                     player.getClerkUserId(),
                     saved.getRole(),
                     saved.getDepartment().getCode()
