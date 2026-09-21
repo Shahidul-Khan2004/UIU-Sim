@@ -24550,63 +24550,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7642762085465517110, guid: fc243a8b89c067f95ae2ab942993d17d, type: 3}
   m_PrefabInstance: {fileID: 198654882}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &198833259
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 696609785730293354, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_Name
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 77.46
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.75
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 57.64
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.66083896
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.7505277
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 97.272
-      objectReference: {fileID: 0}
-    - target: {fileID: 5181854564616842841, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
 --- !u!1001 &200639168
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -77300,7 +77243,7 @@ Transform:
   m_GameObject: {fileID: 579851926}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 50.468, y: 4.121, z: 148.34}
+  m_LocalPosition: {x: 50.468, y: 3.5, z: 148.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -265577,7 +265520,7 @@ MonoBehaviour:
   courseName: Introduction to Computer Science
   departmentCode: CSE
   studentRole: STUDENT
-  classroomNumber: 428
+  classroomNumber: 427
   floor: 4
   classroomInteractionTarget: {fileID: 2004253173}
   scheduledGameplayDay: 1
@@ -287337,7 +287280,6 @@ SceneRoots:
   - {fileID: 947394548}
   - {fileID: 1062119481}
   - {fileID: 1067289088}
-  - {fileID: 198833259}
   - {fileID: 1081776748}
   - {fileID: 1304249726}
   - {fileID: 448598918}
