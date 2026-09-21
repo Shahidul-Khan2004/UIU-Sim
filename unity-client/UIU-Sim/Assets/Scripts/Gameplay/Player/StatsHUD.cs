@@ -55,6 +55,9 @@ public sealed class StatsHUD : MonoBehaviour
     private TextMeshProUGUI auraFeedbackText;
     private TextMeshProUGUI academicFeedbackText;
 
+    private TextMeshProUGUI dayHeaderText;
+    private TextMeshProUGUI todayHeaderText;
+    private GameObject idCardObjectiveRoot;
     private TextMeshProUGUI idMarkerText;
     private TextMeshProUGUI idTitleText;
     private TextMeshProUGUI idDescriptionText;
@@ -68,6 +71,7 @@ public sealed class StatsHUD : MonoBehaviour
     private float lastReputation;
     private Coroutine auraFeedbackRoutine;
     private Coroutine academicFeedbackRoutine;
+    private PlayerSaveState playerSaveState;
 
     private void Awake()
     {
@@ -93,6 +97,13 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState = FindFirstObjectByType<DailyActivityState>();
         }
 
+        if (playerSaveState == null)
+        {
+            playerSaveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+        }
+
         if (playerStats != null)
         {
             lastAura = playerStats.Aura;
@@ -112,6 +123,13 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState.OnActivitiesReset += RefreshObjectiveDisplay;
         }
 
+        if (playerSaveState != null)
+        {
+            playerSaveState.OnHydrated += RefreshObjectiveDisplay;
+            playerSaveState.OnAdmissionCompleted += RefreshObjectiveDisplay;
+            playerSaveState.OnDayProgressChanged += RefreshObjectiveDisplay;
+        }
+
         RefreshObjectiveDisplay();
     }
 
@@ -128,6 +146,13 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState.OnGetIdCardStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnBreakfastStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnActivitiesReset -= RefreshObjectiveDisplay;
+        }
+
+        if (playerSaveState != null)
+        {
+            playerSaveState.OnHydrated -= RefreshObjectiveDisplay;
+            playerSaveState.OnAdmissionCompleted -= RefreshObjectiveDisplay;
+            playerSaveState.OnDayProgressChanged -= RefreshObjectiveDisplay;
         }
 
         StopAllFeedback();
@@ -175,28 +200,55 @@ public sealed class StatsHUD : MonoBehaviour
 
     private void RefreshObjectiveDisplay()
     {
-        if (idMarkerText == null || idTitleText == null || idDescriptionText == null)
+        if (dayHeaderText == null || todayHeaderText == null)
         {
             return;
         }
 
-        string idTitle = dailyActivityState != null ? dailyActivityState.GetIdCardTitle : idCardObjectiveTitle;
-        string idDescription = dailyActivityState != null
-            ? dailyActivityState.GetIdCardDescription
-            : idCardObjectiveDescription;
+        int semester = ResolveSemester();
+        int dayNumber = ResolveDayNumber();
+        bool hasActiveDay = playerSaveState != null && playerSaveState.HasActiveUniversityDay;
+
+        if (hasActiveDay && semester > 0 && dayNumber > 0)
+        {
+            dayHeaderText.gameObject.SetActive(true);
+            dayHeaderText.text = $"SEMESTER {semester} · DAY {dayNumber}";
+            todayHeaderText.gameObject.SetActive(true);
+        }
+        else
+        {
+            dayHeaderText.gameObject.SetActive(false);
+            todayHeaderText.gameObject.SetActive(false);
+        }
+
         ActivityStatus idStatus = dailyActivityState != null
             ? dailyActivityState.GetIdCardStatus
             : ActivityStatus.Pending;
 
-        ApplyObjectiveVisual(
-            idStatus,
-            idTitle,
-            idDescription,
-            idMarkerText,
-            idTitleText,
-            idDescriptionText);
+        // GET_ID_CARD is a Day 1 / admission objective only.
+        bool showIdCard = dayNumber <= 1;
+        if (idCardObjectiveRoot != null)
+        {
+            idCardObjectiveRoot.SetActive(showIdCard);
+        }
 
-        bool showBreakfast = idStatus != ActivityStatus.Pending;
+        if (showIdCard && idMarkerText != null)
+        {
+            string idTitle = dailyActivityState != null ? dailyActivityState.GetIdCardTitle : idCardObjectiveTitle;
+            string idDescription = dailyActivityState != null
+                ? dailyActivityState.GetIdCardDescription
+                : idCardObjectiveDescription;
+
+            ApplyObjectiveVisual(
+                idStatus,
+                idTitle,
+                idDescription,
+                idMarkerText,
+                idTitleText,
+                idDescriptionText);
+        }
+
+        bool showBreakfast = !showIdCard || idStatus != ActivityStatus.Pending;
         if (breakfastObjectiveRoot != null)
         {
             breakfastObjectiveRoot.SetActive(showBreakfast);
@@ -224,6 +276,31 @@ public sealed class StatsHUD : MonoBehaviour
             breakfastDescriptionText);
     }
 
+    private int ResolveSemester()
+    {
+        if (playerSaveState != null && playerSaveState.HasActiveUniversityDay)
+        {
+            return Mathf.Max(1, playerSaveState.Semester);
+        }
+
+        return 0;
+    }
+
+    private int ResolveDayNumber()
+    {
+        if (playerSaveState != null && playerSaveState.HasActiveUniversityDay)
+        {
+            return Mathf.Max(1, playerSaveState.CurrentDay);
+        }
+
+        if (dailyActivityState != null)
+        {
+            return Mathf.Max(1, dailyActivityState.DayNumber);
+        }
+
+        return 1;
+    }
+
     private static void ApplyObjectiveVisual(
         ActivityStatus status,
         string title,
@@ -238,19 +315,19 @@ public sealed class StatsHUD : MonoBehaviour
         {
             case ActivityStatus.Completed:
                 marker.text = "[x]";
-                marker.color = UiTheme.BrightOrange;
-                titleLabel.color = UiTheme.White;
+                marker.color = UiTheme.Success;
+                titleLabel.color = UiTheme.Success;
                 descriptionLabel.gameObject.SetActive(false);
                 break;
             case ActivityStatus.Missed:
                 marker.text = "[X]";
-                marker.color = UiTheme.Red;
-                titleLabel.color = UiTheme.Grey;
+                marker.color = UiTheme.Danger;
+                titleLabel.color = UiTheme.Danger;
                 descriptionLabel.gameObject.SetActive(false);
                 break;
             default:
                 marker.text = "[ ]";
-                marker.color = UiTheme.BrightOrange;
+                marker.color = UiTheme.White;
                 titleLabel.color = UiTheme.White;
                 descriptionLabel.text = description;
                 descriptionLabel.color = UiTheme.Grey;
@@ -385,10 +462,29 @@ public sealed class StatsHUD : MonoBehaviour
         academicFeedbackText.gameObject.SetActive(false);
 
         CreateDivider(panelRoot.transform);
-        CreateLabel(panelRoot.transform, "ObjectiveHeader", 12f, UiTheme.Grey, FontStyles.Bold).text = "OBJECTIVE";
+        dayHeaderText = CreateLabel(panelRoot.transform, "DayHeader", 14f, UiTheme.BrightOrange, FontStyles.Bold);
+        dayHeaderText.text = "SEMESTER 1 · DAY 1";
+        dayHeaderText.gameObject.SetActive(false);
 
-        BuildObjectiveRow(panelRoot.transform, "IdCard", out idMarkerText, out idTitleText);
-        idDescriptionText = CreateLabel(panelRoot.transform, "IdCardDescription", objectiveBodySize, UiTheme.Grey, FontStyles.Normal);
+        todayHeaderText = CreateLabel(panelRoot.transform, "TodayHeader", 12f, UiTheme.Grey, FontStyles.Bold);
+        todayHeaderText.text = "TODAY";
+        todayHeaderText.gameObject.SetActive(false);
+
+        idCardObjectiveRoot = new GameObject("IdCardObjectiveBlock");
+        idCardObjectiveRoot.transform.SetParent(panelRoot.transform, false);
+        VerticalLayoutGroup idLayout = idCardObjectiveRoot.AddComponent<VerticalLayoutGroup>();
+        idLayout.spacing = 4f;
+        idLayout.childAlignment = TextAnchor.UpperLeft;
+        idLayout.childControlWidth = true;
+        idLayout.childControlHeight = true;
+        idLayout.childForceExpandWidth = false;
+        idLayout.childForceExpandHeight = false;
+        ContentSizeFitter idFitter = idCardObjectiveRoot.AddComponent<ContentSizeFitter>();
+        idFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        idFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        BuildObjectiveRow(idCardObjectiveRoot.transform, "IdCard", out idMarkerText, out idTitleText);
+        idDescriptionText = CreateLabel(idCardObjectiveRoot.transform, "IdCardDescription", objectiveBodySize, UiTheme.Grey, FontStyles.Normal);
         idDescriptionText.textWrappingMode = TextWrappingModes.Normal;
         idDescriptionText.text = idCardObjectiveDescription;
         idTitleText.text = idCardObjectiveTitle;

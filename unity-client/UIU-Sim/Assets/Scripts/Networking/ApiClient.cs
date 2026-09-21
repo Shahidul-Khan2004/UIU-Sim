@@ -205,6 +205,52 @@ namespace UIU.Simulator.Networking
             public int academicReputation;
         }
 
+        [Serializable]
+        public class DaySummaryActivityDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int auraDelta;
+            public int academicReputationDelta;
+        }
+
+        [Serializable]
+        public class DayFinalizeResponseDto
+        {
+            public int semester;
+            public int day;
+            public DaySummaryActivityDto[] activities;
+            public int totalAuraDelta;
+            public int totalAcademicReputationDelta;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class DayAdvanceRequestDto
+        {
+            public int expectedSemester;
+            public int expectedDay;
+
+            public DayAdvanceRequestDto(int expectedSemester, int expectedDay)
+            {
+                this.expectedSemester = expectedSemester;
+                this.expectedDay = expectedDay;
+            }
+        }
+
+        [Serializable]
+        public class DayAdvanceResponseDto
+        {
+            public int semester;
+            public int currentDay;
+            public bool alreadyAdvanced;
+            public bool idCardIssued;
+            public int aura;
+            public int academicReputation;
+        }
+
         public IEnumerator PollDevAuthBridge(
             string sessionId,
             float timeoutSeconds,

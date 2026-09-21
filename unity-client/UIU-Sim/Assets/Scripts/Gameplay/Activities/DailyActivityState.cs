@@ -182,12 +182,19 @@ namespace UIU.Simulator.Gameplay.Activities
         }
 
         /// <summary>
-        /// Future Next Day helper: detect pending breakfast so it can be resolved as MISSED (−5 Aura)
-        /// before advancing the day. Not invoked in Phase 2A.
+        /// Detect pending breakfast so finalize can resolve it as MISSED (−5 Aura)
+        /// before advancing the day.
         /// </summary>
         public bool HasPendingBreakfastForDayAdvance()
         {
             return breakfastStatus == ActivityStatus.Pending;
+        }
+
+        /// <summary>Updates the cached journey day without resetting activity rows.</summary>
+        public void SetDayNumber(int newDayNumber)
+        {
+            dayNumber = Mathf.Max(1, newDayNumber);
+            OnActivitiesReset?.Invoke();
         }
     }
 }

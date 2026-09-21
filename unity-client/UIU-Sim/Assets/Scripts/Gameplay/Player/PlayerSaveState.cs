@@ -25,6 +25,8 @@ namespace UIU.Simulator.Gameplay.Player
         private bool hasSave;
         private bool idCardIssued;
         private bool admissionCompleted;
+        private int semester;
+        private int currentDay;
         private string playerName;
         private string role;
         private string department;
@@ -35,6 +37,8 @@ namespace UIU.Simulator.Gameplay.Player
         public bool HasSave => hasSave;
         public bool IdCardIssued => idCardIssued;
         public bool AdmissionCompleted => admissionCompleted;
+        public int Semester => semester;
+        public int CurrentDay => currentDay;
         public string PlayerName => playerName;
         public string Role => role;
         public string Department => department;
@@ -43,8 +47,12 @@ namespace UIU.Simulator.Gameplay.Player
         /// <summary>True when the player still needs receptionist admission / ID issuance.</summary>
         public bool NeedsAdmission => isHydrated && (!hasSave || !idCardIssued);
 
+        /// <summary>True once admission created an active university journey day.</summary>
+        public bool HasActiveUniversityDay => isHydrated && hasSave && admissionCompleted;
+
         public event Action OnHydrated;
         public event Action OnAdmissionCompleted;
+        public event Action OnDayProgressChanged;
 
         public static PlayerSaveState EnsureExists()
         {
@@ -116,6 +124,7 @@ namespace UIU.Simulator.Gameplay.Player
             ApplySaveDto(status.save, hasSaveValue: true);
             isHydrated = true;
             OnAdmissionCompleted?.Invoke();
+            OnDayProgressChanged?.Invoke();
         }
 
         /// <summary>Test / editor seam to inject admission state without networking.</summary>
@@ -124,7 +133,36 @@ namespace UIU.Simulator.Gameplay.Player
             hasSave = hasSaveValue;
             idCardIssued = idCardIssuedValue;
             admissionCompleted = hasSaveValue && idCardIssuedValue;
+            semester = hasSaveValue ? Mathf.Max(1, semester) : 0;
+            currentDay = hasSaveValue ? Mathf.Max(1, currentDay) : 0;
             isHydrated = markHydrated;
+            OnDayProgressChanged?.Invoke();
+        }
+
+        /// <summary>Test / editor seam for semester and day display.</summary>
+        public void SetDayProgressForTesting(int semesterValue, int dayValue, bool markHydrated = true)
+        {
+            semester = Mathf.Max(0, semesterValue);
+            currentDay = Mathf.Max(0, dayValue);
+            if (semester > 0 && currentDay > 0)
+            {
+                hasSave = true;
+                admissionCompleted = true;
+            }
+
+            isHydrated = markHydrated;
+            OnDayProgressChanged?.Invoke();
+        }
+
+        /// <summary>Applies confirmed server day advancement without re-fetching the save.</summary>
+        public void ApplyAdvancedDay(int semesterValue, int dayValue, bool idCardIssuedValue)
+        {
+            hasSave = true;
+            semester = Mathf.Max(1, semesterValue);
+            currentDay = Mathf.Max(1, dayValue);
+            idCardIssued = idCardIssuedValue;
+            admissionCompleted = true;
+            OnDayProgressChanged?.Invoke();
         }
 
         private IEnumerator HydrateRoutine()
@@ -184,9 +222,10 @@ namespace UIU.Simulator.Gameplay.Player
             isHydrated = true;
             isHydrating = false;
             OnHydrated?.Invoke();
+            OnDayProgressChanged?.Invoke();
             Debug.Log(
                 $"[PlayerSaveState] Hydrated: hasSave={hasSave}, idCardIssued={idCardIssued}, " +
-                $"playerName={playerName}");
+                $"semester={semester}, currentDay={currentDay}, playerName={playerName}");
         }
 
         private void ApplySaveDto(ApiClient.PlayerSaveDto save, bool hasSaveValue)
@@ -198,6 +237,8 @@ namespace UIU.Simulator.Gameplay.Player
             universityId = save.universityId;
             admissionCompleted = save.admissionCompleted;
             idCardIssued = save.idCardIssued;
+            semester = Mathf.Max(1, save.semester);
+            currentDay = Mathf.Max(1, save.currentDay);
         }
 
         private void ClearLocalState()
@@ -205,6 +246,8 @@ namespace UIU.Simulator.Gameplay.Player
             hasSave = false;
             idCardIssued = false;
             admissionCompleted = false;
+            semester = 0;
+            currentDay = 0;
             playerName = null;
             role = null;
             department = null;

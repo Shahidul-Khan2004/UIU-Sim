@@ -59,7 +59,7 @@ public sealed class CampusDayState : MonoBehaviour
     /// Resets daily event progression for a new university day.
     /// Idempotent and safe to call when a new day/session begins.
     /// </summary>
-    public void BeginCampusDay()
+    public void BeginCampusDay(int newDayNumber = 1)
     {
         bool wasCompleted = HasCompletedBreakfastEvent;
         hasCompletedBreakfastEvent = false;
@@ -69,9 +69,9 @@ public sealed class CampusDayState : MonoBehaviour
             dailyActivityState = GetComponent<DailyActivityState>();
         }
 
-        dailyActivityState?.ResetForNewDay();
+        dailyActivityState?.ResetForNewDay(Mathf.Max(1, newDayNumber));
 
-        Debug.Log("[CampusDayState] BeginCampusDay called — daily event states reset.");
+        Debug.Log($"[CampusDayState] BeginCampusDay called — day {Mathf.Max(1, newDayNumber)} reset.");
 
         if (wasCompleted)
         {
