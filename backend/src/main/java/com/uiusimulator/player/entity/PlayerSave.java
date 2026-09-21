@@ -18,6 +18,9 @@ import java.util.UUID;
 @Table(name = "player_saves")
 public class PlayerSave {
 
+    /** MVP semester length before semester rollover is implemented. */
+    public static final int MAX_DAY_PER_SEMESTER = 6;
+
     @Id
     @Column(nullable = false, updatable = false)
     private UUID id;
@@ -177,6 +180,24 @@ public class PlayerSave {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * Advances to the next gameplay day within the current semester.
+     * Refuses Day 7+ until semester rollover is implemented.
+     */
+    public void advanceToNextDay() {
+        if (currentDay >= MAX_DAY_PER_SEMESTER) {
+            throw new IllegalArgumentException("Semester progression is not available yet.");
+        }
+        this.currentDay += 1;
+        touchTimestamps();
+    }
+
+    public void touchTimestamps() {
+        Instant now = Instant.now();
+        this.updatedAt = now;
+        this.lastSavedAt = now;
     }
 
     private static String blankToNull(String value) {
