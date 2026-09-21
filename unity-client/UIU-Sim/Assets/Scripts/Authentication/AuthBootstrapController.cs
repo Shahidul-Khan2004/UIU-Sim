@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 namespace UIU.Simulator.Authentication
 {
     /// <summary>
-    /// Entry scene controller: routes to Main when authenticated, otherwise Login.
+    /// Entry scene controller: routes to SaveSelection when authenticated, otherwise Login.
     /// </summary>
     public sealed class AuthBootstrapController : MonoBehaviour
     {
@@ -18,8 +18,8 @@ namespace UIU.Simulator.Authentication
             if (session.IsAuthenticated || session.TryRestoreAuthenticatedSession())
             {
                 host.TokenProvider?.HydrateAccessToken(session.JwtToken);
-                Debug.Log("[AuthBootstrap] Authenticated — loading Main.");
-                SceneManager.LoadScene(AuthSceneNames.Main);
+                Debug.Log("[AuthBootstrap] Authenticated — loading SaveSelection.");
+                SceneManager.LoadScene(AuthSceneNames.SaveSelection);
                 return;
             }
 

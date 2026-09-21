@@ -4,6 +4,7 @@ namespace UIU.Simulator.Authentication
     {
         public const string Bootstrap = "Bootstrap";
         public const string Login = "Login";
+        public const string SaveSelection = "SaveSelection";
         public const string Main = "UIU_Main";
     }
 }

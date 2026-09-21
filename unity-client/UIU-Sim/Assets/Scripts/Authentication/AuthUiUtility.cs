@@ -1,3 +1,4 @@
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -68,7 +69,7 @@ namespace UIU.Simulator.Authentication
             text.font = ResolveUiFont();
             text.fontSize = fontSize;
             text.alignment = anchor;
-            text.color = Color.white;
+            text.color = UiTheme.White;
             text.text = content;
             RectTransform rect = go.GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
@@ -89,7 +90,7 @@ namespace UIU.Simulator.Authentication
             rect.sizeDelta = size;
 
             Image image = buttonObject.AddComponent<Image>();
-            image.color = new Color(0.24f, 0.56f, 0.42f, 1f);
+            image.color = UiTheme.BrightOrange;
             Button button = buttonObject.AddComponent<Button>();
 
             Text text = CreateText(buttonObject.transform, "Label", label, 20, TextAnchor.MiddleCenter);

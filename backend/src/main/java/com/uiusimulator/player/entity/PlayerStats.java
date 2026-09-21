@@ -93,6 +93,15 @@ public class PlayerStats implements Persistable<UUID> {
         return true;
     }
 
+    /**
+     * Resets mutable gameplay stats for New Game while keeping the player identity row.
+     */
+    public void resetToDefaults() {
+        this.aura = 50;
+        this.academicReputation = 50;
+        this.initialIdTutorialPending = true;
+    }
+
     public UUID getPlayerId() {
         return playerId;
     }

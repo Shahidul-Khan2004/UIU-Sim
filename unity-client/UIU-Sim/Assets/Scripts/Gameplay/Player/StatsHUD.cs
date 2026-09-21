@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TMPro;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,8 +22,8 @@ public sealed class StatsHUD : MonoBehaviour
     [SerializeField] private float fontSize = 20f;
     [SerializeField] private float feedbackFontSize = 18f;
     [SerializeField] private Color textColor = Color.white;
-    [SerializeField] private Color positiveDeltaColor = new Color(0.35f, 1f, 0.45f, 1f);
-    [SerializeField] private Color negativeDeltaColor = new Color(1f, 0.4f, 0.4f, 1f);
+    [SerializeField] private Color positiveDeltaColor = UiTheme.BrightOrange;
+    [SerializeField] private Color negativeDeltaColor = UiTheme.Red;
     [SerializeField] private Color backgroundColor = new Color(0f, 0f, 0f, 0.65f);
 
     [Header("Layout")]

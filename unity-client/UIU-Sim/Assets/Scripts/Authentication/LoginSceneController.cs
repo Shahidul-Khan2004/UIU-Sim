@@ -1,3 +1,4 @@
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -86,7 +87,7 @@ namespace UIU.Simulator.Authentication
 
             GameObject panel = AuthUiUtility.CreateRect("Panel", canvasObject.transform);
             Image panelImage = panel.AddComponent<Image>();
-            panelImage.color = new Color(0.07f, 0.11f, 0.09f, 0.96f);
+            panelImage.color = new Color(UiTheme.Black.r, UiTheme.Black.g, UiTheme.Black.b, 0.96f);
             RectTransform panelRect = panel.GetComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -103,7 +104,7 @@ namespace UIU.Simulator.Authentication
             title.font = AuthUiUtility.ResolveUiFont();
             title.fontSize = 32;
             title.alignment = TextAnchor.MiddleCenter;
-            title.color = Color.white;
+            title.color = UiTheme.White;
             title.text = "UIU Simulator";
 
             GameObject subtitleObject = AuthUiUtility.CreateRect("Subtitle", panel.transform);
@@ -117,7 +118,7 @@ namespace UIU.Simulator.Authentication
             subtitle.font = AuthUiUtility.ResolveUiFont();
             subtitle.fontSize = 16;
             subtitle.alignment = TextAnchor.MiddleCenter;
-            subtitle.color = new Color(0.75f, 0.85f, 0.8f, 1f);
+            subtitle.color = UiTheme.Grey;
             subtitle.text = "Sign in to explore the campus";
 
             loginButton = AuthUiUtility.CreateButton(
@@ -139,7 +140,7 @@ namespace UIU.Simulator.Authentication
             statusText.font = AuthUiUtility.ResolveUiFont();
             statusText.fontSize = 15;
             statusText.alignment = TextAnchor.MiddleCenter;
-            statusText.color = new Color(0.85f, 0.9f, 0.87f, 1f);
+            statusText.color = UiTheme.White;
             statusText.text = "Ready";
         }
 
@@ -194,8 +195,8 @@ namespace UIU.Simulator.Authentication
 
         private void EnterGame()
         {
-            Debug.Log("[LoginSceneController] Authentication complete — loading Main.");
-            SceneManager.LoadScene(AuthSceneNames.Main);
+            Debug.Log("[LoginSceneController] Authentication complete — loading SaveSelection.");
+            SceneManager.LoadScene(AuthSceneNames.SaveSelection);
         }
 
         private void SetStatus(string message)
