@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UIU.Simulator.Authentication;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
 using UnityEngine;
@@ -8,11 +9,13 @@ using UnityEngine;
 namespace UIU.Simulator.Gameplay.Player
 {
     /// <summary>
-    /// Centralized component managing persistent Player Aura and Academic Reputation.
+    /// Centralized component managing persistent Player Aura, Academic Reputation, and day activities.
     /// Responsibilities:
     /// - Hydrates initial canonical stats via GET /api/players/me
+    /// - Hydrates current-day activities via GET /api/players/me/activities
     /// - Syncs one-time initial ID tutorial pending flag into PlayerInventory
     /// - Sends single-attempt PATCH /api/players/me/stats for confirmed deltas
+    /// - Sends single-attempt POST /api/players/me/activities/resolve for atomic activity+stat commits
     /// - Atomically consumes initial ID tutorial via POST /api/players/me/initial-id-tutorial/consume
     /// - Guarantees only one in-flight mutation at a time
     /// - Guards against mutations before initial hydration completes
@@ -21,10 +24,15 @@ namespace UIU.Simulator.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerStats))]
-    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync
+    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync
     {
+        private const string ActivitiesPath = "api/players/me/activities";
+        private const string ResolvePath = "api/players/me/activities/resolve";
+
         private PlayerStats playerStats;
         private PlayerInventory playerInventory;
+        private DailyActivityState dailyActivityState;
+        private CampusDayState campusDayState;
         private ApiClient apiClient;
         private UserSession userSession;
 
@@ -43,6 +51,8 @@ namespace UIU.Simulator.Gameplay.Player
         {
             playerStats = GetComponent<PlayerStats>();
             playerInventory = GetComponent<PlayerInventory>();
+            dailyActivityState = GetComponent<DailyActivityState>();
+            campusDayState = GetComponent<CampusDayState>();
         }
 
         private void Start()
@@ -71,6 +81,16 @@ namespace UIU.Simulator.Gameplay.Player
             if (playerInventory == null)
             {
                 playerInventory = GetComponent<PlayerInventory>();
+            }
+
+            if (dailyActivityState == null)
+            {
+                dailyActivityState = GetComponent<DailyActivityState>();
+            }
+
+            if (campusDayState == null)
+            {
+                campusDayState = GetComponent<CampusDayState>();
             }
 
             if (apiClient == null || userSession == null)
@@ -150,7 +170,100 @@ namespace UIU.Simulator.Gameplay.Player
                 }
             );
 
+            if (isHydrated)
+            {
+                yield return HydrateActivitiesRoutine();
+            }
+
             isHydrating = false;
+        }
+
+        private IEnumerator HydrateActivitiesRoutine()
+        {
+            EnsureDependencies();
+            if (apiClient == null || userSession == null || !userSession.HasToken)
+            {
+                yield break;
+            }
+
+            yield return apiClient.Get(
+                ActivitiesPath,
+                userSession.JwtToken,
+                onSuccess: json =>
+                {
+                    try
+                    {
+                        ApplyActivitiesPayload(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[PlayerProgressSync] Failed to parse GET /api/players/me/activities: {ex.Message}");
+                    }
+                },
+                onError: (error, code) =>
+                {
+                    Debug.LogWarning($"[PlayerProgressSync] Activity hydration failed: {error} (HTTP {code})");
+                }
+            );
+        }
+
+        private void ApplyActivitiesPayload(string json)
+        {
+            ApiClient.ActivityListResponseDto dto = JsonUtility.FromJson<ApiClient.ActivityListResponseDto>(json);
+            if (dto == null)
+            {
+                return;
+            }
+
+            if (dailyActivityState == null)
+            {
+                dailyActivityState = GetComponent<DailyActivityState>();
+            }
+
+            if (campusDayState == null)
+            {
+                campusDayState = GetComponent<CampusDayState>();
+            }
+
+            bool breakfastFound = false;
+            if (dto.activities != null)
+            {
+                for (int i = 0; i < dto.activities.Length; i++)
+                {
+                    ApiClient.ActivityStateDto activity = dto.activities[i];
+                    if (activity == null || activity.activityId != ActivityIds.Breakfast)
+                    {
+                        continue;
+                    }
+
+                    breakfastFound = true;
+                    ActivityStatus status = ParseActivityStatus(activity.status);
+                    ActivityRecord record = new ActivityRecord(
+                        activity.activityId,
+                        status,
+                        activity.outcome,
+                        activity.auraDelta,
+                        activity.reputationDelta,
+                        activity.dayNumber > 0 ? activity.dayNumber : dto.dayNumber);
+
+                    dailyActivityState?.ApplyServerActivity(record);
+                    if (record.IsResolved)
+                    {
+                        campusDayState?.ApplyHydratedBreakfastResolved();
+                    }
+                }
+            }
+
+            if (!breakfastFound && dailyActivityState != null && dto.dayNumber > 0)
+            {
+                // Explicit pending for the current journey day.
+                if (dailyActivityState.BreakfastStatus != ActivityStatus.Pending)
+                {
+                    dailyActivityState.ResetForNewDay(dto.dayNumber);
+                }
+            }
+
+            Debug.Log($"[PlayerProgressSync] Hydrated activities for day={dto.dayNumber}, breakfastResolved={breakfastFound}");
         }
 
         /// <summary>
@@ -245,6 +358,47 @@ namespace UIU.Simulator.Gameplay.Player
             StartCoroutine(MutateStatsRoutine(auraDelta, academicReputationDelta));
         }
 
+        public void RequestActivityResolve(
+            string activityId,
+            string outcome,
+            Action<ActivityResolveResult> onSuccess,
+            Action onFailure)
+        {
+            if (string.IsNullOrWhiteSpace(activityId) || string.IsNullOrWhiteSpace(outcome))
+            {
+                onFailure?.Invoke();
+                return;
+            }
+
+            if (!isHydrated)
+            {
+                Debug.LogWarning("[PlayerProgressSync] Activity resolve rejected: Player progress is still loading.");
+                SystemNotificationUI.Show("Player progress is still loading.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            if (isMutationInFlight)
+            {
+                Debug.LogWarning("[PlayerProgressSync] Activity resolve rejected: Progress update is already in progress.");
+                SystemNotificationUI.Show("Progress update is already in progress.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            EnsureDependencies();
+            if (userSession == null || !userSession.HasToken)
+            {
+                string msg = "Your session has expired. Please sign in again.";
+                SystemNotificationUI.Show(msg);
+                OnSyncFailed?.Invoke(msg);
+                onFailure?.Invoke();
+                return;
+            }
+
+            StartCoroutine(ResolveActivityRoutine(activityId, outcome, onSuccess, onFailure));
+        }
+
         private IEnumerator MutateStatsRoutine(int auraDelta, int academicReputationDelta)
         {
             isMutationInFlight = true;
@@ -285,11 +439,104 @@ namespace UIU.Simulator.Gameplay.Player
             );
         }
 
+        private IEnumerator ResolveActivityRoutine(
+            string activityId,
+            string outcome,
+            Action<ActivityResolveResult> onSuccess,
+            Action onFailure)
+        {
+            isMutationInFlight = true;
+
+            ApiClient.ActivityResolveRequestDto requestDto = new ApiClient.ActivityResolveRequestDto(activityId, outcome);
+            string jsonBody = JsonUtility.ToJson(requestDto);
+
+            yield return apiClient.Post(
+                ResolvePath,
+                jsonBody,
+                userSession.JwtToken,
+                onSuccess: json =>
+                {
+                    isMutationInFlight = false;
+                    try
+                    {
+                        ApiClient.ActivityResolveResponseDto response =
+                            JsonUtility.FromJson<ApiClient.ActivityResolveResponseDto>(json);
+                        if (response == null)
+                        {
+                            onFailure?.Invoke();
+                            return;
+                        }
+
+                        ActivityRecord record = new ActivityRecord(
+                            response.activityId,
+                            ParseActivityStatus(response.status),
+                            response.outcome,
+                            response.auraDelta,
+                            response.reputationDelta,
+                            response.dayNumber);
+
+                        dailyActivityState?.ApplyServerActivity(record);
+                        if (record.IsResolved)
+                        {
+                            campusDayState?.CompleteBreakfastEvent();
+                        }
+
+                        StatUpdateSource source = response.alreadyResolved
+                            ? StatUpdateSource.InitialHydration
+                            : StatUpdateSource.GameplayMutation;
+                        playerStats.ApplyServerState(response.aura, response.academicReputation, source);
+
+                        ActivityResolveResult result = new ActivityResolveResult(
+                            record,
+                            response.alreadyResolved,
+                            response.aura,
+                            response.academicReputation);
+                        onSuccess?.Invoke(result);
+                        Debug.Log(
+                            $"[PlayerProgressSync] Activity resolve confirmed: {response.activityId} {response.outcome} " +
+                            $"alreadyResolved={response.alreadyResolved} Aura={response.aura}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[PlayerProgressSync] Failed to parse activity resolve response: {ex.Message}");
+                        onFailure?.Invoke();
+                    }
+                },
+                onError: (error, code) =>
+                {
+                    isMutationInFlight = false;
+                    string userMessage = ClassifyErrorMessage(code, error);
+                    Debug.LogWarning($"[PlayerProgressSync] Activity resolve failed (HTTP {code}): {error}. Local state unchanged.");
+                    SystemNotificationUI.Show(userMessage);
+                    OnSyncFailed?.Invoke(userMessage);
+                    onFailure?.Invoke();
+                }
+            );
+        }
+
+        private static ActivityStatus ParseActivityStatus(string raw)
+        {
+            switch ((raw ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "COMPLETED":
+                    return ActivityStatus.Completed;
+                case "MISSED":
+                    return ActivityStatus.Missed;
+                default:
+                    return ActivityStatus.Pending;
+            }
+        }
+
         private static string ClassifyErrorMessage(long code, string rawError)
         {
             if (code == 401)
             {
                 return "Your session has expired. Please sign in again.";
+            }
+
+            if (code == 404)
+            {
+                return "Complete admission before recording campus activities.";
             }
 
             if (code == 0 || (rawError != null && (rawError.Contains("Cannot connect") || rawError.Contains("timeout") || rawError.Contains("Resolution"))))
