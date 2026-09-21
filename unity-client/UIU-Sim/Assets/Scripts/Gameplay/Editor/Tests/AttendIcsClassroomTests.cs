@@ -24,6 +24,8 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         private IcsClassroomInteractable classroom;
 
         private IcsClassroomLocationConfig locationConfigAsset;
+        private IcsClassroomLocationConfig englishConfig;
+        private IcsClassroomLocationConfig dmConfig;
 
         [SetUp]
         public void SetUp()
@@ -70,6 +72,18 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             {
                 UnityEngine.Object.DestroyImmediate(locationConfigAsset);
                 locationConfigAsset = null;
+            }
+
+            if (englishConfig != null)
+            {
+                UnityEngine.Object.DestroyImmediate(englishConfig);
+                englishConfig = null;
+            }
+
+            if (dmConfig != null)
+            {
+                UnityEngine.Object.DestroyImmediate(dmConfig);
+                dmConfig = null;
             }
 
             if (ClassroomChoiceUI.Instance != null)
@@ -618,6 +632,469 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindChild(statsHud.transform, "StatsPanel").gameObject.activeInHierarchy, Is.True);
         }
 
+        [Test]
+        public void Hud_ShowsEnglishAndDmFromConfigs_WhenFloorsAreUnloaded()
+        {
+            DestroyClassroomWithoutCache();
+            locationConfigAsset = CreateLocationConfig("427", 4);
+            IcsClassroomLocationConfig english = CreateCourseConfig(
+                ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+            IcsClassroomLocationConfig dm = CreateCourseConfig(
+                ActivityIds.AttendDm, "DM", "Discrete Mathematics", "423", 4);
+            dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
+            dailyActivityState.SetAdditionalLocationConfigsForTesting(new[] { english, dm });
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+
+            Assert.That(statsHud.CountBackgroundImagesForTesting(), Is.EqualTo(1));
+            Transform panel = FindChild(statsHud.transform, "StatsPanel");
+            Assert.That(FindChild(panel, "IcsObjectiveBlock").gameObject.activeSelf, Is.True);
+            Assert.That(FindLabel(panel, "IcsDescription").text,
+                Is.EqualTo("Go to Room 427 on Floor 4 to attend Introduction to Computer Science."));
+
+            Transform englishRoot = FindChild(panel, "Classroom_ATTEND_ENGLISH");
+            Transform dmRoot = FindChild(panel, "Classroom_ATTEND_DM");
+            Assert.That(englishRoot.gameObject.activeSelf, Is.True);
+            Assert.That(dmRoot.gameObject.activeSelf, Is.True);
+            Assert.That(englishRoot.IsChildOf(panel), Is.True);
+            Assert.That(FindLabel(panel, "ATTEND_ENGLISHTitle").text, Is.EqualTo("Attend English"));
+            Assert.That(FindLabel(panel, "ATTEND_ENGLISHDescription").text,
+                Is.EqualTo("Go to Room 702 on Floor 7 to attend English."));
+            Assert.That(FindLabel(panel, "ATTEND_DMTitle").text, Is.EqualTo("Attend Discrete Mathematics"));
+            Assert.That(FindLabel(panel, "ATTEND_DMDescription").text,
+                Is.EqualTo("Go to Room 423 on Floor 4 to attend Discrete Mathematics."));
+
+            UnityEngine.Object.DestroyImmediate(english);
+            UnityEngine.Object.DestroyImmediate(dm);
+        }
+
+        [Test]
+        public void EnglishDoor_OpensEnglishChoice_NotIcs()
+        {
+            GameObject door = new GameObject("EnglishDoor");
+            door.AddComponent<BoxCollider>();
+            IcsClassroomInteractable english = door.AddComponent<IcsClassroomInteractable>();
+            SetCourseFields(english, ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+
+            string result = english.Interact();
+
+            Assert.That(result, Is.Null);
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.True);
+            Assert.That(FindLabel(ClassroomChoiceUI.Instance.transform, "Title").text, Is.EqualTo("ENGLISH"));
+            Assert.That(FindLabel(ClassroomChoiceUI.Instance.transform, "Room").text, Is.EqualTo("Room: 702"));
+            UnityEngine.Object.DestroyImmediate(door);
+        }
+
+        [Test]
+        public void DmDoor_OpensDiscreteMathematics_WithoutResolvingIcs()
+        {
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+            GameObject door = new GameObject("DmDoor");
+            door.AddComponent<BoxCollider>();
+            IcsClassroomInteractable dm = door.AddComponent<IcsClassroomInteractable>();
+            SetCourseFields(dm, ActivityIds.AttendDm, "DM", "Discrete Mathematics", "423", 4);
+
+            string result = dm.Interact();
+
+            Assert.That(result, Is.Null);
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.True);
+            Assert.That(FindLabel(ClassroomChoiceUI.Instance.transform, "Title").text, Is.EqualTo("DISCRETE MATHEMATICS"));
+            Assert.That(FindLabel(ClassroomChoiceUI.Instance.transform, "Room").text, Is.EqualTo("Room: 423"));
+            Assert.That(dailyActivityState.IsAttendIcsResolved, Is.False);
+            UnityEngine.Object.DestroyImmediate(door);
+        }
+
+        [Test]
+        public void ClassroomProgress_IsIndependent()
+        {
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+            dailyActivityState.SetClassroomStatusForTesting(
+                ActivityIds.AttendEnglish,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                12,
+                90);
+            dailyActivityState.SetClassroomStatusForTesting(
+                ActivityIds.AttendDm,
+                ActivityStatus.Missed,
+                "LEFT_EARLY",
+                0,
+                -1,
+                30);
+
+            Assert.That(dailyActivityState.IsAttendIcsResolved, Is.False);
+            Assert.That(dailyActivityState.IsClassroomResolved(ActivityIds.AttendEnglish), Is.True);
+            Assert.That(dailyActivityState.IsClassroomResolved(ActivityIds.AttendDm), Is.True);
+            Assert.That(dailyActivityState.GetClassroomOutcome(ActivityIds.AttendDm), Is.EqualTo("LEFT_EARLY"));
+            Assert.That(dailyActivityState.AttendIcsMilestoneSeconds, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Day2_HidesUnscheduledEnglishAndDm()
+        {
+            DestroyClassroomWithoutCache();
+            locationConfigAsset = CreateLocationConfig("427", 4);
+            IcsClassroomLocationConfig english = CreateCourseConfig(
+                ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+            IcsClassroomLocationConfig dm = CreateCourseConfig(
+                ActivityIds.AttendDm, "DM", "Discrete Mathematics", "423", 4);
+            dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
+            dailyActivityState.SetAdditionalLocationConfigsForTesting(new[] { english, dm });
+            dailyActivityState.SetClassroomStatusForTesting(
+                ActivityIds.AttendEnglish, ActivityStatus.Completed, "COMPLETED", 0, 12, 90);
+
+            saveState.SetDayProgressForTesting(1, 2);
+            dailyActivityState.ResetForNewDay(2);
+
+            Transform englishRoot = FindChild(statsHud.transform, "Classroom_ATTEND_ENGLISH");
+            Transform dmRoot = FindChild(statsHud.transform, "Classroom_ATTEND_DM");
+            Transform icsRoot = FindChild(statsHud.transform, "IcsObjectiveBlock");
+            if (englishRoot != null)
+            {
+                Assert.That(englishRoot.gameObject.activeSelf, Is.False);
+            }
+
+            if (dmRoot != null)
+            {
+                Assert.That(dmRoot.gameObject.activeSelf, Is.False);
+            }
+
+            Assert.That(icsRoot.gameObject.activeSelf, Is.False);
+            Assert.That(dailyActivityState.IsClassroomResolved(ActivityIds.AttendEnglish), Is.False);
+            UnityEngine.Object.DestroyImmediate(english);
+            UnityEngine.Object.DestroyImmediate(dm);
+        }
+
+        [Test]
+        public void Summary_ListsEachCourseIndependently()
+        {
+            GameObject summaryObject = new GameObject("SummaryCourses");
+            DailySummaryUI summaryUi = summaryObject.AddComponent<DailySummaryUI>();
+            var summary = new DayFinalizeResult(
+                1,
+                1,
+                new[]
+                {
+                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Completed, "COMPLETED", 0, 12),
+                    new DaySummaryActivity(ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -5),
+                    new DaySummaryActivity(ActivityIds.AttendDm, ActivityStatus.Missed, "LEFT_EARLY", 0, -1)
+                },
+                0,
+                6,
+                50,
+                56);
+
+            summaryUi.ShowForTesting(summary);
+            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
+            TextMeshProUGUI totals = FindLabel(summaryUi.transform, "Totals");
+            Assert.That(body.text, Does.Contain("Introduction to Computer Science"));
+            Assert.That(body.text, Does.Contain("Academic Reputation: +12"));
+            Assert.That(body.text, Does.Contain("English (Missed)"));
+            Assert.That(body.text, Does.Contain("Academic Reputation: -5"));
+            Assert.That(body.text, Does.Contain("Discrete Mathematics (Left Early)"));
+            Assert.That(body.text, Does.Contain("Academic Reputation: -1"));
+            Assert.That(totals.text, Does.Contain("Academic Reputation: +6"));
+            UnityEngine.Object.DestroyImmediate(summaryObject);
+        }
+
+        [Test]
+        public void Lecture_EnglishHeader_AutoClosesAndRestoresControls()
+        {
+            playerObject.AddComponent<CharacterController>();
+            PlayerMovement movement = playerObject.AddComponent<PlayerMovement>();
+            FirstPersonLook look = playerObject.AddComponent<FirstPersonLook>();
+            InteractionController interaction = playerObject.AddComponent<InteractionController>();
+            SetCourseFields(classroom, ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+
+            var sync = new FakeAttendIcsSync();
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+            lecture.SetCompletionCloseDelayForTesting(0f);
+            var start = new AttendIcsSessionResult(
+                new ActivityRecord(ActivityIds.AttendEnglish, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                false,
+                true,
+                60000,
+                0,
+                0,
+                0,
+                0,
+                50f,
+                58f);
+
+            lecture.BeginLecture(classroom, sync, start, () => { });
+            Assert.That(FindLabel(lecture.transform, "Header").text, Is.EqualTo("ENGLISH"));
+            RunToCompletion(lecture.ClaimMilestoneForTesting(90));
+            Assert.That(ClassroomLectureUI.IsOpen, Is.False);
+            Assert.That(movement.enabled, Is.True);
+            Assert.That(look.enabled, Is.True);
+            Assert.That(interaction.enabled, Is.True);
+            Assert.That(Cursor.visible, Is.False);
+        }
+
+        [Test]
+        public void EarlyLeave_UpdatesOnlyThatCourseOnTheHud()
+        {
+            BindThreeCourses();
+            PlayerStats stats = playerObject.GetComponent<PlayerStats>();
+            ShowHud();
+
+            stats.ApplyServerState(50f, 50f, StatUpdateSource.InitialHydration);
+            Assert.That(ApplyLeave(ActivityIds.AttendIcs, 45f), Is.True);
+            AssertLeftEarly("Ics", "Attend Introduction to Computer Science — Left Early");
+            AssertPending("ATTEND_ENGLISH", "Attend English");
+            AssertPending("ATTEND_DM", "Attend Discrete Mathematics");
+            Assert.That(stats.AcademicReputation, Is.EqualTo(45f));
+
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+            stats.ApplyServerState(50f, 58f, StatUpdateSource.InitialHydration);
+            Assert.That(ApplyLeave(ActivityIds.AttendEnglish, 53f), Is.True);
+            AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");
+            AssertPendingMarker("Ics");
+            AssertPending("ATTEND_DM", "Attend Discrete Mathematics");
+            Assert.That(FindLabel(statsHud.transform, "AcademicText").text, Is.EqualTo("ACADEMIC: 53"));
+            Assert.That(FindLabel(statsHud.transform, "IdCardMarker").text, Is.EqualTo("[x]"));
+            Assert.That(FindLabel(statsHud.transform, "BreakfastMarker").text, Is.EqualTo("[ ]"));
+
+            dailyActivityState.SetClassroomStatusForTesting(ActivityIds.AttendEnglish, ActivityStatus.Pending);
+            stats.ApplyServerState(50f, 50f, StatUpdateSource.InitialHydration);
+            Assert.That(ApplyLeave(ActivityIds.AttendDm, 45f), Is.True);
+            AssertLeftEarly("ATTEND_DM", "Attend Discrete Mathematics — Left Early");
+            AssertPending("ATTEND_ENGLISH", "Attend English");
+            AssertPendingMarker("Ics");
+            Assert.That(dailyActivityState.GetClassroomOutcome(ActivityIds.AttendEnglish), Is.Not.EqualTo("LEFT_EARLY"));
+            Assert.That(dailyActivityState.AttendIcsOutcome, Is.Not.EqualTo("LEFT_EARLY"));
+        }
+
+        [Test]
+        public void FullAttendance_TurnsOnlyThatObjectiveGreen()
+        {
+            BindThreeCourses();
+            ShowHud();
+            PlayerProgressSync sync = playerObject.AddComponent<PlayerProgressSync>();
+            Assert.That(sync.ApplySessionResponseForTesting(SessionJson(
+                ActivityIds.AttendEnglish, "COMPLETED", "COMPLETED", 90, 0, 12, 62)), Is.True);
+
+            TextMeshProUGUI marker = FindLabel(statsHud.transform, "ATTEND_ENGLISHMarker");
+            TextMeshProUGUI title = FindLabel(statsHud.transform, "ATTEND_ENGLISHTitle");
+            Assert.That(marker.text, Is.EqualTo("[x]"));
+            Assert.That(marker.color, Is.EqualTo(UiTheme.Success));
+            Assert.That(title.text, Is.EqualTo("Attend English"));
+            Assert.That(title.color, Is.EqualTo(UiTheme.Success));
+            AssertPendingMarker("Ics");
+            AssertPending("ATTEND_DM", "Attend Discrete Mathematics");
+            Assert.That(FindLabel(statsHud.transform, "AcademicText").text, Is.EqualTo("ACADEMIC: 62"));
+        }
+
+        [Test]
+        public void Proxy_KeepsDistinctLabel_AndDoesNotLookLikeFullAttendance()
+        {
+            BindThreeCourses();
+            ShowHud();
+            PlayerProgressSync sync = playerObject.AddComponent<PlayerProgressSync>();
+            Assert.That(sync.ApplySessionResponseForTesting(SessionJson(
+                ActivityIds.AttendEnglish, "COMPLETED", "PROXY", 0, 5, 0, 50)), Is.True);
+
+            TextMeshProUGUI marker = FindLabel(statsHud.transform, "ATTEND_ENGLISHMarker");
+            TextMeshProUGUI title = FindLabel(statsHud.transform, "ATTEND_ENGLISHTitle");
+            TextMeshProUGUI description = FindLabel(statsHud.transform, "ATTEND_ENGLISHDescription");
+            Assert.That(marker.text, Is.EqualTo("[~]"));
+            Assert.That(marker.color, Is.EqualTo(UiTheme.BrightOrange));
+            Assert.That(title.color, Is.EqualTo(UiTheme.BrightOrange));
+            Assert.That(description.gameObject.activeSelf, Is.True);
+            Assert.That(description.text, Is.EqualTo("Proxy — Punched ID and Left"));
+            Assert.That(marker.text, Is.Not.EqualTo("[x]"));
+            AssertPendingMarker("Ics");
+            AssertPending("ATTEND_DM", "Attend Discrete Mathematics");
+        }
+
+        [Test]
+        public void ResolvedClassroom_StaysOnHud_AfterFloorUnloads_AndContinueHydratesIt()
+        {
+            BindThreeCourses();
+            ShowHud();
+            Assert.That(ApplyLeave(ActivityIds.AttendEnglish, 53f), Is.True);
+            AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");
+
+            UnityEngine.Object.DestroyImmediate(classroomObject);
+            classroomObject = null;
+            classroom = null;
+            ShowHud();
+            AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");
+
+            dailyActivityState.ResetForNewGame();
+            saveState.SetDayProgressForTesting(1, 1);
+            saveState.SetIdentityForTesting("STUDENT", "CSE", true);
+            dailyActivityState.SetGetIdCardStatusForTesting(ActivityStatus.Completed, "COMPLETED");
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.AttendEnglish,
+                ActivityStatus.Missed,
+                "LEFT_EARLY",
+                0,
+                3,
+                1,
+                60));
+            playerObject.GetComponent<PlayerStats>().ApplyServerState(50f, 53f, StatUpdateSource.InitialHydration);
+            AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");
+            Assert.That(FindLabel(statsHud.transform, "AcademicText").text, Is.EqualTo("ACADEMIC: 53"));
+        }
+
+        [Test]
+        public void EndDayReplay_DoesNotPenalizeAResolvedClassAgain()
+        {
+            BindThreeCourses();
+            ShowHud();
+            PlayerStats stats = playerObject.GetComponent<PlayerStats>();
+            Assert.That(ApplyLeave(ActivityIds.AttendEnglish, 53f), Is.True);
+            Assert.That(ApplyLeave(ActivityIds.AttendEnglish, 53f), Is.True);
+            Assert.That(stats.AcademicReputation, Is.EqualTo(53f));
+            Assert.That(dailyActivityState.GetClassroomOutcome(ActivityIds.AttendEnglish), Is.EqualTo("LEFT_EARLY"));
+
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.AttendDm, ActivityStatus.Missed, "SKIPPED", 0, -5, 1));
+            Assert.That(stats.AcademicReputation, Is.EqualTo(53f));
+            AssertLeftEarly("ATTEND_DM", "Attend Discrete Mathematics — Missed");
+            AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");
+        }
+
+        [Test]
+        public void FailedSessionResponse_DoesNotChangeReputationOrObjective()
+        {
+            BindThreeCourses();
+            ShowHud();
+            PlayerStats stats = playerObject.GetComponent<PlayerStats>();
+            stats.ApplyServerState(50f, 58f, StatUpdateSource.InitialHydration);
+            PlayerProgressSync sync = playerObject.AddComponent<PlayerProgressSync>();
+
+            Assert.That(sync.ApplySessionResponseForTesting("{"), Is.False);
+            Assert.That(sync.ApplySessionResponseForTesting(""), Is.False);
+            Assert.That(stats.AcademicReputation, Is.EqualTo(58f));
+            Assert.That(dailyActivityState.IsClassroomResolved(ActivityIds.AttendEnglish), Is.False);
+            AssertPending("ATTEND_ENGLISH", "Attend English");
+            Assert.That(FindLabel(statsHud.transform, "IdCardMarker").text, Is.EqualTo("[x]"));
+            Assert.That(FindLabel(statsHud.transform, "BreakfastMarker").text, Is.EqualTo("[ ]"));
+        }
+
+        [Test]
+        public void Door_ReadsTheVisibleHudPlayer_NotAStrayActivityState()
+        {
+            GameObject doorObject = new GameObject("EnglishDoor");
+            doorObject.AddComponent<BoxCollider>();
+            IcsClassroomInteractable door = doorObject.AddComponent<IcsClassroomInteractable>();
+            SetCourseFields(door, ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+
+            GameObject stray = new GameObject("StrayActivities");
+            DailyActivityState strayState = stray.AddComponent<DailyActivityState>();
+            strayState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.AttendEnglish, ActivityStatus.Pending, string.Empty, 0, 0, 1));
+
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.AttendEnglish, ActivityStatus.Missed, "LEFT_EARLY", 0, 3, 1, 60));
+
+            Assert.That(door.Interact(), Is.EqualTo("You already left this class early today."));
+            UnityEngine.Object.DestroyImmediate(doorObject);
+            UnityEngine.Object.DestroyImmediate(stray);
+        }
+
+        [Test]
+        public void DuplicateFloorPlayer_IsDisabled_SoItCannotOwnTheHud()
+        {
+            GameObject floorPlayer = new GameObject("Floor07Player");
+            floorPlayer.AddComponent<PlayerStats>();
+            floorPlayer.AddComponent<DailyActivityState>();
+            floorPlayer.AddComponent<StatsHUD>();
+
+            Assert.That(floorPlayer.activeInHierarchy, Is.False);
+            Assert.That(StatsHUD.Instance, Is.SameAs(statsHud));
+            UnityEngine.Object.DestroyImmediate(floorPlayer);
+        }
+
+        private bool ApplyLeave(string activityId, float academicReputation)
+        {
+            PlayerProgressSync sync = playerObject.GetComponent<PlayerProgressSync>();
+            if (sync == null)
+            {
+                sync = playerObject.AddComponent<PlayerProgressSync>();
+            }
+
+            return sync.ApplySessionResponseForTesting(SessionJson(
+                activityId, "MISSED", "LEFT_EARLY", 60, 0, 3, academicReputation));
+        }
+
+        private void BindThreeCourses()
+        {
+            DestroyClassroomWithoutCache();
+            locationConfigAsset = CreateLocationConfig("427", 4);
+            englishConfig = CreateCourseConfig(
+                ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
+            dmConfig = CreateCourseConfig(
+                ActivityIds.AttendDm, "DM", "Discrete Mathematics", "423", 4);
+            dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
+            dailyActivityState.SetAdditionalLocationConfigsForTesting(new[] { englishConfig, dmConfig });
+        }
+
+        private void ShowHud()
+        {
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+        }
+
+        private void AssertLeftEarly(string namePrefix, string title)
+        {
+            TextMeshProUGUI marker = FindLabel(statsHud.transform, namePrefix + "Marker");
+            TextMeshProUGUI titleLabel = FindLabel(statsHud.transform, namePrefix + "Title");
+            Assert.That(marker.text, Is.EqualTo("[X]"));
+            Assert.That(marker.color, Is.EqualTo(UiTheme.Danger));
+            Assert.That(titleLabel.text, Is.EqualTo(title));
+            Assert.That(titleLabel.color, Is.EqualTo(UiTheme.Danger));
+        }
+
+        private void AssertPending(string namePrefix, string title)
+        {
+            TextMeshProUGUI marker = FindLabel(statsHud.transform, namePrefix + "Marker");
+            TextMeshProUGUI titleLabel = FindLabel(statsHud.transform, namePrefix + "Title");
+            Assert.That(marker.text, Is.EqualTo("[ ]"));
+            Assert.That(titleLabel.text, Is.EqualTo(title));
+            Assert.That(titleLabel.color, Is.EqualTo(UiTheme.White));
+        }
+
+        private void AssertPendingMarker(string namePrefix)
+        {
+            Assert.That(FindLabel(statsHud.transform, namePrefix + "Marker").text, Is.EqualTo("[ ]"));
+        }
+
+        private static string SessionJson(
+            string activityId,
+            string status,
+            string outcome,
+            int milestoneSeconds,
+            int auraDelta,
+            int reputationDelta,
+            float academicReputation)
+        {
+            return "{"
+                + "\"activityId\":\"" + activityId + "\","
+                + "\"status\":\"" + status + "\","
+                + "\"outcome\":\"" + outcome + "\","
+                + "\"milestoneSeconds\":" + milestoneSeconds + ","
+                + "\"auraDelta\":" + auraDelta + ","
+                + "\"reputationDelta\":" + reputationDelta + ","
+                + "\"requestedAuraDelta\":0,"
+                + "\"requestedReputationDelta\":0,"
+                + "\"appliedAuraDelta\":" + auraDelta + ","
+                + "\"appliedReputationDelta\":" + reputationDelta + ","
+                + "\"alreadyApplied\":false,"
+                + "\"sessionActive\":false,"
+                + "\"activeElapsedMs\":60000,"
+                + "\"dayNumber\":1,"
+                + "\"aura\":50,"
+                + "\"academicReputation\":" + academicReputation.ToString("0")
+                + "}";
+        }
+
         private static void RunToCompletion(IEnumerator routine)
         {
             int guard = 0;
@@ -626,6 +1103,44 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 guard++;
                 Assert.That(guard, Is.LessThan(10000), "Coroutine did not finish");
             }
+        }
+
+        private static void SetCourseFields(
+            IcsClassroomInteractable target,
+            string activityId,
+            string courseId,
+            string courseName,
+            string room,
+            int floor)
+        {
+            var type = typeof(IcsClassroomInteractable);
+            const System.Reflection.BindingFlags flags =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            type.GetField("activityId", flags)?.SetValue(target, activityId);
+            type.GetField("courseId", flags)?.SetValue(target, courseId);
+            type.GetField("courseName", flags)?.SetValue(target, courseName);
+            type.GetField("classroomNumber", flags)?.SetValue(target, room);
+            type.GetField("floor", flags)?.SetValue(target, floor);
+            type.GetField("departmentCode", flags)?.SetValue(target, "CSE");
+            type.GetField("studentRole", flags)?.SetValue(target, "STUDENT");
+            type.GetField("scheduledGameplayDay", flags)?.SetValue(target, 1);
+        }
+
+        private static IcsClassroomLocationConfig CreateCourseConfig(
+            string activityId,
+            string courseId,
+            string courseName,
+            string room,
+            int floor)
+        {
+            IcsClassroomLocationConfig config = CreateLocationConfig(room, floor);
+            var type = typeof(IcsClassroomLocationConfig);
+            const System.Reflection.BindingFlags flags =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            type.GetField("activityId", flags)?.SetValue(config, activityId);
+            type.GetField("courseId", flags)?.SetValue(config, courseId);
+            type.GetField("courseName", flags)?.SetValue(config, courseName);
+            return config;
         }
 
         private static void SetClassroomConfig(IcsClassroomInteractable target, string room, int floor)
