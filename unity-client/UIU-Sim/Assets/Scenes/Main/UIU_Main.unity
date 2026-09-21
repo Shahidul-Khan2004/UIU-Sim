@@ -307,6 +307,7 @@ GameObject:
   - component: {fileID: 867626050}
   - component: {fileID: 867626052}
   - component: {fileID: 867626053}
+  - component: {fileID: 867626054}
   m_Layer: 0
   m_Name: Game Managers
   m_TagString: Untagged
@@ -327,6 +328,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UIU.Simulator.Building.Generation::UIU.Simulator.Building.Generation.FloorSceneLoader
   initialFloorSceneName: GroundFloor
+  currentFloorNumber: 0
 --- !u!4 &867626051
 Transform:
   m_ObjectHideFlags: 0
@@ -369,6 +371,18 @@ MonoBehaviour:
   playerPrefab: {fileID: 696609785730293354, guid: 69483ab282db71ac5be75dd5866f0abf, type: 3}
   cameraFollow: {fileID: 0}
   fallbackPosition: {x: 0, y: 1, z: 15}
+--- !u!114 &867626054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867626049}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d2a4a53d3007be43a18d708f0bacdbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Stairs.StairTravelController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
