@@ -102,7 +102,8 @@ namespace UIU.Simulator.Gameplay.Editor
             if (counter == null) counter = counterGo.AddComponent<CanteenBreakfastCounter>();
 
             SerializedObject serializedCounter = new SerializedObject(counter);
-            serializedCounter.FindProperty("workerName").stringValue = "Canteen Worker";
+            serializedCounter.FindProperty("stallDisplayName").stringValue = "Neptune";
+            serializedCounter.FindProperty("workerName").stringValue = "";
             serializedCounter.FindProperty("prompt").stringValue = "Order Breakfast";
             serializedCounter.FindProperty("queueDuration").floatValue = 75f;
             serializedCounter.ApplyModifiedProperties();

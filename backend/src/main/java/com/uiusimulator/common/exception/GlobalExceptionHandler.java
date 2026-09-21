@@ -81,6 +81,16 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of(ex.getMessage(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(com.uiusimulator.player.exception.PlayerSaveNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePlayerSaveNotFound(
+            com.uiusimulator.player.exception.PlayerSaveNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        log.info("Player save missing: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiErrorResponse.of(ex.getMessage(), request.getRequestURI()));
+    }
+
     @ExceptionHandler(com.uiusimulator.advisor.exception.AdvisorRateLimitException.class)
     public ResponseEntity<ApiErrorResponse> handleAdvisorRateLimit(
             com.uiusimulator.advisor.exception.AdvisorRateLimitException ex,

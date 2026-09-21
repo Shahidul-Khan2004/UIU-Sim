@@ -41,6 +41,12 @@ class ClerkFilterRegistrationTest {
     private com.uiusimulator.player.service.PlayerStatsService playerStatsService;
 
     @MockitoBean
+    private com.uiusimulator.player.service.PlayerSaveService playerSaveService;
+
+    @MockitoBean
+    private com.uiusimulator.player.service.PlayerActivityService playerActivityService;
+
+    @MockitoBean
     private com.uiusimulator.auth.service.AuthService authService;
 
     @MockitoBean

@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 4561587381547158817}
   - component: {fileID: 8293740192847561928}
   - component: {fileID: 7123984123891726351}
+  - component: {fileID: 9182736450192837465}
   - component: {fileID: 6238491823749123841}
   - component: {fileID: 3718356153676586817}
   - component: {fileID: 8827461950182736402}
@@ -224,10 +225,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StatsHUD
   fontSize: 20
   feedbackFontSize: 18
+  objectiveTitleSize: 18
+  objectiveBodySize: 14
   textColor: {r: 1, g: 1, b: 1, a: 1}
   positiveDeltaColor: {r: 1, g: 0.55, b: 0.1, a: 1}
   negativeDeltaColor: {r: 1, g: 0.4, b: 0.4, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.65}
+  idCardObjectiveTitle: Get Your ID Card
+  idCardObjectiveDescription: Talk to the receptionist to take your ID card.
+  breakfastObjectiveTitle: Have Breakfast
+  breakfastObjectiveDescription: Go to Neptune in the canteen to get your breakfast.
   screenOffset: {x: 24, y: -24}
   feedbackHoldDuration: 1.4
   feedbackFadeDuration: 0.6
@@ -244,6 +251,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CampusDayState
   hasCompletedBreakfastEvent: 0
+--- !u!114 &9182736450192837465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696609785730293354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d81b274c3e8c43a89c2c4b2e8091c352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UIU.Simulator.Gameplay.Activities::DailyActivityState
+  breakfastTitle: Have Breakfast
+  breakfastDescription: Go to Neptune in the canteen to get your breakfast.
+  breakfastStallDisplayName: Neptune
 --- !u!114 &6238491823749123841
 MonoBehaviour:
   m_ObjectHideFlags: 0
