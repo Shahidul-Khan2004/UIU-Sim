@@ -10,7 +10,7 @@ using UIU.Simulator.Authentication;
 namespace UIU.Simulator.Authentication.EditorTools
 {
     /// <summary>
-    /// Creates Bootstrap/Login scenes and wires Build Settings + Main auth guard.
+    /// Creates Bootstrap/Login/SaveSelection scenes and wires Build Settings + Main auth guard.
     /// Menu: UIU Simulator → Setup Authentication Scenes
     /// </summary>
     public static class AuthSceneSetupMenu
@@ -19,6 +19,7 @@ namespace UIU.Simulator.Authentication.EditorTools
         private const string AuthRoot = ScenesRoot + "/Auth";
         private const string BootstrapPath = AuthRoot + "/Bootstrap.unity";
         private const string LoginPath = AuthRoot + "/Login.unity";
+        private const string SaveSelectionPath = AuthRoot + "/SaveSelection.unity";
         private const string MainPath = "Assets/Scenes/Main/UIU_Main.unity";
 
         [MenuItem("UIU Simulator/Setup Authentication Scenes")]
@@ -29,12 +30,13 @@ namespace UIU.Simulator.Authentication.EditorTools
 
             CreateControllerScene(BootstrapPath, "Bootstrap", typeof(AuthBootstrapController));
             CreateControllerScene(LoginPath, "Login", typeof(LoginSceneController));
+            CreateControllerScene(SaveSelectionPath, "SaveSelection", typeof(SaveSelectionController));
             EnsureGameplayGuardOnMain();
             UpdateBuildSettings();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[AuthSceneSetup] Bootstrap + Login scenes ready. Bootstrap is first in Build Settings.");
+            Debug.Log("[AuthSceneSetup] Bootstrap + Login + SaveSelection scenes ready. Bootstrap is first in Build Settings.");
         }
 
         private static void EnsureFolder(string path)
@@ -87,12 +89,16 @@ namespace UIU.Simulator.Authentication.EditorTools
             {
                 new EditorBuildSettingsScene(BootstrapPath, true),
                 new EditorBuildSettingsScene(LoginPath, true),
+                new EditorBuildSettingsScene(SaveSelectionPath, true),
                 new EditorBuildSettingsScene(MainPath, true)
             };
 
             foreach (EditorBuildSettingsScene existing in EditorBuildSettings.scenes)
             {
-                if (existing.path == BootstrapPath || existing.path == LoginPath || existing.path == MainPath)
+                if (existing.path == BootstrapPath ||
+                    existing.path == LoginPath ||
+                    existing.path == SaveSelectionPath ||
+                    existing.path == MainPath)
                 {
                     continue;
                 }

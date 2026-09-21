@@ -195,8 +195,8 @@ namespace UIU.Simulator.Authentication
 
         private void EnterGame()
         {
-            Debug.Log("[LoginSceneController] Authentication complete — loading Main.");
-            SceneManager.LoadScene(AuthSceneNames.Main);
+            Debug.Log("[LoginSceneController] Authentication complete — loading SaveSelection.");
+            SceneManager.LoadScene(AuthSceneNames.SaveSelection);
         }
 
         private void SetStatus(string message)
