@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UIU.Simulator.Gameplay.Activities;
 
 /// <summary>
 /// Tracks the player's daily campus activities and event completions.
@@ -9,6 +10,8 @@ using UnityEngine;
 /// and mutation methods like <see cref="CompleteBreakfastEvent"/> to record progress.
 /// External systems cannot directly set the state fields.
 /// </para>
+/// Breakfast resolution is authoritative in <see cref="DailyActivityState"/> when present;
+/// this component keeps a compatible gate for canteen interaction.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CampusDayState : MonoBehaviour
@@ -17,13 +20,26 @@ public sealed class CampusDayState : MonoBehaviour
     [Tooltip("True once the player has resolved today's breakfast event (eaten, completed queue, or skipped).")]
     [SerializeField] private bool hasCompletedBreakfastEvent;
 
+    private DailyActivityState dailyActivityState;
+
     // ── Public API — Queries ───────────────────────────────────────────
 
     /// <summary>
     /// True once the player has resolved today's breakfast event
-    /// (by having Rice, waiting for Porotta, skipping breakfast, or skipping the line).
+    /// (COMPLETED or MISSED — including skip breakfast).
     /// </summary>
-    public bool HasCompletedBreakfastEvent => hasCompletedBreakfastEvent;
+    public bool HasCompletedBreakfastEvent
+    {
+        get
+        {
+            if (dailyActivityState != null)
+            {
+                return dailyActivityState.IsBreakfastResolved;
+            }
+
+            return hasCompletedBreakfastEvent;
+        }
+    }
 
     /// <summary>
     /// Raised whenever <see cref="HasCompletedBreakfastEvent"/> changes.
@@ -45,8 +61,15 @@ public sealed class CampusDayState : MonoBehaviour
     /// </summary>
     public void BeginCampusDay()
     {
-        bool wasCompleted = hasCompletedBreakfastEvent;
+        bool wasCompleted = HasCompletedBreakfastEvent;
         hasCompletedBreakfastEvent = false;
+
+        if (dailyActivityState == null)
+        {
+            dailyActivityState = GetComponent<DailyActivityState>();
+        }
+
+        dailyActivityState?.ResetForNewDay();
 
         Debug.Log("[CampusDayState] BeginCampusDay called — daily event states reset.");
 
@@ -59,8 +82,8 @@ public sealed class CampusDayState : MonoBehaviour
     }
 
     /// <summary>
-    /// Records the daily breakfast event as completed.
-    /// Called by the canteen breakfast counter upon resolving any terminal outcome.
+    /// Records the daily breakfast event as resolved (COMPLETED or MISSED).
+    /// Called only after a successful backend activity resolve (or test seam).
     /// </summary>
     public void CompleteBreakfastEvent()
     {
@@ -70,7 +93,22 @@ public sealed class CampusDayState : MonoBehaviour
         }
 
         hasCompletedBreakfastEvent = true;
-        Debug.Log("[CampusDayState] Breakfast event completed for today.");
+        Debug.Log("[CampusDayState] Breakfast event resolved for today.");
+        OnBreakfastEventCompletedChanged?.Invoke(true);
+    }
+
+    /// <summary>
+    /// Applies a hydrated server breakfast resolution without networking.
+    /// Does not reset other day state.
+    /// </summary>
+    public void ApplyHydratedBreakfastResolved()
+    {
+        if (HasCompletedBreakfastEvent)
+        {
+            return;
+        }
+
+        hasCompletedBreakfastEvent = true;
         OnBreakfastEventCompletedChanged?.Invoke(true);
     }
 
@@ -78,7 +116,9 @@ public sealed class CampusDayState : MonoBehaviour
 
     private void Awake()
     {
-        // MVP: Initialize daily state when the player object is instantiated.
-        BeginCampusDay();
+        dailyActivityState = GetComponent<DailyActivityState>();
+        // Local day gate starts pending. Server hydration may mark breakfast resolved after Continue.
+        // Do NOT wipe persisted activity state here — respawn/Continue must keep outcomes.
+        hasCompletedBreakfastEvent = dailyActivityState != null && dailyActivityState.IsBreakfastResolved;
     }
 }
