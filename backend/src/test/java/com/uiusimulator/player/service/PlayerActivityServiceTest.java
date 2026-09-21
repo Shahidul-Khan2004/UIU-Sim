@@ -61,6 +61,82 @@ class PlayerActivityServiceTest {
     }
 
     @Test
+    void resolve_getIdCard_completesWithZeroRewards() {
+        Jwt jwt = jwtWith("user_act_idcard");
+        createSave(jwt);
+
+        // createSave already records GET_ID_CARD; resolve must be idempotent.
+        ActivityResolveResponse response = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("GET_ID_CARD", "COMPLETED")
+        );
+
+        assertThat(response.status()).isEqualTo("COMPLETED");
+        assertThat(response.outcome()).isEqualTo("COMPLETED");
+        assertThat(response.auraDelta()).isEqualTo(0);
+        assertThat(response.reputationDelta()).isEqualTo(0);
+        assertThat(response.alreadyResolved()).isTrue();
+        assertThat(response.aura()).isEqualTo(50);
+
+        Player player = playerRepository.findByClerkUserId("user_act_idcard").orElseThrow();
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "GET_ID_CARD")).isPresent();
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(50);
+    }
+
+    @Test
+    void resolve_getIdCard_duplicate_doesNotChangeState() {
+        Jwt jwt = jwtWith("user_act_idcard_dup");
+        createSave(jwt);
+
+        ActivityResolveResponse first = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("GET_ID_CARD", "COMPLETED")
+        );
+        ActivityResolveResponse second = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("GET_ID_CARD", "COMPLETED")
+        );
+
+        assertThat(first.alreadyResolved()).isTrue();
+        assertThat(second.alreadyResolved()).isTrue();
+        assertThat(second.outcome()).isEqualTo("COMPLETED");
+
+        Player player = playerRepository.findByClerkUserId("user_act_idcard_dup").orElseThrow();
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "GET_ID_CARD")).isPresent();
+        assertThat(playerDayActivityRepository.findByPlayer_IdOrderByResolvedAtAsc(player.getId())
+                .stream()
+                .filter(a -> "GET_ID_CARD".equals(a.getActivityId()))
+                .count()).isEqualTo(1);
+    }
+
+    @Test
+    void createSave_seedsGetIdCardCompleted() {
+        Jwt jwt = jwtWith("user_act_idcard_seed");
+        createSave(jwt);
+
+        ActivityListResponse listed = playerActivityService.listCurrentDayActivities(jwt);
+        assertThat(listed.activities()).anySatisfy(activity -> {
+            assertThat(activity.activityId()).isEqualTo("GET_ID_CARD");
+            assertThat(activity.status()).isEqualTo("COMPLETED");
+            assertThat(activity.outcome()).isEqualTo("COMPLETED");
+            assertThat(activity.auraDelta()).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void deleteSave_clearsGetIdCardActivity() {
+        Jwt jwt = jwtWith("user_act_idcard_reset");
+        createSave(jwt);
+
+        Player player = playerRepository.findByClerkUserId("user_act_idcard_reset").orElseThrow();
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "GET_ID_CARD")).isPresent();
+
+        playerSaveService.deleteSave(jwt);
+
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "GET_ID_CARD")).isEmpty();
+    }
+
+    @Test
     void resolve_rice_completesWithPlus5Aura() {
         Jwt jwt = jwtWith("user_act_rice");
         createSave(jwt);
@@ -144,7 +220,11 @@ class PlayerActivityServiceTest {
         assertThat(second.aura()).isEqualTo(55);
 
         Player player = playerRepository.findByClerkUserId("user_act_dup").orElseThrow();
-        assertThat(playerDayActivityRepository.findByPlayer_IdOrderByResolvedAtAsc(player.getId())).hasSize(1);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")).isPresent();
+        assertThat(playerDayActivityRepository.findByPlayer_IdOrderByResolvedAtAsc(player.getId())
+                .stream()
+                .filter(a -> "BREAKFAST".equals(a.getActivityId()))
+                .count()).isEqualTo(1);
         assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(55);
     }
 
@@ -155,14 +235,22 @@ class PlayerActivityServiceTest {
 
         ActivityListResponse before = playerActivityService.listCurrentDayActivities(jwt);
         assertThat(before.dayNumber()).isEqualTo(1);
-        assertThat(before.activities()).isEmpty();
+        // Admission seeds GET_ID_CARD COMPLETED; breakfast remains pending (no row).
+        assertThat(before.activities()).hasSize(1);
+        assertThat(before.activities().get(0).activityId()).isEqualTo("GET_ID_CARD");
 
         playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("breakfast", "rice"));
 
         ActivityListResponse after = playerActivityService.listCurrentDayActivities(jwt);
-        assertThat(after.activities()).hasSize(1);
-        assertThat(after.activities().get(0).activityId()).isEqualTo(BreakfastOutcome.ACTIVITY_ID);
-        assertThat(after.activities().get(0).status()).isEqualTo("COMPLETED");
+        assertThat(after.activities()).hasSize(2);
+        assertThat(after.activities())
+                .extracting(a -> a.activityId())
+                .containsExactlyInAnyOrder("GET_ID_CARD", BreakfastOutcome.ACTIVITY_ID);
+        assertThat(after.activities())
+                .filteredOn(a -> BreakfastOutcome.ACTIVITY_ID.equals(a.activityId()))
+                .first()
+                .extracting(a -> a.status())
+                .isEqualTo("COMPLETED");
     }
 
     @Test
