@@ -30,6 +30,9 @@ public class PlayerSave {
     @Column(nullable = false, length = 32)
     private PlayerRole role;
 
+    @Column(name = "player_name", length = 128)
+    private String playerName;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
@@ -45,6 +48,9 @@ public class PlayerSave {
 
     @Column(name = "admission_completed", nullable = false)
     private boolean admissionCompleted;
+
+    @Column(name = "id_card_issued", nullable = false)
+    private boolean idCardIssued;
 
     @Column(name = "last_saved_at")
     private Instant lastSavedAt;
@@ -62,11 +68,13 @@ public class PlayerSave {
             UUID id,
             Player player,
             PlayerRole role,
+            String playerName,
             Department department,
             String universityId,
             int semester,
             int currentDay,
             boolean admissionCompleted,
+            boolean idCardIssued,
             Instant lastSavedAt,
             Instant createdAt,
             Instant updatedAt
@@ -74,11 +82,13 @@ public class PlayerSave {
         this.id = id;
         this.player = Objects.requireNonNull(player, "player must not be null");
         this.role = Objects.requireNonNull(role, "role must not be null");
+        this.playerName = blankToNull(playerName);
         this.department = Objects.requireNonNull(department, "department must not be null");
         this.universityId = blankToNull(universityId);
         this.semester = semester;
         this.currentDay = currentDay;
         this.admissionCompleted = admissionCompleted;
+        this.idCardIssued = idCardIssued;
         this.lastSavedAt = lastSavedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -86,11 +96,12 @@ public class PlayerSave {
 
     /**
      * Creates a new university journey after admission.
-     * Defaults: semester=1, currentDay=1, admissionCompleted=true.
+     * Defaults: semester=1, currentDay=1, admissionCompleted=true, idCardIssued=true.
      */
     public static PlayerSave createAfterAdmission(
             Player player,
             PlayerRole role,
+            String playerName,
             Department department,
             String universityId
     ) {
@@ -99,10 +110,12 @@ public class PlayerSave {
                 UUID.randomUUID(),
                 player,
                 role,
+                playerName,
                 department,
                 universityId,
                 1,
                 1,
+                true,
                 true,
                 now,
                 now,
@@ -126,6 +139,10 @@ public class PlayerSave {
         return role;
     }
 
+    public String getPlayerName() {
+        return playerName;
+    }
+
     public Department getDepartment() {
         return department;
     }
@@ -144,6 +161,10 @@ public class PlayerSave {
 
     public boolean isAdmissionCompleted() {
         return admissionCompleted;
+    }
+
+    public boolean isIdCardIssued() {
+        return idCardIssued;
     }
 
     public Instant getLastSavedAt() {

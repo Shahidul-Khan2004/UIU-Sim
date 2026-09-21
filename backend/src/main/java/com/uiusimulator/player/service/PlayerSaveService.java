@@ -54,8 +54,14 @@ public class PlayerSaveService {
         if (request.role() == null) {
             throw new IllegalArgumentException("role must not be null");
         }
+        if (request.playerName() == null || request.playerName().isBlank()) {
+            throw new IllegalArgumentException("playerName must not be blank");
+        }
         if (request.departmentId() == null) {
             throw new IllegalArgumentException("departmentId must not be null");
+        }
+        if (request.universityId() == null || request.universityId().isBlank()) {
+            throw new IllegalArgumentException("universityId must not be blank");
         }
 
         Player player = playerService.getOrProvisionPlayer(jwt);
@@ -70,8 +76,9 @@ public class PlayerSaveService {
         PlayerSave created = PlayerSave.createAfterAdmission(
                 player,
                 request.role(),
+                request.playerName().trim(),
                 department,
-                request.universityId()
+                request.universityId().trim()
         );
 
         try {
