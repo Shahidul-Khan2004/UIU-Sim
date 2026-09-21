@@ -185,7 +185,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
-        public void Summary_DifferentiatesCompletedAndMissedWithRichTextColors()
+        public void Summary_DifferentiatesCompletedAndMissedWithStatusColors()
         {
             DaySummaryActivity[] activities =
             {
@@ -196,13 +196,13 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             summaryUi.ShowForTesting(summary);
 
-            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
-            string successHex = ColorUtility.ToHtmlStringRGB(UiTheme.Success);
-            string dangerHex = ColorUtility.ToHtmlStringRGB(UiTheme.Danger);
+            TextMeshProUGUI idTitle = FindLabel(FindChild(summaryUi.transform, "ActivityRow_0"), "Title");
+            TextMeshProUGUI breakfastTitle = FindLabel(FindChild(summaryUi.transform, "ActivityRow_1"), "Title");
 
-            Assert.That(body.richText, Is.True);
-            Assert.That(body.text, Does.Contain($"<color=#{successHex}>[x] Get Your ID Card</color>"));
-            Assert.That(body.text, Does.Contain($"<color=#{dangerHex}>[X] Have Breakfast</color>"));
+            Assert.That(idTitle.text, Does.Contain("[x] Get Your ID Card"));
+            Assert.That(idTitle.color, Is.EqualTo(UiTheme.Success));
+            Assert.That(breakfastTitle.text, Does.Contain("[X] Have Breakfast"));
+            Assert.That(breakfastTitle.color, Is.EqualTo(UiTheme.Danger));
         }
 
         [Test]
@@ -224,15 +224,64 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(Time.timeScale, Is.EqualTo(1f));
 
             TextMeshProUGUI header = FindLabel(summaryUi.transform, "Header");
-            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
+            string body = summaryUi.GetActivityBodyTextForTesting();
             TextMeshProUGUI totals = FindLabel(summaryUi.transform, "Totals");
 
             Assert.That(header.text, Does.Contain("SEMESTER 1"));
             Assert.That(header.text, Does.Contain("DAY 1 COMPLETE"));
-            Assert.That(body.text, Does.Contain("[x] Get Your ID Card"));
-            Assert.That(body.text, Does.Contain("[X] Have Breakfast"));
-            Assert.That(body.text, Does.Contain("Aura: -5"));
+            Assert.That(body, Does.Contain("[x] Get Your ID Card"));
+            Assert.That(body, Does.Contain("[X] Have Breakfast"));
+            Assert.That(body, Does.Contain("Aura: -5"));
+            Assert.That(totals.text, Does.Contain("TODAY'S TOTAL"));
             Assert.That(totals.text, Does.Contain("Aura: -5"));
+            Assert.That(FindChild(summaryUi.transform, "ActivityScroll"), Is.Not.Null);
+            Assert.That(FindChild(summaryUi.transform, "FooterRegion"), Is.Not.Null);
+        }
+
+        [Test]
+        public void Summary_ManyActivities_BuildsDistinctRows_KeepsFooterAndScroll()
+        {
+            var activities = new DaySummaryActivity[10];
+            for (int i = 0; i < activities.Length; i++)
+            {
+                activities[i] = new DaySummaryActivity(
+                    ActivityIds.Breakfast,
+                    i % 2 == 0 ? ActivityStatus.Completed : ActivityStatus.Missed,
+                    i % 2 == 0 ? "RICE" : "SKIP_BREAKFAST",
+                    i % 2 == 0 ? 5 : -5,
+                    0);
+            }
+
+            // Mix in classroom outcomes with long titles.
+            activities[7] = new DaySummaryActivity(
+                ActivityIds.AttendIcs, ActivityStatus.Missed, "LEFT_EARLY", 0, -1);
+            activities[8] = new DaySummaryActivity(
+                ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -5);
+            activities[9] = new DaySummaryActivity(
+                ActivityIds.AttendDm, ActivityStatus.Completed, "PROXY", 5, 0);
+
+            DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, 0, -6, 50, 44);
+            summaryUi.ShowForTesting(summary);
+
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.That(FindChild(summaryUi.transform, $"ActivityRow_{i}"), Is.Not.Null);
+            }
+
+            RectTransform panel = FindChild(summaryUi.transform, "DailySummaryPanel") as RectTransform;
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel.sizeDelta.x, Is.InRange(540f, 620f));
+            Assert.That(panel.sizeDelta.y, Is.InRange(420f, 720f));
+
+            Assert.That(FindChild(summaryUi.transform, "ActivityScroll").GetComponent<ScrollRect>(), Is.Not.Null);
+            Assert.That(FindChild(summaryUi.transform, "FooterRegion"), Is.Not.Null);
+            Assert.That(FindButton(summaryUi.transform, "Button_Continue"), Is.Not.Null);
+            Assert.That(FindLabel(summaryUi.transform, "Totals").text, Does.Contain("TODAY'S TOTAL"));
+
+            string body = summaryUi.GetActivityBodyTextForTesting();
+            Assert.That(body, Does.Contain("Introduction to Computer Science"));
+            Assert.That(body, Does.Contain("Proxy — Punched ID and Left"));
+            Assert.That(body, Does.Contain("Aura: +5 | Academic: 0"));
         }
 
         [Test]

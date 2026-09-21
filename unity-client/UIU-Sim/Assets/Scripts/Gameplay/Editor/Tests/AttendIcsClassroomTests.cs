@@ -319,10 +319,13 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 50);
 
             summaryUi.ShowForTesting(summary);
-            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
-            Assert.That(body.text, Does.Contain("Proxy — Punched ID and Left"));
-            Assert.That(body.text, Does.Contain("Aura: +5"));
-            Assert.That(body.text, Does.Contain("Academic Reputation: 0"));
+            string body = summaryUi.GetActivityBodyTextForTesting();
+            Assert.That(body, Does.Contain("Proxy — Punched ID and Left"));
+            Assert.That(body, Does.Contain("Aura: +5"));
+            Assert.That(body, Does.Contain("Academic: 0"));
+
+            TextMeshProUGUI title = FindLabel(FindChild(summaryUi.transform, "ActivityRow_0"), "Title");
+            Assert.That(title.color, Is.EqualTo(UiTheme.BrightOrange));
 
             UnityEngine.Object.DestroyImmediate(summaryObject);
         }
@@ -346,9 +349,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 49);
 
             summaryUi.ShowForTesting(summary);
-            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
-            Assert.That(body.text, Does.Contain("Left Early"));
-            Assert.That(body.text, Does.Contain("Academic Reputation: -1"));
+            string body = summaryUi.GetActivityBodyTextForTesting();
+            Assert.That(body, Does.Contain("Left Early"));
+            Assert.That(body, Does.Contain("Academic: -1"));
 
             UnityEngine.Object.DestroyImmediate(summaryObject);
         }
@@ -788,15 +791,17 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 56);
 
             summaryUi.ShowForTesting(summary);
-            TextMeshProUGUI body = FindLabel(summaryUi.transform, "Body");
+            string body = summaryUi.GetActivityBodyTextForTesting();
             TextMeshProUGUI totals = FindLabel(summaryUi.transform, "Totals");
-            Assert.That(body.text, Does.Contain("Introduction to Computer Science"));
-            Assert.That(body.text, Does.Contain("Academic Reputation: +12"));
-            Assert.That(body.text, Does.Contain("English (Missed)"));
-            Assert.That(body.text, Does.Contain("Academic Reputation: -5"));
-            Assert.That(body.text, Does.Contain("Discrete Mathematics (Left Early)"));
-            Assert.That(body.text, Does.Contain("Academic Reputation: -1"));
+            Assert.That(body, Does.Contain("Introduction to Computer Science"));
+            Assert.That(body, Does.Contain("Academic: +12"));
+            Assert.That(body, Does.Contain("English (Missed)"));
+            Assert.That(body, Does.Contain("Academic: -5"));
+            Assert.That(body, Does.Contain("Discrete Mathematics (Left Early)"));
+            Assert.That(body, Does.Contain("Academic: -1"));
+            Assert.That(totals.text, Does.Contain("TODAY'S TOTAL"));
             Assert.That(totals.text, Does.Contain("Academic Reputation: +6"));
+            Assert.That(FindChild(summaryUi.transform, "ActivityScroll"), Is.Not.Null);
             UnityEngine.Object.DestroyImmediate(summaryObject);
         }
 

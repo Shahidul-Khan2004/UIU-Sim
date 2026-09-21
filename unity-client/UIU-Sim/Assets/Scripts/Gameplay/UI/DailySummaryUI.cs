@@ -25,7 +25,7 @@ namespace UIU.Simulator.Gameplay.UI
     {
         private const int CanvasSortOrder = 245;
         private const float PanelWidth = 580f;
-        private const float PanelMinHeight = 380f;
+        private const float PanelMinHeight = 420f;
         private const float PanelMaxHeight = 680f;
         private const float HeaderPreferredHeight = 96f;
         private const float FooterPreferredHeight = 168f;
@@ -119,7 +119,6 @@ namespace UIU.Simulator.Gameplay.UI
             isAdvancing = false;
             advanceSucceeded = false;
             SetError(string.Empty);
-            RenderSummary(summary);
             continueButton.interactable = true;
 
             if (!IsOpen)
@@ -131,8 +130,10 @@ namespace UIU.Simulator.Gameplay.UI
                 EnsureEventSystem();
             }
 
+            // Activate before rendering so layout rebuilds measure real widths/heights.
             overlayRoot.SetActive(true);
             IsOpen = true;
+            RenderSummary(summary);
         }
 
         public void Hide(bool restoreGameplayControls = true)
@@ -356,9 +357,18 @@ namespace UIU.Simulator.Gameplay.UI
         {
             for (int i = 0; i < activityRows.Count; i++)
             {
-                if (activityRows[i] != null)
+                if (activityRows[i] == null)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
                 {
                     Destroy(activityRows[i]);
+                }
+                else
+                {
+                    DestroyImmediate(activityRows[i]);
                 }
             }
 
@@ -391,7 +401,8 @@ namespace UIU.Simulator.Gameplay.UI
             rowLayout.childForceExpandWidth = true;
             rowLayout.childForceExpandHeight = false;
 
-            // Prefer content-driven height; avoid nested ContentSizeFitter (conflicts with parent CSF).
+            // TMP implements ILayoutElement — row height follows wrapped title preferred size.
+            // Do not nest ContentSizeFitter here; parent ActivityContent already has one.
             LayoutElement rowLe = row.AddComponent<LayoutElement>();
             rowLe.flexibleWidth = 1f;
             rowLe.minHeight = 36f;
@@ -407,17 +418,6 @@ namespace UIU.Simulator.Gameplay.UI
             titleLabel.textWrappingMode = TextWrappingModes.Normal;
             titleLabel.overflowMode = TextOverflowModes.Overflow;
 
-            LayoutElement titleLe = titleLabel.gameObject.AddComponent<LayoutElement>();
-            titleLe.minHeight = 22f;
-            titleLe.preferredHeight = 22f;
-            titleLe.flexibleWidth = 1f;
-
-            // Grow title height when the course name wraps.
-            titleLabel.enableAutoSizing = false;
-            ContentSizeFitter titleFitter = titleLabel.gameObject.AddComponent<ContentSizeFitter>();
-            titleFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            titleFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
             TextMeshProUGUI detailLabel = CreateText(
                 row.transform,
                 "Details",
@@ -427,11 +427,6 @@ namespace UIU.Simulator.Gameplay.UI
                 UiTheme.Grey,
                 TextAlignmentOptions.TopLeft);
             detailLabel.textWrappingMode = TextWrappingModes.Normal;
-
-            LayoutElement detailLe = detailLabel.gameObject.AddComponent<LayoutElement>();
-            detailLe.minHeight = 18f;
-            detailLe.preferredHeight = 20f;
-            detailLe.flexibleWidth = 1f;
 
             activityRows.Add(row);
         }
@@ -449,11 +444,11 @@ namespace UIU.Simulator.Gameplay.UI
             float contentHeight = Mathf.Max(activityContentRect.rect.height, activityContentRect.sizeDelta.y);
             float padding = 48f; // panel VerticalLayoutGroup padding top+bottom
             float spacing = 10f * 2f; // header↔scroll and scroll↔footer
-            float desired = HeaderPreferredHeight + FooterPreferredHeight + contentHeight + padding + spacing;
+            float chrome = HeaderPreferredHeight + FooterPreferredHeight + padding + spacing;
+            float desired = chrome + Mathf.Max(contentHeight, ScrollMinHeight);
             float panelHeight = Mathf.Clamp(desired, PanelMinHeight, ResolveMaxPanelHeight());
 
-            float scrollHeight = panelHeight - HeaderPreferredHeight - FooterPreferredHeight - padding - spacing;
-            scrollHeight = Mathf.Max(ScrollMinHeight, scrollHeight);
+            float scrollHeight = Mathf.Max(ScrollMinHeight, panelHeight - chrome);
 
             panelRect.sizeDelta = new Vector2(PanelWidth, panelHeight);
             scrollLayoutElement.minHeight = ScrollMinHeight;
