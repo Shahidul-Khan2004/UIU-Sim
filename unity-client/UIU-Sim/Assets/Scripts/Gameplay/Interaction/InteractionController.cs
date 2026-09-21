@@ -104,7 +104,7 @@ public sealed class InteractionController : MonoBehaviour
         currentTarget = null;
 
         // Block interaction targeting while a dialogue panel, queue UI, advisor panel, elevator UI, admission UI, or game menu is open.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen)
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen)
         {
             if (previousTarget != null)
             {
@@ -159,7 +159,7 @@ public sealed class InteractionController : MonoBehaviour
         }
 
         // Block interaction input while a dialogue panel, queue UI, advisor panel, elevator UI, or game menu is open.
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen)
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen)
         {
             return;
         }

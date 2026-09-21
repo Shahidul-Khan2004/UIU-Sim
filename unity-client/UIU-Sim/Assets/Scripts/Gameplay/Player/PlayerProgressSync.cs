@@ -24,12 +24,18 @@ namespace UIU.Simulator.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerStats))]
-    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync
+    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync
     {
         private const string ActivitiesPath = "api/players/me/activities";
         private const string ResolvePath = "api/players/me/activities/resolve";
         private const string FinalizeDayPath = "api/players/me/day/finalize";
         private const string AdvanceDayPath = "api/players/me/day/advance";
+        private const string AttendIcsStartPath = "api/players/me/activities/attend-ics/start";
+        private const string AttendIcsPausePath = "api/players/me/activities/attend-ics/pause";
+        private const string AttendIcsResumePath = "api/players/me/activities/attend-ics/resume";
+        private const string AttendIcsMilestonePath = "api/players/me/activities/attend-ics/milestone";
+        private const string AttendIcsLeavePath = "api/players/me/activities/attend-ics/leave-early";
+        private const string AttendIcsProxyPath = "api/players/me/activities/attend-ics/proxy";
 
         private PlayerStats playerStats;
         private PlayerInventory playerInventory;
@@ -240,6 +246,7 @@ namespace UIU.Simulator.Gameplay.Player
 
             bool breakfastFound = false;
             bool getIdCardFound = false;
+            bool attendIcsFound = false;
             if (dto.activities != null)
             {
                 for (int i = 0; i < dto.activities.Length; i++)
@@ -257,11 +264,19 @@ namespace UIU.Simulator.Gameplay.Player
                         activity.outcome,
                         activity.auraDelta,
                         activity.reputationDelta,
-                        activity.dayNumber > 0 ? activity.dayNumber : dto.dayNumber);
+                        activity.dayNumber > 0 ? activity.dayNumber : dto.dayNumber,
+                        activity.milestoneSeconds);
 
                     if (activity.activityId == ActivityIds.GetIdCard)
                     {
                         getIdCardFound = true;
+                        dailyActivityState?.ApplyServerActivity(record);
+                        continue;
+                    }
+
+                    if (activity.activityId == ActivityIds.AttendIcs)
+                    {
+                        attendIcsFound = true;
                         dailyActivityState?.ApplyServerActivity(record);
                         continue;
                     }
@@ -298,9 +313,19 @@ namespace UIU.Simulator.Gameplay.Player
                 dailyActivityState?.SetDayNumber(dto.dayNumber);
             }
 
+            if (!attendIcsFound && dailyActivityState != null && dto.dayNumber > 0
+                && dailyActivityState.AttendIcsStatus != ActivityStatus.Pending)
+            {
+                // Day advance cleared ICS — keep pending unless ResetForNewDay already handled it.
+                if (breakfastFound)
+                {
+                    dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+                }
+            }
+
             Debug.Log(
                 $"[PlayerProgressSync] Hydrated activities for day={dto.dayNumber}, " +
-                $"getIdCardResolved={getIdCardFound}, breakfastResolved={breakfastFound}");
+                $"getIdCardResolved={getIdCardFound}, breakfastResolved={breakfastFound}, attendIcsFound={attendIcsFound}");
         }
 
         /// <summary>
@@ -712,6 +737,156 @@ namespace UIU.Simulator.Gameplay.Player
             StartCoroutine(ResolveActivityRoutine(activityId, outcome, onSuccess, onFailure));
         }
 
+        public void RequestAttendIcsStart(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            StartAttendIcsMutation(AttendIcsStartPath, null, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsPause(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            StartAttendIcsMutation(AttendIcsPausePath, null, onSuccess, onFailure, requireMutationSlot: false);
+        }
+
+        public void RequestAttendIcsResume(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            StartAttendIcsMutation(AttendIcsResumePath, null, onSuccess, onFailure, requireMutationSlot: false);
+        }
+
+        public void RequestAttendIcsMilestone(
+            int milestoneSeconds,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            string body = JsonUtility.ToJson(new ApiClient.AttendIcsMilestoneRequestDto(milestoneSeconds));
+            StartAttendIcsMutation(AttendIcsMilestonePath, body, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsLeaveEarly(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            StartAttendIcsMutation(AttendIcsLeavePath, null, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsProxy(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            StartAttendIcsMutation(AttendIcsProxyPath, null, onSuccess, onFailure);
+        }
+
+        private void StartAttendIcsMutation(
+            string path,
+            string jsonBody,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure,
+            bool requireMutationSlot = true)
+        {
+            if (!isHydrated)
+            {
+                SystemNotificationUI.Show("Player progress is still loading.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            if (requireMutationSlot && isMutationInFlight)
+            {
+                SystemNotificationUI.Show("Progress update is already in progress.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            EnsureDependencies();
+            if (userSession == null || !userSession.HasToken)
+            {
+                string msg = "Your session has expired. Please sign in again.";
+                SystemNotificationUI.Show(msg);
+                OnSyncFailed?.Invoke(msg);
+                onFailure?.Invoke();
+                return;
+            }
+
+            StartCoroutine(AttendIcsMutationRoutine(path, jsonBody, onSuccess, onFailure, requireMutationSlot));
+        }
+
+        private IEnumerator AttendIcsMutationRoutine(
+            string path,
+            string jsonBody,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure,
+            bool requireMutationSlot)
+        {
+            if (requireMutationSlot)
+            {
+                isMutationInFlight = true;
+            }
+
+            yield return apiClient.Post(
+                path,
+                string.IsNullOrEmpty(jsonBody) ? "{}" : jsonBody,
+                userSession.JwtToken,
+                onSuccess: json =>
+                {
+                    if (requireMutationSlot)
+                    {
+                        isMutationInFlight = false;
+                    }
+
+                    try
+                    {
+                        ApiClient.AttendIcsSessionResponseDto response =
+                            JsonUtility.FromJson<ApiClient.AttendIcsSessionResponseDto>(json);
+                        if (response == null)
+                        {
+                            onFailure?.Invoke();
+                            return;
+                        }
+
+                        ActivityRecord record = new ActivityRecord(
+                            response.activityId,
+                            ParseActivityStatus(response.status),
+                            response.outcome,
+                            response.auraDelta,
+                            response.reputationDelta,
+                            response.dayNumber,
+                            response.milestoneSeconds);
+
+                        dailyActivityState?.ApplyServerActivity(record);
+                        playerStats.ApplyServerState(
+                            response.aura,
+                            response.academicReputation,
+                            StatUpdateSource.GameplayMutation);
+
+                        onSuccess?.Invoke(new AttendIcsSessionResult(
+                            record,
+                            response.alreadyApplied,
+                            response.sessionActive,
+                            response.activeElapsedMs,
+                            response.requestedAuraDelta,
+                            response.requestedReputationDelta,
+                            response.appliedAuraDelta,
+                            response.appliedReputationDelta,
+                            response.aura,
+                            response.academicReputation));
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[PlayerProgressSync] Failed to parse ATTEND_ICS response: {ex.Message}");
+                        onFailure?.Invoke();
+                    }
+                },
+                onError: (error, code) =>
+                {
+                    if (requireMutationSlot)
+                    {
+                        isMutationInFlight = false;
+                    }
+
+                    string userMessage = ClassifyErrorMessage(code, error);
+                    Debug.LogWarning($"[PlayerProgressSync] ATTEND_ICS failed (HTTP {code}): {error}. Local state unchanged.");
+                    SystemNotificationUI.Show(userMessage);
+                    OnSyncFailed?.Invoke(userMessage);
+                    onFailure?.Invoke();
+                }
+            );
+        }
+
         private IEnumerator MutateStatsRoutine(int auraDelta, int academicReputationDelta)
         {
             isMutationInFlight = true;
@@ -835,6 +1010,8 @@ namespace UIU.Simulator.Gameplay.Player
                     return ActivityStatus.Completed;
                 case "MISSED":
                     return ActivityStatus.Missed;
+                case "IN_PROGRESS":
+                    return ActivityStatus.InProgress;
                 default:
                     return ActivityStatus.Pending;
             }

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Minimal screen-space HUD displaying the player's Aura, Academic Reputation,
 /// and stacked objectives driven by <see cref="DailyActivityState"/>
-/// (GET_ID_CARD first, then BREAKFAST).
+/// (GET_ID_CARD, BREAKFAST, ATTEND_ICS).
 /// Built at runtime — no canvas prefab required.
 /// Attach to the Player prefab root alongside <see cref="PlayerStats"/>.
 /// </summary>
@@ -39,6 +39,13 @@ public sealed class StatsHUD : MonoBehaviour
     [SerializeField, TextArea]
     private string breakfastObjectiveDescription = "Go to Neptune in the canteen to get your breakfast.";
 
+    [Header("Objective Copy — ICS Classroom")]
+    [SerializeField] private string icsObjectiveTitle = "Attend Introduction to Computer Science";
+
+    [SerializeField, TextArea]
+    private string icsObjectiveDescriptionFallback =
+        "ICS classroom is not configured. Assign floor, room number, and classroom interaction in the Inspector.";
+
     [Header("Layout")]
     [SerializeField] private Vector2 screenOffset = new Vector2(24f, -24f);
 
@@ -66,6 +73,11 @@ public sealed class StatsHUD : MonoBehaviour
     private TextMeshProUGUI breakfastMarkerText;
     private TextMeshProUGUI breakfastTitleText;
     private TextMeshProUGUI breakfastDescriptionText;
+
+    private GameObject icsObjectiveRoot;
+    private TextMeshProUGUI icsMarkerText;
+    private TextMeshProUGUI icsTitleText;
+    private TextMeshProUGUI icsDescriptionText;
 
     private float lastAura;
     private float lastReputation;
@@ -120,6 +132,7 @@ public sealed class StatsHUD : MonoBehaviour
         {
             dailyActivityState.OnGetIdCardStatusChanged += RefreshObjectiveDisplay;
             dailyActivityState.OnBreakfastStatusChanged += RefreshObjectiveDisplay;
+            dailyActivityState.OnAttendIcsStatusChanged += RefreshObjectiveDisplay;
             dailyActivityState.OnActivitiesReset += RefreshObjectiveDisplay;
         }
 
@@ -145,6 +158,7 @@ public sealed class StatsHUD : MonoBehaviour
         {
             dailyActivityState.OnGetIdCardStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnBreakfastStatusChanged -= RefreshObjectiveDisplay;
+            dailyActivityState.OnAttendIcsStatusChanged -= RefreshObjectiveDisplay;
             dailyActivityState.OnActivitiesReset -= RefreshObjectiveDisplay;
         }
 
@@ -256,6 +270,7 @@ public sealed class StatsHUD : MonoBehaviour
 
         if (!showBreakfast || breakfastMarkerText == null)
         {
+            RefreshIcsObjective(showBreakfast);
             return;
         }
 
@@ -274,6 +289,79 @@ public sealed class StatsHUD : MonoBehaviour
             breakfastMarkerText,
             breakfastTitleText,
             breakfastDescriptionText);
+
+        RefreshIcsObjective(showBreakfast);
+    }
+
+    private void RefreshIcsObjective(bool breakfastVisible)
+    {
+        bool showIcs = breakfastVisible
+            && dailyActivityState != null
+            && dailyActivityState.ShouldShowAttendIcsObjective(playerSaveState);
+
+        if (icsObjectiveRoot != null)
+        {
+            icsObjectiveRoot.SetActive(showIcs);
+        }
+
+        if (!showIcs || icsMarkerText == null || dailyActivityState == null)
+        {
+            return;
+        }
+
+        ActivityStatus icsStatus = dailyActivityState.AttendIcsStatus;
+        string outcome = dailyActivityState.AttendIcsOutcome;
+        string title = dailyActivityState.BuildAttendIcsObjectiveTitle();
+        string description = dailyActivityState.BuildAttendIcsObjectiveDescription();
+
+        if (string.Equals(outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyProxyObjectiveVisual(
+                title,
+                "Proxy — Punched ID and Left",
+                icsMarkerText,
+                icsTitleText,
+                icsDescriptionText);
+            return;
+        }
+
+        if (string.Equals(outcome, "LEFT_EARLY", System.StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyObjectiveVisual(
+                ActivityStatus.Missed,
+                title,
+                description,
+                icsMarkerText,
+                icsTitleText,
+                icsDescriptionText);
+            return;
+        }
+
+        ApplyObjectiveVisual(
+            icsStatus == ActivityStatus.InProgress ? ActivityStatus.Pending : icsStatus,
+            title,
+            description,
+            icsMarkerText,
+            icsTitleText,
+            icsDescriptionText);
+    }
+
+    private static void ApplyProxyObjectiveVisual(
+        string title,
+        string description,
+        TextMeshProUGUI marker,
+        TextMeshProUGUI titleLabel,
+        TextMeshProUGUI descriptionLabel)
+    {
+        marker.text = "[~]";
+        marker.color = UiTheme.BrightOrange;
+        titleLabel.text = title;
+        titleLabel.color = UiTheme.BrightOrange;
+        if (descriptionLabel != null)
+        {
+            descriptionLabel.text = description;
+            descriptionLabel.color = UiTheme.Grey;
+        }
     }
 
     private int ResolveSemester()
@@ -513,6 +601,31 @@ public sealed class StatsHUD : MonoBehaviour
         breakfastDescriptionText.text = breakfastObjectiveDescription;
         breakfastTitleText.text = breakfastObjectiveTitle;
         breakfastObjectiveRoot.SetActive(false);
+
+        icsObjectiveRoot = new GameObject("IcsObjectiveBlock");
+        icsObjectiveRoot.transform.SetParent(panelRoot.transform, false);
+        VerticalLayoutGroup icsLayout = icsObjectiveRoot.AddComponent<VerticalLayoutGroup>();
+        icsLayout.spacing = 4f;
+        icsLayout.childAlignment = TextAnchor.UpperLeft;
+        icsLayout.childControlWidth = true;
+        icsLayout.childControlHeight = true;
+        icsLayout.childForceExpandWidth = false;
+        icsLayout.childForceExpandHeight = false;
+        ContentSizeFitter icsFitter = icsObjectiveRoot.AddComponent<ContentSizeFitter>();
+        icsFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        icsFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        BuildObjectiveRow(icsObjectiveRoot.transform, "Ics", out icsMarkerText, out icsTitleText);
+        icsDescriptionText = CreateLabel(
+            icsObjectiveRoot.transform,
+            "IcsDescription",
+            objectiveBodySize,
+            UiTheme.Grey,
+            FontStyles.Normal);
+        icsDescriptionText.textWrappingMode = TextWrappingModes.Normal;
+        icsDescriptionText.text = icsObjectiveDescriptionFallback;
+        icsTitleText.text = icsObjectiveTitle;
+        icsObjectiveRoot.SetActive(false);
     }
 
     private void BuildObjectiveRow(

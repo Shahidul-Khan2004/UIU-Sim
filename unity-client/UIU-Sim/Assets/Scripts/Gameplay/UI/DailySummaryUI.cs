@@ -301,8 +301,13 @@ namespace UIU.Simulator.Gameplay.UI
             {
                 DaySummaryActivity item = activities[i];
                 string title = ResolveActivityTitle(item.ActivityId, activityState);
-                string marker = StatusMarker(item.Status);
-                string hex = ColorUtility.ToHtmlStringRGB(StatusColor(item.Status));
+                if (item.ActivityId == ActivityIds.AttendIcs)
+                {
+                    title = AttendIcsOutcomeApi.SummaryLabel(item.Outcome);
+                }
+
+                string marker = StatusMarkerForActivity(item);
+                string hex = ColorUtility.ToHtmlStringRGB(StatusColorForActivity(item));
                 body.AppendLine($"<color=#{hex}>{marker} {title}</color>");
                 body.AppendLine($"    Aura: {FormatSigned(item.AuraDelta)}");
                 body.AppendLine($"    Academic Reputation: {FormatSigned(item.AcademicReputationDelta)}");
@@ -328,6 +333,11 @@ namespace UIU.Simulator.Gameplay.UI
             if (activityId == ActivityIds.Breakfast)
             {
                 return state != null ? state.BreakfastTitle : "Have Breakfast";
+            }
+
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                return AttendIcsOutcomeApi.SummaryLabel(state != null ? state.AttendIcsOutcome : null);
             }
 
             return activityId;
@@ -357,6 +367,34 @@ namespace UIU.Simulator.Gameplay.UI
                 default:
                     return UiTheme.White;
             }
+        }
+
+        private static string StatusMarkerForActivity(DaySummaryActivity item)
+        {
+            if (item.ActivityId == ActivityIds.AttendIcs
+                && string.Equals(item.Outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return "[~]";
+            }
+
+            return StatusMarker(item.Status);
+        }
+
+        private static Color StatusColorForActivity(DaySummaryActivity item)
+        {
+            if (item.ActivityId == ActivityIds.AttendIcs
+                && string.Equals(item.Outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return UiTheme.BrightOrange;
+            }
+
+            if (item.ActivityId == ActivityIds.AttendIcs
+                && string.Equals(item.Outcome, "LEFT_EARLY", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return UiTheme.Danger;
+            }
+
+            return StatusColor(item.Status);
         }
 
         private static string FormatSigned(int value)

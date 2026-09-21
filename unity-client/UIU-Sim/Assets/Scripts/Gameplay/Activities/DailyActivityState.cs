@@ -1,4 +1,5 @@
 using System;
+using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
 
@@ -7,13 +8,14 @@ namespace UIU.Simulator.Gameplay.Activities
     /// <summary>
     /// Minimal current-day activity tracker. Definitions live in Unity Inspector;
     /// resolved outcomes are hydrated from the backend.
-    /// GET_ID_CARD is one-time (not reset by Next Day); BREAKFAST resets each day.
+    /// GET_ID_CARD is one-time (not reset by Next Day); BREAKFAST and ATTEND_ICS reset each day.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DailyActivityState : MonoBehaviour
     {
         public const string BreakfastActivityId = ActivityIds.Breakfast;
         public const string GetIdCardActivityId = ActivityIds.GetIdCard;
+        public const string AttendIcsActivityId = ActivityIds.AttendIcs;
 
         [Header("ID Card Activity")]
         [SerializeField] private string getIdCardTitle = "Get Your ID Card";
@@ -29,6 +31,10 @@ namespace UIU.Simulator.Gameplay.Activities
 
         [SerializeField] private string breakfastStallDisplayName = "Neptune";
 
+        [Header("ICS Classroom Activity")]
+        [Tooltip("Optional scene classroom used to build the objective HUD text.")]
+        [SerializeField] private IcsClassroomInteractable icsClassroom;
+
         private ActivityStatus getIdCardStatus = ActivityStatus.Pending;
         private string getIdCardOutcome = string.Empty;
         private int getIdCardAuraDelta;
@@ -38,7 +44,22 @@ namespace UIU.Simulator.Gameplay.Activities
         private string breakfastOutcome = string.Empty;
         private int breakfastAuraDelta;
         private int breakfastReputationDelta;
+
+        private ActivityStatus attendIcsStatus = ActivityStatus.Pending;
+        private string attendIcsOutcome = string.Empty;
+        private int attendIcsAuraDelta;
+        private int attendIcsReputationDelta;
+        private int attendIcsMilestoneSeconds;
+
         private int dayNumber = 1;
+
+        private void Awake()
+        {
+            if (icsClassroom == null)
+            {
+                icsClassroom = FindFirstObjectByType<IcsClassroomInteractable>();
+            }
+        }
 
         public string GetIdCardTitle => getIdCardTitle;
         public string GetIdCardDescription => getIdCardDescription;
@@ -54,7 +75,19 @@ namespace UIU.Simulator.Gameplay.Activities
         public string BreakfastOutcome => breakfastOutcome;
         public int BreakfastAuraDelta => breakfastAuraDelta;
         public int BreakfastReputationDelta => breakfastReputationDelta;
+
+        public ActivityStatus AttendIcsStatus => attendIcsStatus;
+        public string AttendIcsOutcome => attendIcsOutcome;
+        public int AttendIcsAuraDelta => attendIcsAuraDelta;
+        public int AttendIcsReputationDelta => attendIcsReputationDelta;
+        public int AttendIcsMilestoneSeconds => attendIcsMilestoneSeconds;
         public int DayNumber => dayNumber;
+
+        public IcsClassroomInteractable IcsClassroom
+        {
+            get => icsClassroom;
+            set => icsClassroom = value;
+        }
 
         /// <summary>True once GET_ID_CARD is COMPLETED for this journey.</summary>
         public bool IsGetIdCardResolved =>
@@ -64,13 +97,13 @@ namespace UIU.Simulator.Gameplay.Activities
         public bool IsBreakfastResolved =>
             breakfastStatus == ActivityStatus.Completed || breakfastStatus == ActivityStatus.Missed;
 
-        /// <summary>Raised whenever GET_ID_CARD status changes.</summary>
+        /// <summary>True once ATTEND_ICS reached a terminal outcome for the current day.</summary>
+        public bool IsAttendIcsResolved =>
+            attendIcsStatus == ActivityStatus.Completed || attendIcsStatus == ActivityStatus.Missed;
+
         public event Action OnGetIdCardStatusChanged;
-
-        /// <summary>Raised whenever breakfast status changes.</summary>
         public event Action OnBreakfastStatusChanged;
-
-        /// <summary>Raised when day activity state is reset (New Game / future Next Day).</summary>
+        public event Action OnAttendIcsStatusChanged;
         public event Action OnActivitiesReset;
 
         public ActivityRecord GetIdCardRecord()
@@ -95,11 +128,66 @@ namespace UIU.Simulator.Gameplay.Activities
                 dayNumber);
         }
 
+        public ActivityRecord GetAttendIcsRecord()
+        {
+            return new ActivityRecord(
+                AttendIcsActivityId,
+                attendIcsStatus,
+                attendIcsOutcome,
+                attendIcsAuraDelta,
+                attendIcsReputationDelta,
+                dayNumber,
+                attendIcsMilestoneSeconds);
+        }
+
+        public string BuildAttendIcsObjectiveTitle()
+        {
+            return "Attend Introduction to Computer Science";
+        }
+
+        public string BuildAttendIcsObjectiveDescription()
+        {
+            if (icsClassroom == null)
+            {
+                return "ICS classroom is not configured. Assign floor, room number, and classroom interaction in the Inspector.";
+            }
+
+            if (!icsClassroom.HasClassroomConfigured)
+            {
+                return icsClassroom.MissingSetupMessage;
+            }
+
+            return icsClassroom.BuildObjectiveDescription();
+        }
+
         /// <summary>
-        /// Resets daily activities to PENDING. Preserves one-time GET_ID_CARD.
-        /// Used by future Next Day progression. New Game resets GET_ID_CARD via
-        /// <see cref="ResetForNewGame"/>.
+        /// Whether the HUD should show ICS today for this player save.
         /// </summary>
+        public bool ShouldShowAttendIcsObjective(PlayerSaveState saveState)
+        {
+            if (icsClassroom == null)
+            {
+                return false;
+            }
+
+            if (saveState == null || !saveState.HasActiveUniversityDay)
+            {
+                return false;
+            }
+
+            if (!string.Equals(saveState.Role, "STUDENT", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!string.Equals(saveState.Department, icsClassroom.DepartmentCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return saveState.CurrentDay == icsClassroom.ScheduledGameplayDay;
+        }
+
         public void ResetForNewDay(int newDayNumber = 1)
         {
             dayNumber = Mathf.Max(1, newDayNumber);
@@ -107,14 +195,17 @@ namespace UIU.Simulator.Gameplay.Activities
             breakfastOutcome = string.Empty;
             breakfastAuraDelta = 0;
             breakfastReputationDelta = 0;
+            attendIcsStatus = ActivityStatus.Pending;
+            attendIcsOutcome = string.Empty;
+            attendIcsAuraDelta = 0;
+            attendIcsReputationDelta = 0;
+            attendIcsMilestoneSeconds = 0;
             OnActivitiesReset?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
-            Debug.Log($"[DailyActivityState] Reset for day {dayNumber} — breakfast PENDING (GET_ID_CARD preserved).");
+            OnAttendIcsStatusChanged?.Invoke();
+            Debug.Log($"[DailyActivityState] Reset for day {dayNumber} — breakfast/ICS PENDING (GET_ID_CARD preserved).");
         }
 
-        /// <summary>
-        /// Full journey reset used by New Game after the server clears activity rows.
-        /// </summary>
         public void ResetForNewGame()
         {
             dayNumber = 1;
@@ -126,13 +217,18 @@ namespace UIU.Simulator.Gameplay.Activities
             breakfastOutcome = string.Empty;
             breakfastAuraDelta = 0;
             breakfastReputationDelta = 0;
+            attendIcsStatus = ActivityStatus.Pending;
+            attendIcsOutcome = string.Empty;
+            attendIcsAuraDelta = 0;
+            attendIcsReputationDelta = 0;
+            attendIcsMilestoneSeconds = 0;
             OnActivitiesReset?.Invoke();
             OnGetIdCardStatusChanged?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
-            Debug.Log("[DailyActivityState] New Game reset — GET_ID_CARD and breakfast PENDING.");
+            OnAttendIcsStatusChanged?.Invoke();
+            Debug.Log("[DailyActivityState] New Game reset — GET_ID_CARD, breakfast, and ICS PENDING.");
         }
 
-        /// <summary>Applies a confirmed server activity row without mutating Aura.</summary>
         public void ApplyServerActivity(ActivityRecord record)
         {
             if (record.ActivityId == GetIdCardActivityId)
@@ -143,8 +239,27 @@ namespace UIU.Simulator.Gameplay.Activities
                 getIdCardAuraDelta = record.AuraDelta;
                 getIdCardReputationDelta = record.ReputationDelta;
                 OnGetIdCardStatusChanged?.Invoke();
+                return;
+            }
+
+            if (record.ActivityId == AttendIcsActivityId)
+            {
+                dayNumber = Mathf.Max(1, record.DayNumber);
+                attendIcsStatus = record.Status == ActivityStatus.Pending && !string.IsNullOrEmpty(record.Outcome)
+                    ? ActivityStatus.InProgress
+                    : record.Status;
+                if (string.Equals(record.Outcome, "ATTENDING", StringComparison.OrdinalIgnoreCase))
+                {
+                    attendIcsStatus = ActivityStatus.InProgress;
+                }
+
+                attendIcsOutcome = record.Outcome ?? string.Empty;
+                attendIcsAuraDelta = record.AuraDelta;
+                attendIcsReputationDelta = record.ReputationDelta;
+                attendIcsMilestoneSeconds = record.MilestoneSeconds;
+                OnAttendIcsStatusChanged?.Invoke();
                 Debug.Log(
-                    $"[DailyActivityState] Applied server GET_ID_CARD: status={getIdCardStatus}, outcome={getIdCardOutcome}");
+                    $"[DailyActivityState] Applied server ATTEND_ICS: status={attendIcsStatus}, outcome={attendIcsOutcome}, milestone={attendIcsMilestoneSeconds}");
                 return;
             }
 
@@ -159,11 +274,8 @@ namespace UIU.Simulator.Gameplay.Activities
             breakfastAuraDelta = record.AuraDelta;
             breakfastReputationDelta = record.ReputationDelta;
             OnBreakfastStatusChanged?.Invoke();
-            Debug.Log(
-                $"[DailyActivityState] Applied server breakfast: status={breakfastStatus}, outcome={breakfastOutcome}");
         }
 
-        /// <summary>Test seam to force GET_ID_CARD status without networking.</summary>
         public void SetGetIdCardStatusForTesting(ActivityStatus status, string outcome = null, int auraDelta = 0)
         {
             getIdCardStatus = status;
@@ -172,7 +284,6 @@ namespace UIU.Simulator.Gameplay.Activities
             OnGetIdCardStatusChanged?.Invoke();
         }
 
-        /// <summary>Test seam to force breakfast status without networking.</summary>
         public void SetBreakfastStatusForTesting(ActivityStatus status, string outcome = null, int auraDelta = 0)
         {
             breakfastStatus = status;
@@ -181,16 +292,26 @@ namespace UIU.Simulator.Gameplay.Activities
             OnBreakfastStatusChanged?.Invoke();
         }
 
-        /// <summary>
-        /// Detect pending breakfast so finalize can resolve it as MISSED (−5 Aura)
-        /// before advancing the day.
-        /// </summary>
+        public void SetAttendIcsStatusForTesting(
+            ActivityStatus status,
+            string outcome = null,
+            int auraDelta = 0,
+            int reputationDelta = 0,
+            int milestoneSeconds = 0)
+        {
+            attendIcsStatus = status;
+            attendIcsOutcome = outcome ?? string.Empty;
+            attendIcsAuraDelta = auraDelta;
+            attendIcsReputationDelta = reputationDelta;
+            attendIcsMilestoneSeconds = milestoneSeconds;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+
         public bool HasPendingBreakfastForDayAdvance()
         {
             return breakfastStatus == ActivityStatus.Pending;
         }
 
-        /// <summary>Updates the cached journey day without resetting activity rows.</summary>
         public void SetDayNumber(int newDayNumber)
         {
             dayNumber = Mathf.Max(1, newDayNumber);

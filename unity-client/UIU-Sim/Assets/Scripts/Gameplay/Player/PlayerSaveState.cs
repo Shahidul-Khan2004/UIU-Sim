@@ -154,6 +154,18 @@ namespace UIU.Simulator.Gameplay.Player
             OnDayProgressChanged?.Invoke();
         }
 
+        /// <summary>Test seam for role / department eligibility checks.</summary>
+        public void SetIdentityForTesting(string roleValue, string departmentValue, bool idCardIssuedValue = true)
+        {
+            role = roleValue;
+            department = departmentValue;
+            idCardIssued = idCardIssuedValue;
+            hasSave = true;
+            admissionCompleted = true;
+            isHydrated = true;
+            OnDayProgressChanged?.Invoke();
+        }
+
         /// <summary>Applies confirmed server day advancement without re-fetching the save.</summary>
         public void ApplyAdvancedDay(int semesterValue, int dayValue, bool idCardIssuedValue)
         {

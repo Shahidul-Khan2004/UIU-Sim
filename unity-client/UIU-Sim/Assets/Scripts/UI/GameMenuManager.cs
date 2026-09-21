@@ -320,7 +320,9 @@ namespace UIU.Simulator.UI
                 || CanteenQueueUI.IsOpen
                 || AdmissionUI.IsOpen
                 || IdCardUI.IsOpen
-                || DailySummaryUI.IsOpen;
+                || DailySummaryUI.IsOpen
+                || ClassroomChoiceUI.IsOpen
+                || ClassroomLectureUI.IsOpen;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)

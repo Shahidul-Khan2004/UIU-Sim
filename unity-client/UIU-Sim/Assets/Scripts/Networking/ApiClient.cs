@@ -169,6 +169,7 @@ namespace UIU.Simulator.Networking
             public int auraDelta;
             public int reputationDelta;
             public int dayNumber;
+            public int milestoneSeconds;
         }
 
         [Serializable]
@@ -201,6 +202,38 @@ namespace UIU.Simulator.Networking
             public int reputationDelta;
             public int dayNumber;
             public bool alreadyResolved;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class AttendIcsMilestoneRequestDto
+        {
+            public int milestoneSeconds;
+
+            public AttendIcsMilestoneRequestDto(int milestoneSeconds)
+            {
+                this.milestoneSeconds = milestoneSeconds;
+            }
+        }
+
+        [Serializable]
+        public class AttendIcsSessionResponseDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int milestoneSeconds;
+            public int auraDelta;
+            public int reputationDelta;
+            public int requestedAuraDelta;
+            public int requestedReputationDelta;
+            public int appliedAuraDelta;
+            public int appliedReputationDelta;
+            public bool alreadyApplied;
+            public bool sessionActive;
+            public long activeElapsedMs;
+            public int dayNumber;
             public int aura;
             public int academicReputation;
         }
