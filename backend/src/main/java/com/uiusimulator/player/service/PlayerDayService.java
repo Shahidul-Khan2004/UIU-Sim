@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Authoritative day finalization and advancement.
  * Finalize closes unresolved required activities (breakfast → SKIP_BREAKFAST,
- * ATTEND_ICS → SKIPPED / LEFT_EARLY) exactly once.
+ * each scheduled CSE classroom → SKIPPED / LEFT_EARLY) exactly once.
  * Advance increments current_day with expected-day idempotency and clears current-day activity rows.
  */
 @Service

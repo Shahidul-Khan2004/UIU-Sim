@@ -134,11 +134,16 @@ public class PlayerDayActivity {
         );
     }
 
-    public static PlayerDayActivity startAttendIcsSession(Player player, int dayNumber, Instant now) {
+    public static PlayerDayActivity startClassroomSession(
+            Player player,
+            String activityId,
+            int dayNumber,
+            Instant now
+    ) {
         return new PlayerDayActivity(
                 UUID.randomUUID(),
                 player,
-                AttendIcsDefinition.ACTIVITY_ID,
+                activityId,
                 dayNumber,
                 AttendIcsOutcome.ATTENDING.status(),
                 AttendIcsOutcome.ATTENDING.name(),
@@ -152,6 +157,10 @@ public class PlayerDayActivity {
                 now,
                 now
         );
+    }
+
+    public static PlayerDayActivity startAttendIcsSession(Player player, int dayNumber, Instant now) {
+        return startClassroomSession(player, AttendIcsDefinition.ACTIVITY_ID, dayNumber, now);
     }
 
     public boolean isTerminal() {
