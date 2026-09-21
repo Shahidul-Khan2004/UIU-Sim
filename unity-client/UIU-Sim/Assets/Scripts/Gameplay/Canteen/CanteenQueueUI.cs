@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -36,13 +37,13 @@ public sealed class CanteenQueueUI : MonoBehaviour
     [SerializeField] private Color panelBackground = new Color(0.05f, 0.05f, 0.05f, 0.94f);
 
     [Header("Text Colors")]
-    [SerializeField] private Color headerColor = new Color(1f, 0.82f, 0.35f, 1f); // warm amber
+    [SerializeField] private Color headerColor = UiTheme.BrightOrange;
     [SerializeField] private Color statusColor = new Color(0.85f, 0.85f, 0.85f, 1f);
     [SerializeField] private Color buttonTextColor = Color.white;
 
     [Header("Progress Bar Colors")]
     [SerializeField] private Color progressBarBackground = new Color(0.15f, 0.15f, 0.15f, 1f);
-    [SerializeField] private Color progressBarFillColor = new Color(1f, 0.65f, 0.15f, 1f); // warm orange/gold
+    [SerializeField] private Color progressBarFillColor = UiTheme.BrightOrange;
 
     [Header("Button Appearance")]
     [SerializeField] private Color buttonNormalColor = new Color(0.18f, 0.18f, 0.18f, 1f);

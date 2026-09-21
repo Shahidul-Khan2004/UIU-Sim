@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -35,7 +36,7 @@ public sealed class DialogueUI : MonoBehaviour
     [SerializeField] private Color panelBackground  = new Color(0.05f, 0.05f, 0.05f, 0.92f);
 
     [Header("Text Colors")]
-    [SerializeField] private Color speakerColor  = new Color(1f, 0.82f, 0.35f, 1f);  // warm amber
+    [SerializeField] private Color speakerColor  = UiTheme.BrightOrange;
     [SerializeField] private Color dialogueColor = Color.white;
     [SerializeField] private Color buttonTextColor = Color.white;
 

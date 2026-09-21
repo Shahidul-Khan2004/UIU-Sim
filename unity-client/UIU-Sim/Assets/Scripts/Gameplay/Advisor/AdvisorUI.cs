@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UIU.Simulator.Gameplay.UI;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -24,10 +25,10 @@ namespace UIU.Simulator.Gameplay.Advisor
 
         [Header("Appearance Colors")]
         [SerializeField] private Color panelBackground = new Color(0.06f, 0.07f, 0.09f, 0.95f);
-        [SerializeField] private Color headerColor = new Color(1f, 0.82f, 0.35f, 1f); // warm amber
+        [SerializeField] private Color headerColor = UiTheme.BrightOrange;
         [SerializeField] private Color advisorTextColor = new Color(0.95f, 0.95f, 0.95f, 1f);
         [SerializeField] private Color playerTextColor = new Color(0.75f, 0.88f, 1f, 1f);
-        [SerializeField] private Color statusTextColor = new Color(0.70f, 0.70f, 0.70f, 1f);
+        [SerializeField] private Color statusTextColor = UiTheme.Grey;
         [SerializeField] private Color buttonNormalColor = new Color(0.18f, 0.20f, 0.24f, 1f);
         [SerializeField] private Color buttonHighlightedColor = new Color(0.28f, 0.32f, 0.38f, 1f);
         [SerializeField] private Color buttonPressedColor = new Color(0.12f, 0.14f, 0.16f, 1f);

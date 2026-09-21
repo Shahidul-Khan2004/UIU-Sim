@@ -201,7 +201,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueUI
   panelBackground: {r: 0.05, g: 0.05, b: 0.05, a: 0.92}
-  speakerColor: {r: 1, g: 0.82, b: 0.35, a: 1}
+  speakerColor: {r: 1, g: 0.55, b: 0.1, a: 1}
   dialogueColor: {r: 1, g: 1, b: 1, a: 1}
   buttonTextColor: {r: 1, g: 1, b: 1, a: 1}
   buttonNormalColor: {r: 0.18, g: 0.18, b: 0.18, a: 1}
@@ -225,7 +225,7 @@ MonoBehaviour:
   fontSize: 20
   feedbackFontSize: 18
   textColor: {r: 1, g: 1, b: 1, a: 1}
-  positiveDeltaColor: {r: 0.35, g: 1, b: 0.45, a: 1}
+  positiveDeltaColor: {r: 1, g: 0.55, b: 0.1, a: 1}
   negativeDeltaColor: {r: 1, g: 0.4, b: 0.4, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.65}
   screenOffset: {x: 24, y: -24}
@@ -257,11 +257,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CanteenQueueUI
   panelBackground: {r: 0.05, g: 0.05, b: 0.05, a: 0.94}
-  headerColor: {r: 1, g: 0.82, b: 0.35, a: 1}
+  headerColor: {r: 1, g: 0.55, b: 0.1, a: 1}
   statusColor: {r: 0.85, g: 0.85, b: 0.85, a: 1}
   buttonTextColor: {r: 1, g: 1, b: 1, a: 1}
   progressBarBackground: {r: 0.15, g: 0.15, b: 0.15, a: 1}
-  progressBarFillColor: {r: 1, g: 0.65, b: 0.15, a: 1}
+  progressBarFillColor: {r: 1, g: 0.55, b: 0.1, a: 1}
   buttonNormalColor: {r: 0.18, g: 0.18, b: 0.18, a: 1}
   buttonHighlightedColor: {r: 0.32, g: 0.32, b: 0.32, a: 1}
   buttonPressedColor: {r: 0.08, g: 0.08, b: 0.08, a: 1}

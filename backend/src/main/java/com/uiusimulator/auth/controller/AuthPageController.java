@@ -39,13 +39,15 @@ public class AuthPageController {
                   ></script>
                   <style>
                     :root {
-                      --bg: #0f1a14;
-                      --panel: #1a2b22;
-                      --text: #e8f0ea;
-                      --muted: #9bb5a5;
-                      --accent: #3d8f6a;
-                      --accent-hover: #4eaa7f;
-                      --danger: #c45c5c;
+                      /* Aligns with Unity UiTheme: Black / White / Grey / BrightOrange / Red */
+                      --bg: #000000;
+                      --panel: #0a0a0a;
+                      --text: #ffffff;
+                      --muted: #b3b3b3;
+                      --accent: #ff8c1a;
+                      --accent-hover: #ffa43d;
+                      --danger: #ff6666;
+                      --border: #2a2a2a;
                     }
                     * { box-sizing: border-box; }
                     body {
@@ -53,7 +55,7 @@ public class AuthPageController {
                       min-height: 100vh;
                       font-family: "Segoe UI", system-ui, sans-serif;
                       background:
-                        radial-gradient(ellipse at top, #1e3a2c 0%%, transparent 55%%),
+                        radial-gradient(ellipse at top, rgba(255, 140, 26, 0.12) 0%%, transparent 55%%),
                         var(--bg);
                       color: var(--text);
                       display: grid;
@@ -63,7 +65,7 @@ public class AuthPageController {
                     .card {
                       width: min(520px, 100%%);
                       background: var(--panel);
-                      border: 1px solid #2a4034;
+                      border: 1px solid var(--border);
                       border-radius: 12px;
                       padding: 2rem;
                     }
@@ -99,7 +101,7 @@ public class AuthPageController {
                     button:hover { background: var(--accent-hover); }
                     button.secondary {
                       background: transparent;
-                      border: 1px solid #3a5646;
+                      border: 1px solid var(--border);
                       color: var(--text);
                     }
                     button.secondary:hover { border-color: var(--accent); }
@@ -110,12 +112,12 @@ public class AuthPageController {
                       min-height: 1.25rem;
                     }
                     #status.error { color: var(--danger); }
-                    #status.ok { color: #7dcea0; }
+                    #status.ok { color: var(--accent); }
                     #user-info, #dev-panel {
                       display: none;
                       margin-top: 0.75rem;
                       padding-top: 1rem;
-                      border-top: 1px solid #2a4034;
+                      border-top: 1px solid var(--border);
                       font-size: 0.9rem;
                     }
                     textarea {
@@ -123,8 +125,8 @@ public class AuthPageController {
                       min-height: 88px;
                       margin: 0.5rem 0;
                       border-radius: 8px;
-                      border: 1px solid #3a5646;
-                      background: #122018;
+                      border: 1px solid var(--border);
+                      background: #111111;
                       color: var(--text);
                       padding: 0.6rem;
                       font-family: ui-monospace, monospace;
