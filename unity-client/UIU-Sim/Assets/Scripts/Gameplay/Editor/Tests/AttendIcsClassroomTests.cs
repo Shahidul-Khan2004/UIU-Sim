@@ -6,6 +6,7 @@ using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIU.Simulator.Gameplay.Editor.Tests
 {
@@ -203,6 +204,133 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(dailyActivityState.AttendIcsStatus, Is.EqualTo(ActivityStatus.Pending));
             Assert.That(dailyActivityState.AttendIcsMilestoneSeconds, Is.EqualTo(0));
             Assert.That(dailyActivityState.IsAttendIcsResolved, Is.False);
+        }
+
+        [Test]
+        public void ChoiceMenu_UnlocksCursorAndDisablesLook()
+        {
+            playerObject.AddComponent<CharacterController>();
+            PlayerMovement movement = playerObject.AddComponent<PlayerMovement>();
+            FirstPersonLook look = playerObject.AddComponent<FirstPersonLook>();
+            InteractionController interaction = playerObject.AddComponent<InteractionController>();
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            ClassroomChoiceUI choice = ClassroomChoiceUI.EnsureExists();
+            choice.Show("INTRODUCTION TO COMPUTER SCIENCE", "Room: 202", () => { }, () => { }, () => { });
+
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.True);
+            Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.None));
+            Assert.That(Cursor.visible, Is.True);
+            Assert.That(movement.enabled, Is.False);
+            Assert.That(look.enabled, Is.False);
+            Assert.That(interaction.enabled, Is.False);
+
+            CanvasScaler scaler = choice.GetComponentInChildren<CanvasScaler>(true);
+            Assert.That(scaler, Is.Not.Null);
+            Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
+
+            RectTransform panel = FindChild(choice.transform, "ChoicePanel") as RectTransform;
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel.sizeDelta.x, Is.InRange(550f, 700f));
+        }
+
+        [Test]
+        public void ChoiceMenu_Back_RestoresGameplayControls()
+        {
+            playerObject.AddComponent<CharacterController>();
+            PlayerMovement movement = playerObject.AddComponent<PlayerMovement>();
+            FirstPersonLook look = playerObject.AddComponent<FirstPersonLook>();
+            InteractionController interaction = playerObject.AddComponent<InteractionController>();
+
+            ClassroomChoiceUI choice = ClassroomChoiceUI.EnsureExists();
+            choice.Show("INTRODUCTION TO COMPUTER SCIENCE", "Room: 202", () => { }, () => { }, () => { });
+            choice.Hide(restoreGameplay: true);
+
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+            Assert.That(movement.enabled, Is.True);
+            Assert.That(look.enabled, Is.True);
+            Assert.That(interaction.enabled, Is.True);
+            Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.Locked));
+            Assert.That(Cursor.visible, Is.False);
+        }
+
+        [Test]
+        public void ChoiceMenu_HideWithoutRestore_KeepsCursorUsableForLectureHandoff()
+        {
+            playerObject.AddComponent<CharacterController>();
+            playerObject.AddComponent<PlayerMovement>();
+            playerObject.AddComponent<FirstPersonLook>();
+
+            ClassroomChoiceUI choice = ClassroomChoiceUI.EnsureExists();
+            choice.Show("INTRODUCTION TO COMPUTER SCIENCE", "Room: 202", () => { }, () => { }, () => { });
+            choice.Hide(restoreGameplay: false);
+
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+            Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.None));
+            Assert.That(Cursor.visible, Is.True);
+        }
+
+        [Test]
+        public void LectureCountdown_UsesExistingElapsedTime()
+        {
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(0f, 90f, 0),
+                Is.EqualTo("Next milestone in 30 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(20f, 90f, 0),
+                Is.EqualTo("Next milestone in 10 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(29f, 90f, 0),
+                Is.EqualTo("Next milestone in 1 second"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(35f, 90f, 30),
+                Is.EqualTo("Next milestone in 25 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(45f, 90f, 30),
+                Is.EqualTo("Next milestone in 15 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(64f, 90f, 60),
+                Is.EqualTo("Next milestone in 26 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(85f, 90f, 60),
+                Is.EqualTo("Next milestone in 5 seconds"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(89f, 90f, 60),
+                Is.EqualTo("Next milestone in 1 second"));
+            Assert.That(
+                ClassroomLectureUI.FormatNextMilestoneCountdown(90f, 90f, 90),
+                Is.EqualTo("All milestones completed!"));
+        }
+
+        [Test]
+        public void LectureConfirmedReward_TracksMilestonesOnly()
+        {
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(0), Is.EqualTo(0));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(29), Is.EqualTo(0));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(30), Is.EqualTo(4));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(60), Is.EqualTo(8));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(90), Is.EqualTo(12));
+        }
+
+        [Test]
+        public void LecturePanel_BuildsMilestoneRowsAndLeaveButton()
+        {
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+
+            Assert.That(FindChild(lecture.transform, "Milestone30"), Is.Not.Null);
+            Assert.That(FindChild(lecture.transform, "Milestone60"), Is.Not.Null);
+            Assert.That(FindChild(lecture.transform, "Milestone90"), Is.Not.Null);
+            Assert.That(FindChild(lecture.transform, "NextMilestone"), Is.Not.Null);
+            Assert.That(FindChild(lecture.transform, "CurrentReward"), Is.Not.Null);
+            Assert.That(FindChild(lecture.transform, "LeaveButton"), Is.Not.Null);
+
+            CanvasScaler scaler = lecture.GetComponentInChildren<CanvasScaler>(true);
+            Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
+
+            RectTransform panel = FindChild(lecture.transform, "LecturePanel") as RectTransform;
+            Assert.That(panel.sizeDelta.x, Is.InRange(550f, 700f));
         }
 
         private static void SetClassroomConfig(IcsClassroomInteractable target, string room, int floor)

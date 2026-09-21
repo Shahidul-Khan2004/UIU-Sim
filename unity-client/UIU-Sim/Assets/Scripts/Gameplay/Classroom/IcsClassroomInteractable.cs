@@ -9,6 +9,7 @@ namespace UIU.Simulator.Gameplay.Classroom
     /// <summary>
     /// Inspector-configurable ICS classroom entrance. Room number and floor are never hardcoded —
     /// assign them (and the interaction collider) in the Unity Inspector on this component.
+    /// Modal input ownership lives on ClassroomChoiceUI / ClassroomLectureUI.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Collider))]
@@ -156,20 +157,19 @@ namespace UIU.Simulator.Gameplay.Classroom
             if (attendIcsSync == null)
             {
                 SystemNotificationUI.Show("Progress sync is not available.");
+                ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                 return;
             }
 
             isBusy = true;
-            FreezePlayer(true);
-
             attendIcsSync.RequestAttendIcsStart(
                 onSuccess: result =>
                 {
                     isBusy = false;
                     if (result.Record.IsResolved)
                     {
-                        FreezePlayer(false);
                         SystemNotificationUI.Show("This class is already resolved for today.");
+                        ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                         return;
                     }
 
@@ -177,12 +177,13 @@ namespace UIU.Simulator.Gameplay.Classroom
                         this,
                         attendIcsSync,
                         result,
-                        onClosedCallback: () => FreezePlayer(false));
+                        onClosedCallback: () => { });
                 },
                 onFailure: () =>
                 {
                     isBusy = false;
-                    FreezePlayer(false);
+                    // Choice UI already closed without restore — give controls back so the player is not stuck.
+                    ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                 });
         }
 
@@ -197,6 +198,7 @@ namespace UIU.Simulator.Gameplay.Classroom
             if (save == null || !save.IdCardIssued)
             {
                 SystemNotificationUI.Show("You need an issued university ID card to punch in.");
+                ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                 return;
             }
 
@@ -204,6 +206,7 @@ namespace UIU.Simulator.Gameplay.Classroom
             if (attendIcsSync == null)
             {
                 SystemNotificationUI.Show("Progress sync is not available.");
+                ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                 return;
             }
 
@@ -213,8 +216,13 @@ namespace UIU.Simulator.Gameplay.Classroom
                 {
                     isBusy = false;
                     SystemNotificationUI.Show("Proxy — Punched ID and Left");
+                    ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
                 },
-                onFailure: () => { isBusy = false; });
+                onFailure: () =>
+                {
+                    isBusy = false;
+                    ClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
+                });
         }
 
         private void EnsureSync()
@@ -225,21 +233,6 @@ namespace UIU.Simulator.Gameplay.Classroom
             }
 
             attendIcsSync = FindFirstObjectByType<PlayerProgressSync>();
-        }
-
-        private static void FreezePlayer(bool freeze)
-        {
-            PlayerMovement movement = FindFirstObjectByType<PlayerMovement>();
-            FirstPersonLook look = FindFirstObjectByType<FirstPersonLook>();
-            if (movement != null)
-            {
-                movement.enabled = !freeze;
-            }
-
-            if (look != null)
-            {
-                look.enabled = !freeze;
-            }
         }
 
         private void OnValidate()

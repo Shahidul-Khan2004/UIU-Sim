@@ -14,22 +14,29 @@ using UnityEngine.UI;
 namespace UIU.Simulator.Gameplay.UI
 {
     /// <summary>
-    /// Compressed ICS lecture UI. Local timer drives progress display; milestones and leave
-    /// are confirmed by the backend before HUD stats update.
+    /// Compact ICS lecture timer modal. Owns gameplay lock + visible cursor while open.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ClassroomLectureUI : MonoBehaviour
     {
+        private const float PanelWidth = 640f;
+        private const float ButtonHeight = 52f;
+
         public static ClassroomLectureUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
 
+        private GameObject overlayRoot;
         private GameObject panelRoot;
         private GameObject confirmRoot;
         private TextMeshProUGUI headerLabel;
         private TextMeshProUGUI timerLabel;
         private TextMeshProUGUI statusLabel;
+        private TextMeshProUGUI nextMilestoneLabel;
+        private TextMeshProUGUI currentRewardLabel;
+        private TextMeshProUGUI milestone30Label;
+        private TextMeshProUGUI milestone60Label;
+        private TextMeshProUGUI milestone90Label;
         private RectTransform fillRect;
-        private Button leaveButton;
 
         private IcsClassroomInteractable classroom;
         private IAttendIcsProgressSync sync;
@@ -43,6 +50,12 @@ namespace UIU.Simulator.Gameplay.UI
         private bool leaveConfirmOpen;
         private Coroutine tickRoutine;
         private int openedFrame = -1;
+
+        private PlayerMovement cachedPlayerMovement;
+        private FirstPersonLook cachedFirstPersonLook;
+        private InteractionController cachedInteraction;
+        private CameraFollow cachedCameraFollow;
+        private bool ownsGameplayLock;
 
         public static ClassroomLectureUI EnsureExists()
         {
@@ -79,6 +92,11 @@ namespace UIU.Simulator.Gameplay.UI
         {
             if (Instance == this)
             {
+                if (ownsGameplayLock)
+                {
+                    RestoreGameplayControls();
+                }
+
                 Instance = null;
                 IsOpen = false;
             }
@@ -135,6 +153,13 @@ namespace UIU.Simulator.Gameplay.UI
             Action onClosedCallback)
         {
             EnsureEventSystem();
+
+            // Choice UI handed off without restoring; claim ownership here.
+            if (ClassroomChoiceUI.Instance != null)
+            {
+                ClassroomChoiceUI.Instance.ReleaseOwnershipWithoutRestore();
+            }
+
             classroom = source;
             sync = progressSync;
             onClosed = onClosedCallback;
@@ -151,10 +176,13 @@ namespace UIU.Simulator.Gameplay.UI
             statusLabel.text = "Lecture in progress";
             UpdateProgressVisual();
 
+            overlayRoot.SetActive(true);
             panelRoot.SetActive(true);
             confirmRoot.SetActive(false);
             IsOpen = true;
             openedFrame = Time.frameCount;
+
+            LockGameplayControls();
 
             if (tickRoutine != null)
             {
@@ -190,7 +218,6 @@ namespace UIU.Simulator.Gameplay.UI
 
         private float ScaledMilestoneSeconds(int milestoneSeconds)
         {
-            // Default 90s lecture maps 30/60/90 directly. Shorter/longer durations scale proportionally.
             return durationSeconds * (milestoneSeconds / 90f);
         }
 
@@ -236,6 +263,7 @@ namespace UIU.Simulator.Gameplay.UI
                         statusLabel.text = $"+{result.AppliedReputationDelta} Academic Reputation";
                     }
 
+                    UpdateProgressVisual();
                     done = true;
                 },
                 () =>
@@ -253,9 +281,10 @@ namespace UIU.Simulator.Gameplay.UI
 
             if (!success)
             {
-                // Failed request must not grant free rewards — rewind local timer slightly and retry later.
                 elapsedSeconds = Mathf.Max(0f, ScaledMilestoneSeconds(milestoneSeconds) - 0.5f);
                 statusLabel.text = "Could not save progress. Retrying…";
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
             else if (claimedMilestone >= 90)
             {
@@ -272,6 +301,8 @@ namespace UIU.Simulator.Gameplay.UI
 
             leaveConfirmOpen = true;
             confirmRoot.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             if (sync != null)
             {
                 sync.RequestAttendIcsPause(_ => { }, () => { });
@@ -282,6 +313,8 @@ namespace UIU.Simulator.Gameplay.UI
         {
             leaveConfirmOpen = false;
             confirmRoot.SetActive(false);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             if (sync != null)
             {
                 sync.RequestAttendIcsResume(_ => { }, () => { });
@@ -307,6 +340,8 @@ namespace UIU.Simulator.Gameplay.UI
                     isMutating = false;
                     StayInClass();
                     statusLabel.text = "Could not leave class. Try again.";
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
                 });
         }
 
@@ -321,6 +356,8 @@ namespace UIU.Simulator.Gameplay.UI
             }
 
             HideImmediate();
+            RestoreGameplayControls();
+
             Action callback = onClosed;
             onClosed = null;
             classroom = null;
@@ -330,6 +367,11 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void HideImmediate()
         {
+            if (overlayRoot != null)
+            {
+                overlayRoot.SetActive(false);
+            }
+
             if (panelRoot != null)
             {
                 panelRoot.SetActive(false);
@@ -343,6 +385,93 @@ namespace UIU.Simulator.Gameplay.UI
             IsOpen = false;
         }
 
+        private void LockGameplayControls()
+        {
+            CacheControlReferences();
+
+            if (cachedPlayerMovement != null)
+            {
+                cachedPlayerMovement.enabled = false;
+            }
+
+            if (cachedFirstPersonLook != null)
+            {
+                cachedFirstPersonLook.enabled = false;
+            }
+
+            if (cachedInteraction != null)
+            {
+                cachedInteraction.enabled = false;
+            }
+
+            if (cachedCameraFollow != null)
+            {
+                cachedCameraFollow.enabled = false;
+            }
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            ownsGameplayLock = true;
+        }
+
+        private void RestoreGameplayControls()
+        {
+            if (!ownsGameplayLock)
+            {
+                return;
+            }
+
+            CacheControlReferences();
+
+            if (cachedPlayerMovement != null)
+            {
+                cachedPlayerMovement.enabled = true;
+            }
+
+            if (cachedInteraction != null)
+            {
+                cachedInteraction.enabled = true;
+            }
+
+            if (cachedCameraFollow != null)
+            {
+                cachedCameraFollow.enabled = true;
+            }
+
+            if (cachedFirstPersonLook != null)
+            {
+                cachedFirstPersonLook.SuppressEscapeThisFrame();
+                cachedFirstPersonLook.enabled = true;
+            }
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            ownsGameplayLock = false;
+        }
+
+        private void CacheControlReferences()
+        {
+            if (cachedPlayerMovement == null)
+            {
+                cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
+            }
+
+            if (cachedFirstPersonLook == null)
+            {
+                cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
+            }
+
+            if (cachedInteraction == null)
+            {
+                cachedInteraction = FindFirstObjectByType<InteractionController>();
+            }
+
+            if (cachedCameraFollow == null)
+            {
+                cachedCameraFollow = FindFirstObjectByType<CameraFollow>();
+            }
+        }
+
         private void UpdateProgressVisual()
         {
             float normalized = durationSeconds <= 0f ? 1f : Mathf.Clamp01(elapsedSeconds / durationSeconds);
@@ -352,7 +481,109 @@ namespace UIU.Simulator.Gameplay.UI
             }
 
             int displayedMinutes = Mathf.FloorToInt(normalized * 90f);
-            timerLabel.text = $"{displayedMinutes} / 90 min  ·  Milestone {claimedMilestone}s";
+            if (timerLabel != null)
+            {
+                timerLabel.text = $"{displayedMinutes} / 90 min";
+            }
+
+            if (nextMilestoneLabel != null)
+            {
+                nextMilestoneLabel.text = FormatNextMilestoneCountdown(
+                    elapsedSeconds,
+                    durationSeconds,
+                    claimedMilestone);
+            }
+
+            if (currentRewardLabel != null)
+            {
+                currentRewardLabel.text =
+                    $"Current class reward: +{ConfirmedReputationReward(claimedMilestone)} Academic Reputation";
+            }
+
+            ApplyMilestoneRowColors(claimedMilestone);
+        }
+
+        /// <summary>
+        /// Confirmed cumulative Academic Reputation from awarded milestones only (+4 each).
+        /// </summary>
+        public static int ConfirmedReputationReward(int confirmedMilestoneSeconds)
+        {
+            if (confirmedMilestoneSeconds >= 90)
+            {
+                return 12;
+            }
+
+            if (confirmedMilestoneSeconds >= 60)
+            {
+                return 8;
+            }
+
+            if (confirmedMilestoneSeconds >= 30)
+            {
+                return 4;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Countdown to the next unclaimed milestone using the existing lecture elapsed time.
+        /// </summary>
+        public static string FormatNextMilestoneCountdown(
+            float elapsedSeconds,
+            float durationSeconds,
+            int confirmedMilestoneSeconds)
+        {
+            if (confirmedMilestoneSeconds >= 90)
+            {
+                return "All milestones completed!";
+            }
+
+            int next = NextMilestone(confirmedMilestoneSeconds);
+            if (next <= 0)
+            {
+                return "All milestones completed!";
+            }
+
+            float target = durationSeconds <= 0f
+                ? next
+                : durationSeconds * (next / 90f);
+            int remaining = Mathf.Max(0, Mathf.CeilToInt(target - elapsedSeconds));
+            string unit = remaining == 1 ? "second" : "seconds";
+            return $"Next milestone in {remaining} {unit}";
+        }
+
+        private void ApplyMilestoneRowColors(int confirmedMilestoneSeconds)
+        {
+            int next = NextMilestone(confirmedMilestoneSeconds);
+            SetMilestoneRowColor(milestone30Label, 30, confirmedMilestoneSeconds, next);
+            SetMilestoneRowColor(milestone60Label, 60, confirmedMilestoneSeconds, next);
+            SetMilestoneRowColor(milestone90Label, 90, confirmedMilestoneSeconds, next);
+        }
+
+        private static void SetMilestoneRowColor(
+            TextMeshProUGUI label,
+            int milestoneSeconds,
+            int confirmedMilestoneSeconds,
+            int nextMilestoneSeconds)
+        {
+            if (label == null)
+            {
+                return;
+            }
+
+            if (confirmedMilestoneSeconds >= milestoneSeconds)
+            {
+                label.color = UiTheme.Success;
+            }
+            else if (nextMilestoneSeconds == milestoneSeconds)
+            {
+                label.color = UiTheme.BrightOrange;
+            }
+            else
+            {
+                label.color = UiTheme.Grey;
+            }
         }
 
         private void BuildUi()
@@ -362,19 +593,25 @@ namespace UIU.Simulator.Gameplay.UI
             Canvas canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 220;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+
+            CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            panelRoot = CreatePanel(canvasGo.transform, "LecturePanel", new Vector2(640f, 280f));
-            headerLabel = CreateLabel(panelRoot.transform, "Header", "ICS", 24f, UiTheme.BrightOrange, new Vector2(0f, 90f));
-            timerLabel = CreateLabel(panelRoot.transform, "Timer", "0 / 90 min", 18f, UiTheme.White, new Vector2(0f, 45f));
-            statusLabel = CreateLabel(panelRoot.transform, "Status", "Lecture in progress", 16f, UiTheme.Grey, new Vector2(0f, 10f));
+            overlayRoot = CreateBackdrop(canvasGo.transform);
+
+            panelRoot = CreateContentPanel(canvasGo.transform, "LecturePanel", PanelWidth);
+            headerLabel = CreateLabel(panelRoot.transform, "Header", "ICS", 28f, UiTheme.BrightOrange);
+            timerLabel = CreateLabel(panelRoot.transform, "Timer", "0 / 90 min", 20f, UiTheme.White);
+            statusLabel = CreateLabel(panelRoot.transform, "Status", "Lecture in progress", 16f, UiTheme.Grey);
 
             GameObject barBg = new GameObject("ProgressBg");
             barBg.transform.SetParent(panelRoot.transform, false);
-            RectTransform barBgRect = barBg.AddComponent<RectTransform>();
-            barBgRect.sizeDelta = new Vector2(520f, 22f);
-            barBgRect.anchoredPosition = new Vector2(0f, -35f);
+            LayoutElement barLe = barBg.AddComponent<LayoutElement>();
+            barLe.minHeight = 22f;
+            barLe.preferredHeight = 22f;
             barBg.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.15f, 1f);
 
             GameObject fillGo = new GameObject("ProgressFill");
@@ -386,30 +623,90 @@ namespace UIU.Simulator.Gameplay.UI
             fillRect.offsetMax = Vector2.zero;
             fillGo.AddComponent<Image>().color = UiTheme.BrightOrange;
 
-            leaveButton = CreateButton(panelRoot.transform, "LeaveButton", "LEAVE CLASS", new Vector2(0f, -95f), OpenLeaveConfirm);
+            nextMilestoneLabel = CreateLabel(
+                panelRoot.transform,
+                "NextMilestone",
+                "Next milestone in 30 seconds",
+                18f,
+                UiTheme.BrightOrange);
+            currentRewardLabel = CreateLabel(
+                panelRoot.transform,
+                "CurrentReward",
+                "Current class reward: +0 Academic Reputation",
+                17f,
+                UiTheme.White);
 
-            confirmRoot = CreatePanel(canvasGo.transform, "LeaveConfirmPanel", new Vector2(560f, 260f));
+            milestone30Label = CreateLabel(
+                panelRoot.transform,
+                "Milestone30",
+                "30s milestone — +4 Academic Reputation",
+                16f,
+                UiTheme.BrightOrange);
+            milestone60Label = CreateLabel(
+                panelRoot.transform,
+                "Milestone60",
+                "60s milestone — +4 Academic Reputation",
+                16f,
+                UiTheme.Grey);
+            milestone90Label = CreateLabel(
+                panelRoot.transform,
+                "Milestone90",
+                "90s milestone — +4 Academic Reputation",
+                16f,
+                UiTheme.Grey);
+
+            CreateButton(panelRoot.transform, "LeaveButton", "LEAVE CLASS", OpenLeaveConfirm);
+
+            confirmRoot = CreateContentPanel(canvasGo.transform, "LeaveConfirmPanel", 600f);
             CreateLabel(
                 confirmRoot.transform,
                 "ConfirmText",
                 "Leave this class early? You will keep the Academic Reputation you have earned, but receive a -5 Academic Reputation penalty.",
-                16f,
-                UiTheme.White,
-                new Vector2(0f, 50f));
-            CreateButton(confirmRoot.transform, "StayButton", "STAY", new Vector2(-120f, -70f), StayInClass);
-            CreateButton(confirmRoot.transform, "ConfirmLeaveButton", "LEAVE", new Vector2(120f, -70f), ConfirmLeave);
+                18f,
+                UiTheme.White);
+            CreateButton(confirmRoot.transform, "StayButton", "STAY", StayInClass);
+            CreateButton(confirmRoot.transform, "ConfirmLeaveButton", "LEAVE", ConfirmLeave);
             confirmRoot.SetActive(false);
         }
 
-        private static GameObject CreatePanel(Transform parent, string name, Vector2 size)
+        private static GameObject CreateBackdrop(Transform parent)
+        {
+            GameObject go = new GameObject("Backdrop");
+            go.transform.SetParent(parent, false);
+            RectTransform rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            Image image = go.AddComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.55f);
+            image.raycastTarget = true;
+            return go;
+        }
+
+        private static GameObject CreateContentPanel(Transform parent, string name, float width)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
             RectTransform rect = go.AddComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = size;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(width, 0f);
             go.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.05f, 0.94f);
+
+            VerticalLayoutGroup layout = go.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(24, 24, 22, 22);
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            ContentSizeFitter fitter = go.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             return go;
         }
 
@@ -418,32 +715,38 @@ namespace UIU.Simulator.Gameplay.UI
             string name,
             string text,
             float size,
-            Color color,
-            Vector2 anchoredPos)
+            Color color)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            RectTransform rect = go.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(520f, 70f);
-            rect.anchoredPosition = anchoredPos;
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.minHeight = size + 4f;
+            le.preferredHeight = size + 10f;
+
             TextMeshProUGUI label = go.AddComponent<TextMeshProUGUI>();
             label.text = text;
             label.fontSize = size;
             label.color = color;
             label.alignment = TextAlignmentOptions.Center;
             label.textWrappingMode = TextWrappingModes.Normal;
+            label.raycastTarget = false;
             return label;
         }
 
-        private static Button CreateButton(Transform parent, string name, string label, Vector2 pos, Action onClick)
+        private static void CreateButton(Transform parent, string name, string label, Action onClick)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            RectTransform rect = go.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(200f, 44f);
-            rect.anchoredPosition = pos;
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.minHeight = ButtonHeight;
+            le.preferredHeight = ButtonHeight;
+
             go.AddComponent<Image>().color = new Color(0.18f, 0.18f, 0.18f, 1f);
             Button button = go.AddComponent<Button>();
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = new Color(0.32f, 0.32f, 0.32f, 1f);
+            colors.pressedColor = new Color(0.08f, 0.08f, 0.08f, 1f);
+            button.colors = colors;
             button.onClick.AddListener(() => onClick?.Invoke());
 
             GameObject textGo = new GameObject("Label");
@@ -455,17 +758,22 @@ namespace UIU.Simulator.Gameplay.UI
             textRect.offsetMax = Vector2.zero;
             TextMeshProUGUI tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
-            tmp.fontSize = 16f;
+            tmp.fontSize = 20f;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
-            return button;
+            tmp.raycastTarget = false;
         }
 
         private static void EnsureEventSystem()
         {
             if (EventSystem.current != null)
             {
+                if (EventSystem.current.GetComponent<InputSystemUIInputModule>() == null)
+                {
+                    EventSystem.current.gameObject.AddComponent<InputSystemUIInputModule>();
+                }
+
                 return;
             }
 
