@@ -1,4 +1,5 @@
 using System.Collections;
+using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -9,7 +10,8 @@ namespace UIU.Simulator.Authentication
 {
     /// <summary>
     /// Post-login save hub: Continue existing journey or start a new one.
-    /// Admission character-create UI is not implemented yet — New Game uses an explicit MVP placeholder.
+    /// New Game deletes any existing save and loads the world as an unregistered visitor;
+    /// admission (save creation + ID card) happens in-world at the receptionist.
     /// </summary>
     public sealed class SaveSelectionController : MonoBehaviour
     {
@@ -374,7 +376,8 @@ namespace UIU.Simulator.Authentication
                 yield break;
             }
 
-            // Step 1: DELETE existing save (safe when none exists).
+            // DELETE existing save (safe when none exists). Do not create a placeholder save —
+            // admission happens in-world at the receptionist.
             bool deleteOk = false;
             string deleteError = null;
             long deleteCode = 0;
@@ -396,73 +399,20 @@ namespace UIU.Simulator.Authentication
                 yield break;
             }
 
-            // Step 2: POST new save with admission fields from placeholder until admission UI exists.
-            ApiClient.PlayerSaveCreateRequestDto createRequest = BuildAdmissionCreateRequestPlaceholder();
-            string jsonBody = JsonUtility.ToJson(createRequest);
+            hasSave = false;
+            infoText.text = "No previous save found";
+            infoText.color = UiTheme.Grey;
+            ApplySaveUi();
 
-            bool createOk = false;
-            string createError = null;
-            long createCode = 0;
-
-            yield return apiClient.Post(
-                SavePath,
-                jsonBody,
-                userSession.JwtToken,
-                _ => createOk = true,
-                (error, code) =>
-                {
-                    createError = error;
-                    createCode = code;
-                });
-
-            if (!createOk)
+            // Clear any cached admission state so Main loads as an unregistered visitor.
+            PlayerSaveState existingState = PlayerSaveState.Instance;
+            if (existingState != null)
             {
-                hasSave = false;
-                infoText.text = "No previous save found";
-                infoText.color = UiTheme.Grey;
-                ApplySaveUi();
-
-                if (createCode == 409)
-                {
-                    SetStatus("A save already exists. Try Continue, or retry New Game.");
-                }
-                else
-                {
-                    SetStatus(FormatApiError("Failed to create save", createError, createCode));
-                }
-
-                SetBusy(false);
-                yield break;
+                existingState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false, markHydrated: true);
             }
 
-            Debug.Log("[SaveSelection] New Game save created — loading Main.");
+            Debug.Log("[SaveSelection] New Game reset complete — loading Main as unregistered visitor.");
             SceneManager.LoadScene(AuthSceneNames.Main);
-        }
-
-        /// <summary>
-        /// TODO(admission-ui): Replace this placeholder once the admission / character-create screen exists.
-        /// That screen must collect and supply:
-        /// - role (STUDENT | FACULTY)
-        /// - departmentId (UUID from departments catalog)
-        /// - universityId (player-facing campus ID string, nullable until issued)
-        /// Integration point: call this flow with values from admission UI instead of BuildAdmissionCreateRequestPlaceholder().
-        /// </summary>
-        private static ApiClient.PlayerSaveCreateRequestDto BuildAdmissionCreateRequestPlaceholder()
-        {
-            // MVP TEMPORARY VALUES — seeded CSE department from V5 migration. Do not treat as final product defaults.
-            const string PlaceholderRole = "STUDENT";
-            const string PlaceholderDepartmentId = "a1000000-0000-4000-8000-000000000001"; // CSE
-            const string PlaceholderUniversityId = "TEMP-PENDING-ADMISSION";
-
-            Debug.LogWarning(
-                "[SaveSelection] Using MVP admission placeholder for New Game " +
-                $"(role={PlaceholderRole}, departmentId={PlaceholderDepartmentId}). " +
-                "Replace via admission UI (see TODO admission-ui).");
-
-            return new ApiClient.PlayerSaveCreateRequestDto(
-                PlaceholderRole,
-                PlaceholderDepartmentId,
-                PlaceholderUniversityId);
         }
 
         private void SetBusy(bool busy)

@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
 
 namespace UIU.Simulator.Core
@@ -54,6 +55,9 @@ namespace UIU.Simulator.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // Cache admission / ID-card save state for scanner + receptionist gating.
+            PlayerSaveState.EnsureExists();
         }
 
         private void OnDestroy()

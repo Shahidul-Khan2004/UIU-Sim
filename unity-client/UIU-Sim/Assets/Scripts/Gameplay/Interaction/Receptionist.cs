@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
@@ -8,6 +9,7 @@ using UnityEngine;
 /// <para>
 /// State gating (evaluated on every <see cref="Interact"/> call):
 /// <list type="bullet">
+///   <item>Needs admission (no save / no ID card) → opens <see cref="AdmissionUI"/>.</item>
 ///   <item>No ID problem → short dismissal response; no dialogue, no Aura change.</item>
 ///   <item>Has ID problem, but already holds a temporary ID → tells the player to use it.</item>
 ///   <item>Has ID problem, no temporary ID → opens a <see cref="DialogueUI"/> with two choices.</item>
@@ -49,9 +51,20 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
 
     public string Interact()
     {
-        // Guard: dialogue is already open (e.g. player pressed E twice quickly).
-        if (DialogueUI.IsOpen)
+        // Guard: dialogue / admission panel already open.
+        if (DialogueUI.IsOpen || AdmissionUI.IsOpen)
         {
+            return null;
+        }
+
+        // Unregistered visitor / ID not yet issued → open admission form.
+        PlayerSaveState saveState = PlayerSaveState.Instance != null
+            ? PlayerSaveState.Instance
+            : FindFirstObjectByType<PlayerSaveState>();
+        if (saveState != null && saveState.IsHydrated && saveState.NeedsAdmission)
+        {
+            Debug.Log("[Receptionist] Opening admission panel — player needs registration / ID card.");
+            AdmissionUI.EnsureExists().Show();
             return null;
         }
 
