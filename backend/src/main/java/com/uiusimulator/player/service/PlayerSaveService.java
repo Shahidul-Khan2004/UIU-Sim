@@ -10,6 +10,7 @@ import com.uiusimulator.player.entity.PlayerStats;
 import com.uiusimulator.player.exception.PlayerSaveAlreadyExistsException;
 import com.uiusimulator.player.exception.PlayerStatsNotFoundException;
 import com.uiusimulator.player.repository.DepartmentRepository;
+import com.uiusimulator.player.repository.PlayerDayActivityRepository;
 import com.uiusimulator.player.repository.PlayerSaveRepository;
 import com.uiusimulator.player.repository.PlayerStatsRepository;
 import org.slf4j.Logger;
@@ -28,17 +29,20 @@ public class PlayerSaveService {
     private final PlayerSaveRepository playerSaveRepository;
     private final DepartmentRepository departmentRepository;
     private final PlayerStatsRepository playerStatsRepository;
+    private final PlayerDayActivityRepository playerDayActivityRepository;
 
     public PlayerSaveService(
             PlayerService playerService,
             PlayerSaveRepository playerSaveRepository,
             DepartmentRepository departmentRepository,
-            PlayerStatsRepository playerStatsRepository
+            PlayerStatsRepository playerStatsRepository,
+            PlayerDayActivityRepository playerDayActivityRepository
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
         this.departmentRepository = departmentRepository;
         this.playerStatsRepository = playerStatsRepository;
+        this.playerDayActivityRepository = playerDayActivityRepository;
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +108,9 @@ public class PlayerSaveService {
     public PlayerSaveStatusResponse deleteSave(Jwt jwt) {
         Player player = playerService.getOrProvisionPlayer(jwt);
 
+        playerDayActivityRepository.deleteByPlayer_Id(player.getId());
+        playerDayActivityRepository.flush();
+
         playerSaveRepository.deleteByPlayer_Id(player.getId());
         playerSaveRepository.flush();
 
@@ -112,7 +119,7 @@ public class PlayerSaveService {
         lockedStats.resetToDefaults();
         playerStatsRepository.saveAndFlush(lockedStats);
 
-        log.info("Player save deleted and stats reset for clerkUserId={}", player.getClerkUserId());
+        log.info("Player save deleted, day activities cleared, and stats reset for clerkUserId={}", player.getClerkUserId());
         return PlayerSaveStatusResponse.none();
     }
 }
