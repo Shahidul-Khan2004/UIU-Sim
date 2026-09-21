@@ -23,7 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Authoritative day finalization and advancement.
- * Finalize closes unresolved required activities (breakfast → SKIP_BREAKFAST) exactly once.
+ * Finalize closes unresolved required activities (breakfast → SKIP_BREAKFAST,
+ * ATTEND_ICS → SKIPPED / LEFT_EARLY) exactly once.
  * Advance increments current_day with expected-day idempotency and clears current-day activity rows.
  */
 @Service
@@ -35,17 +36,20 @@ public class PlayerDayService {
     private final PlayerSaveRepository playerSaveRepository;
     private final PlayerDayActivityRepository playerDayActivityRepository;
     private final PlayerStatsRepository playerStatsRepository;
+    private final AttendIcsService attendIcsService;
 
     public PlayerDayService(
             PlayerService playerService,
             PlayerSaveRepository playerSaveRepository,
             PlayerDayActivityRepository playerDayActivityRepository,
-            PlayerStatsRepository playerStatsRepository
+            PlayerStatsRepository playerStatsRepository,
+            AttendIcsService attendIcsService
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
         this.playerDayActivityRepository = playerDayActivityRepository;
         this.playerStatsRepository = playerStatsRepository;
+        this.attendIcsService = attendIcsService;
     }
 
     /**
@@ -64,6 +68,7 @@ public class PlayerDayService {
                 .orElseThrow(PlayerSaveNotFoundException::new);
 
         ensureBreakfastResolved(player, lockedSave, lockedStats);
+        attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
 
         List<DaySummaryActivityResponse> activities = playerDayActivityRepository
                 .findByPlayer_IdOrderByResolvedAtAsc(player.getId())
@@ -139,8 +144,9 @@ public class PlayerDayService {
             throw new IllegalArgumentException("Semester progression is not available yet.");
         }
 
-        // Safety: close unresolved breakfast before clearing rows.
+        // Safety: close unresolved required activities before clearing rows.
         ensureBreakfastResolved(player, lockedSave, lockedStats);
+        attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
 
         playerDayActivityRepository.deleteByPlayer_Id(player.getId());
         playerDayActivityRepository.flush();
