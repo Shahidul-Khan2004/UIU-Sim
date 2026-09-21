@@ -7,14 +7,22 @@ using UnityEngine;
 namespace UIU.Simulator.Gameplay.Classroom
 {
     /// <summary>
-    /// Inspector-configurable ICS classroom entrance. Room number and floor are never hardcoded —
-    /// assign them (and the interaction collider) in the Unity Inspector on this component.
-    /// Modal input ownership lives on ClassroomChoiceUI / ClassroomLectureUI.
+    /// ICS classroom entrance on the floor scene. Location for the HUD lives on
+    /// <see cref="IcsClassroomLocationConfig"/> so it is available while this floor is unloaded.
+    /// Assign the same location asset here so interaction copy stays aligned.
+    /// Local Inspector fields remain as fallback. Modal input ownership lives on
+    /// ClassroomChoiceUI / ClassroomLectureUI.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Collider))]
     public sealed class IcsClassroomInteractable : MonoBehaviour, IInteractable
     {
+        [Header("Persistent Location")]
+        [Tooltip(
+            "Shared HUD/interaction location asset. When assigned, course identity and classroom " +
+            "location come from this asset. Local Inspector fields below remain as fallback.")]
+        [SerializeField] private IcsClassroomLocationConfig locationConfig;
+
         [Header("Course Identity")]
         [SerializeField] private string courseId = "ICS";
         [SerializeField] private string courseName = "Introduction to Computer Science";
@@ -51,20 +59,29 @@ namespace UIU.Simulator.Gameplay.Classroom
         private IAttendIcsProgressSync attendIcsSync;
         private bool isBusy;
 
-        public string CourseId => courseId;
-        public string CourseName => courseName;
-        public string DepartmentCode => departmentCode;
-        public string StudentRole => studentRole;
-        public string ClassroomNumber => classroomNumber;
-        public int Floor => floor;
+        private void OnEnable()
+        {
+            DailyActivityState activities = FindFirstObjectByType<DailyActivityState>();
+            activities?.RegisterClassroom(this);
+        }
+
+        public string CourseId => ResolveText(locationConfig != null ? locationConfig.CourseId : null, courseId);
+        public string CourseName => ResolveText(locationConfig != null ? locationConfig.CourseName : null, courseName);
+        public string DepartmentCode => ResolveText(locationConfig != null ? locationConfig.DepartmentCode : null, departmentCode);
+        public string StudentRole => ResolveText(locationConfig != null ? locationConfig.StudentRole : null, studentRole);
+        public string ClassroomNumber => ResolveText(locationConfig != null ? locationConfig.ClassroomNumber : null, classroomNumber);
+        public int Floor => locationConfig != null && locationConfig.IsConfigured
+            ? locationConfig.Floor
+            : floor;
         public GameObject ClassroomInteractionTarget =>
             classroomInteractionTarget != null ? classroomInteractionTarget : gameObject;
-        public int ScheduledGameplayDay => scheduledGameplayDay;
+        public int ScheduledGameplayDay =>
+            locationConfig != null ? locationConfig.ScheduledGameplayDay : scheduledGameplayDay;
         public string DisplayedClassTime => displayedClassTime;
         public float LectureDurationSeconds => lectureDurationSeconds;
 
         public bool HasClassroomConfigured =>
-            !string.IsNullOrWhiteSpace(classroomNumber) && floor >= 0;
+            !string.IsNullOrWhiteSpace(ClassroomNumber) && Floor >= 0;
 
         public string MissingSetupMessage => missingSetupMessage;
 
@@ -75,7 +92,7 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return missingSetupMessage;
             }
 
-            return $"Go to Room {classroomNumber.Trim()} on Floor {floor} to attend {courseName}.";
+            return $"Go to Room {ClassroomNumber.Trim()} on Floor {Floor} to attend {CourseName}.";
         }
 
         public void SetAttendIcsSyncForTesting(IAttendIcsProgressSync sync)
@@ -84,7 +101,7 @@ namespace UIU.Simulator.Gameplay.Classroom
         }
 
         public string InteractionPrompt =>
-            HasClassroomConfigured ? $"{prompt} (Room {classroomNumber.Trim()})" : prompt;
+            HasClassroomConfigured ? $"{prompt} (Room {ClassroomNumber.Trim()})" : prompt;
 
         public string Interact()
         {
@@ -113,12 +130,28 @@ namespace UIU.Simulator.Gameplay.Classroom
 
             if (activities != null && activities.IsAttendIcsResolved)
             {
+                string outcome = activities.AttendIcsOutcome;
+                if (string.Equals(outcome, "COMPLETED", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "You already completed Introduction to Computer Science today.";
+                }
+
+                if (string.Equals(outcome, "PROXY", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "You already punched ID and left for this class today.";
+                }
+
+                if (string.Equals(outcome, "LEFT_EARLY", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "You already left this class early today.";
+                }
+
                 return alreadyResolvedMessage;
             }
 
             ClassroomChoiceUI.EnsureExists().Show(
-                courseName.ToUpperInvariant(),
-                $"Room: {classroomNumber.Trim()}",
+                CourseName.ToUpperInvariant(),
+                $"Room: {ClassroomNumber.Trim()}",
                 onAttendClass: () => BeginAttend(activities),
                 onPunchId: () => BeginProxy(),
                 onBackChoice: () => { });
@@ -133,17 +166,17 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return false;
             }
 
-            if (!string.Equals(save.Role, studentRole, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(save.Role, StudentRole, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            if (!string.Equals(save.Department, departmentCode, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(save.Department, DepartmentCode, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return save.CurrentDay == scheduledGameplayDay;
+            return save.CurrentDay == ScheduledGameplayDay;
         }
 
         private void BeginAttend(DailyActivityState activities)
@@ -244,6 +277,11 @@ namespace UIU.Simulator.Gameplay.Classroom
 
             lectureDurationSeconds = Mathf.Max(1f, lectureDurationSeconds);
             scheduledGameplayDay = Mathf.Max(1, scheduledGameplayDay);
+        }
+
+        private static string ResolveText(string fromConfig, string fallback)
+        {
+            return !string.IsNullOrWhiteSpace(fromConfig) ? fromConfig : fallback;
         }
     }
 }

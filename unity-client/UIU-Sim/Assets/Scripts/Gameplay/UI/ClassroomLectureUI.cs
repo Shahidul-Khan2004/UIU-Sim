@@ -2,7 +2,11 @@ using System;
 using System.Collections;
 using TMPro;
 using UIU.Simulator.Gameplay.Activities;
+using UIU.Simulator.Gameplay.Admission;
+using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Classroom;
+using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -15,12 +19,22 @@ namespace UIU.Simulator.Gameplay.UI
 {
     /// <summary>
     /// Compact ICS lecture timer modal. Owns gameplay lock + visible cursor while open.
+    /// Terminal full-attendance closes automatically after the final milestone is confirmed.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ClassroomLectureUI : MonoBehaviour
     {
         private const float PanelWidth = 640f;
         private const float ButtonHeight = 52f;
+
+        private enum LectureUiState
+        {
+            Closed,
+            LectureActive,
+            Completing,
+            Completed,
+            LeftEarly
+        }
 
         public static ClassroomLectureUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
@@ -37,6 +51,7 @@ namespace UIU.Simulator.Gameplay.UI
         private TextMeshProUGUI milestone60Label;
         private TextMeshProUGUI milestone90Label;
         private RectTransform fillRect;
+        private Button leaveButton;
 
         private IcsClassroomInteractable classroom;
         private IAttendIcsProgressSync sync;
@@ -45,11 +60,13 @@ namespace UIU.Simulator.Gameplay.UI
         private float durationSeconds = 90f;
         private float elapsedSeconds;
         private int claimedMilestone;
-        private bool lectureActive;
+        private LectureUiState uiState = LectureUiState.Closed;
         private bool isMutating;
         private bool leaveConfirmOpen;
         private Coroutine tickRoutine;
         private int openedFrame = -1;
+        private float completionCloseDelaySeconds = 0.55f;
+        private int finalMilestoneAttempts;
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
@@ -104,7 +121,7 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void OnApplicationPause(bool pauseStatus)
         {
-            if (!lectureActive || sync == null)
+            if (uiState != LectureUiState.LectureActive || sync == null)
             {
                 return;
             }
@@ -121,7 +138,7 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void OnDisable()
         {
-            if (lectureActive && sync != null)
+            if (uiState == LectureUiState.LectureActive && sync != null)
             {
                 sync.RequestAttendIcsPause(_ => { }, () => { });
             }
@@ -129,7 +146,7 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void Update()
         {
-            if (!IsOpen || leaveConfirmOpen)
+            if (!IsOpen || leaveConfirmOpen || uiState != LectureUiState.LectureActive)
             {
                 return;
             }
@@ -166,14 +183,16 @@ namespace UIU.Simulator.Gameplay.UI
             durationSeconds = source != null ? Mathf.Max(1f, source.LectureDurationSeconds) : 90f;
             elapsedSeconds = Mathf.Clamp(startResult.ActiveElapsedMs / 1000f, 0f, durationSeconds);
             claimedMilestone = startResult.Record.MilestoneSeconds;
-            lectureActive = true;
+            uiState = LectureUiState.LectureActive;
             isMutating = false;
             leaveConfirmOpen = false;
+            finalMilestoneAttempts = 0;
 
             headerLabel.text = source != null
                 ? source.CourseName.ToUpperInvariant()
                 : "INTRODUCTION TO COMPUTER SCIENCE";
             statusLabel.text = "Lecture in progress";
+            SetLeaveButtonInteractable(true);
             UpdateProgressVisual();
 
             overlayRoot.SetActive(true);
@@ -189,12 +208,19 @@ namespace UIU.Simulator.Gameplay.UI
                 StopCoroutine(tickRoutine);
             }
 
+            // Already fully complete from hydration / idempotent start — close after confirm.
+            if (claimedMilestone >= 90 || startResult.Record.IsResolved)
+            {
+                tickRoutine = StartCoroutine(FinalizeSuccessfulCompletionRoutine());
+                return;
+            }
+
             tickRoutine = StartCoroutine(TickRoutine());
         }
 
         private IEnumerator TickRoutine()
         {
-            while (lectureActive && claimedMilestone < 90)
+            while (uiState == LectureUiState.LectureActive && claimedMilestone < 90)
             {
                 elapsedSeconds = Mathf.Min(durationSeconds, elapsedSeconds + Time.unscaledDeltaTime);
                 UpdateProgressVisual();
@@ -203,16 +229,14 @@ namespace UIU.Simulator.Gameplay.UI
                 if (nextMilestone > 0 && elapsedSeconds + 0.0001f >= ScaledMilestoneSeconds(nextMilestone))
                 {
                     yield return ClaimMilestoneRoutine(nextMilestone);
+
+                    if (uiState == LectureUiState.Completed || uiState == LectureUiState.LeftEarly)
+                    {
+                        yield break;
+                    }
                 }
 
                 yield return null;
-            }
-
-            if (lectureActive && claimedMilestone >= 90)
-            {
-                statusLabel.text = "Class complete";
-                yield return new WaitForSecondsRealtime(0.75f);
-                CloseLecture();
             }
         }
 
@@ -243,21 +267,44 @@ namespace UIU.Simulator.Gameplay.UI
 
         private IEnumerator ClaimMilestoneRoutine(int milestoneSeconds)
         {
-            if (isMutating || sync == null)
+            if (isMutating || sync == null || uiState != LectureUiState.LectureActive)
             {
                 yield break;
+            }
+
+            // Never re-submit a milestone the server already confirmed.
+            if (claimedMilestone >= milestoneSeconds)
+            {
+                yield break;
+            }
+
+            bool isFinalMilestone = milestoneSeconds >= 90;
+            if (isFinalMilestone)
+            {
+                uiState = LectureUiState.Completing;
+                statusLabel.text = "Completing class...";
+                SetLeaveButtonInteractable(false);
+                if (leaveConfirmOpen)
+                {
+                    leaveConfirmOpen = false;
+                    confirmRoot.SetActive(false);
+                }
+
+                finalMilestoneAttempts++;
             }
 
             isMutating = true;
             bool done = false;
             bool success = false;
+            AttendIcsSessionResult? successResult = null;
 
             sync.RequestAttendIcsMilestone(
                 milestoneSeconds,
                 result =>
                 {
                     success = true;
-                    claimedMilestone = result.Record.MilestoneSeconds;
+                    successResult = result;
+                    claimedMilestone = Mathf.Max(claimedMilestone, result.Record.MilestoneSeconds);
                     if (result.AppliedReputationDelta != 0)
                     {
                         statusLabel.text = $"+{result.AppliedReputationDelta} Academic Reputation";
@@ -282,19 +329,69 @@ namespace UIU.Simulator.Gameplay.UI
             if (!success)
             {
                 elapsedSeconds = Mathf.Max(0f, ScaledMilestoneSeconds(milestoneSeconds) - 0.5f);
-                statusLabel.text = "Could not save progress. Retrying…";
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+
+                if (isFinalMilestone)
+                {
+                    // Stay on the lecture UI; do not mark completed or close.
+                    uiState = LectureUiState.LectureActive;
+                    statusLabel.text = "Could not complete class. Retrying…";
+                    SetLeaveButtonInteractable(true);
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+                else
+                {
+                    statusLabel.text = "Could not save progress. Retrying…";
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+
+                yield break;
             }
-            else if (claimedMilestone >= 90)
+
+            // Idempotent recovery: server may already be COMPLETED.
+            if (successResult.HasValue && successResult.Value.Record.IsResolved
+                && string.Equals(
+                    successResult.Value.Record.Outcome,
+                    "COMPLETED",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                lectureActive = false;
+                claimedMilestone = Mathf.Max(claimedMilestone, 90);
             }
+
+            if (claimedMilestone >= 90)
+            {
+                yield return FinalizeSuccessfulCompletionRoutine();
+            }
+        }
+
+        private IEnumerator FinalizeSuccessfulCompletionRoutine()
+        {
+            uiState = LectureUiState.Completed;
+            SetLeaveButtonInteractable(false);
+            leaveConfirmOpen = false;
+            if (confirmRoot != null)
+            {
+                confirmRoot.SetActive(false);
+            }
+
+            statusLabel.text = "Class complete";
+            UpdateProgressVisual();
+
+            if (completionCloseDelaySeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(completionCloseDelaySeconds);
+            }
+
+            int reward = ConfirmedReputationReward(Mathf.Max(claimedMilestone, 90));
+            SystemNotificationUI.Show($"ICS class completed! +{reward} Academic Reputation earned.");
+
+            CloseLecture(LectureUiState.Completed);
         }
 
         private void OpenLeaveConfirm()
         {
-            if (!lectureActive || leaveConfirmOpen || isMutating)
+            if (uiState != LectureUiState.LectureActive || leaveConfirmOpen || isMutating)
             {
                 return;
             }
@@ -311,6 +408,11 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void StayInClass()
         {
+            if (uiState != LectureUiState.LectureActive)
+            {
+                return;
+            }
+
             leaveConfirmOpen = false;
             confirmRoot.SetActive(false);
             Cursor.lockState = CursorLockMode.None;
@@ -323,21 +425,23 @@ namespace UIU.Simulator.Gameplay.UI
 
         private void ConfirmLeave()
         {
-            if (isMutating || sync == null)
+            if (isMutating || sync == null || uiState != LectureUiState.LectureActive)
             {
                 return;
             }
 
             isMutating = true;
+            SetLeaveButtonInteractable(false);
             sync.RequestAttendIcsLeaveEarly(
                 _ =>
                 {
                     isMutating = false;
-                    CloseLecture();
+                    CloseLecture(LectureUiState.LeftEarly);
                 },
                 () =>
                 {
                     isMutating = false;
+                    SetLeaveButtonInteractable(true);
                     StayInClass();
                     statusLabel.text = "Could not leave class. Try again.";
                     Cursor.lockState = CursorLockMode.None;
@@ -345,9 +449,9 @@ namespace UIU.Simulator.Gameplay.UI
                 });
         }
 
-        private void CloseLecture()
+        private void CloseLecture(LectureUiState terminalState)
         {
-            lectureActive = false;
+            uiState = terminalState;
             leaveConfirmOpen = false;
             if (tickRoutine != null)
             {
@@ -383,6 +487,18 @@ namespace UIU.Simulator.Gameplay.UI
             }
 
             IsOpen = false;
+            if (uiState != LectureUiState.Completed && uiState != LectureUiState.LeftEarly)
+            {
+                uiState = LectureUiState.Closed;
+            }
+        }
+
+        private void SetLeaveButtonInteractable(bool interactable)
+        {
+            if (leaveButton != null)
+            {
+                leaveButton.interactable = interactable;
+            }
         }
 
         private void LockGameplayControls()
@@ -421,6 +537,13 @@ namespace UIU.Simulator.Gameplay.UI
                 return;
             }
 
+            // Do not force-enable gameplay if another legitimate modal still owns input.
+            if (IsAnotherBlockingModalOpen())
+            {
+                ownsGameplayLock = false;
+                return;
+            }
+
             CacheControlReferences();
 
             if (cachedPlayerMovement != null)
@@ -447,6 +570,19 @@ namespace UIU.Simulator.Gameplay.UI
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             ownsGameplayLock = false;
+        }
+
+        private static bool IsAnotherBlockingModalOpen()
+        {
+            return ClassroomChoiceUI.IsOpen
+                || DialogueUI.IsOpen
+                || CanteenQueueUI.IsOpen
+                || AdmissionUI.IsOpen
+                || IdCardUI.IsOpen
+                || DailySummaryUI.IsOpen
+                || ElevatorUI.IsOpen
+                || AdvisorUI.IsOpen
+                || (GameMenuManager.Instance != null && GameMenuManager.IsOpen);
         }
 
         private void CacheControlReferences()
@@ -655,7 +791,7 @@ namespace UIU.Simulator.Gameplay.UI
                 16f,
                 UiTheme.Grey);
 
-            CreateButton(panelRoot.transform, "LeaveButton", "LEAVE CLASS", OpenLeaveConfirm);
+            leaveButton = CreateButton(panelRoot.transform, "LeaveButton", "LEAVE CLASS", OpenLeaveConfirm);
 
             confirmRoot = CreateContentPanel(canvasGo.transform, "LeaveConfirmPanel", 600f);
             CreateLabel(
@@ -733,7 +869,7 @@ namespace UIU.Simulator.Gameplay.UI
             return label;
         }
 
-        private static void CreateButton(Transform parent, string name, string label, Action onClick)
+        private static Button CreateButton(Transform parent, string name, string label, Action onClick)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -763,6 +899,7 @@ namespace UIU.Simulator.Gameplay.UI
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
             tmp.raycastTarget = false;
+            return button;
         }
 
         private static void EnsureEventSystem()
@@ -780,6 +917,51 @@ namespace UIU.Simulator.Gameplay.UI
             GameObject es = new GameObject("EventSystem");
             es.AddComponent<EventSystem>();
             es.AddComponent<InputSystemUIInputModule>();
+        }
+
+        // ── EditMode test seams ──────────────────────────────────────────
+
+        public void SetCompletionCloseDelayForTesting(float seconds)
+        {
+            completionCloseDelaySeconds = Mathf.Max(0f, seconds);
+        }
+
+        public bool IsLeaveButtonInteractableForTesting()
+        {
+            return leaveButton != null && leaveButton.interactable;
+        }
+
+        public string StatusTextForTesting()
+        {
+            return statusLabel != null ? statusLabel.text : string.Empty;
+        }
+
+        public int ClaimedMilestoneForTesting()
+        {
+            return claimedMilestone;
+        }
+
+        public int FinalMilestoneAttemptsForTesting()
+        {
+            return finalMilestoneAttempts;
+        }
+
+        public bool IsLecturePanelActiveForTesting()
+        {
+            return panelRoot != null && panelRoot.activeSelf;
+        }
+
+        /// <summary>
+        /// Drives ClaimMilestoneRoutine synchronously for EditMode tests (no WaitForSeconds).
+        /// </summary>
+        public IEnumerator ClaimMilestoneForTesting(int milestoneSeconds)
+        {
+            return ClaimMilestoneRoutine(milestoneSeconds);
+        }
+
+        public IEnumerator FinalizeSuccessfulCompletionForTesting()
+        {
+            return FinalizeSuccessfulCompletionRoutine();
         }
     }
 }

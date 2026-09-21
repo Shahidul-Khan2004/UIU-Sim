@@ -17,6 +17,10 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PlayerStats))]
 public sealed class StatsHUD : MonoBehaviour
 {
+    private const float PanelContentWidth = 380f;
+
+    public static StatsHUD Instance { get; private set; }
+
     [Header("Appearance")]
     [SerializeField] private float fontSize = 20f;
     [SerializeField] private float feedbackFontSize = 18f;
@@ -56,7 +60,10 @@ public sealed class StatsHUD : MonoBehaviour
     private PlayerStats playerStats;
     private DailyActivityState dailyActivityState;
 
+    private GameObject canvasRoot;
     private GameObject panelRoot;
+    private Image panelBackground;
+    private RectTransform panelRect;
     private TextMeshProUGUI auraText;
     private TextMeshProUGUI academicText;
     private TextMeshProUGUI auraFeedbackText;
@@ -87,13 +94,34 @@ public sealed class StatsHUD : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("[StatsHUD] Duplicate StatsHUD disabled — keeping the existing player HUD.");
+            enabled = false;
+            return;
+        }
+
+        Instance = this;
         playerStats = GetComponent<PlayerStats>();
         dailyActivityState = GetComponent<DailyActivityState>();
         BuildUI();
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     private void OnEnable()
     {
+        if (Instance != null && Instance != this)
+        {
+            return;
+        }
+
         if (playerStats == null)
         {
             playerStats = GetComponent<PlayerStats>();
@@ -214,7 +242,7 @@ public sealed class StatsHUD : MonoBehaviour
 
     private void RefreshObjectiveDisplay()
     {
-        if (dayHeaderText == null || todayHeaderText == null)
+        if (dayHeaderText == null || todayHeaderText == null || panelRoot == null)
         {
             return;
         }
@@ -268,29 +296,27 @@ public sealed class StatsHUD : MonoBehaviour
             breakfastObjectiveRoot.SetActive(showBreakfast);
         }
 
-        if (!showBreakfast || breakfastMarkerText == null)
+        if (showBreakfast && breakfastMarkerText != null)
         {
-            RefreshIcsObjective(showBreakfast);
-            return;
+            string title = dailyActivityState != null ? dailyActivityState.BreakfastTitle : breakfastObjectiveTitle;
+            string description = dailyActivityState != null
+                ? dailyActivityState.BreakfastDescription
+                : breakfastObjectiveDescription;
+            ActivityStatus status = dailyActivityState != null
+                ? dailyActivityState.BreakfastStatus
+                : ActivityStatus.Pending;
+
+            ApplyObjectiveVisual(
+                status,
+                title,
+                description,
+                breakfastMarkerText,
+                breakfastTitleText,
+                breakfastDescriptionText);
         }
 
-        string title = dailyActivityState != null ? dailyActivityState.BreakfastTitle : breakfastObjectiveTitle;
-        string description = dailyActivityState != null
-            ? dailyActivityState.BreakfastDescription
-            : breakfastObjectiveDescription;
-        ActivityStatus status = dailyActivityState != null
-            ? dailyActivityState.BreakfastStatus
-            : ActivityStatus.Pending;
-
-        ApplyObjectiveVisual(
-            status,
-            title,
-            description,
-            breakfastMarkerText,
-            breakfastTitleText,
-            breakfastDescriptionText);
-
         RefreshIcsObjective(showBreakfast);
+        RebuildPanelLayout();
     }
 
     private void RefreshIcsObjective(bool breakfastVisible)
@@ -313,6 +339,10 @@ public sealed class StatsHUD : MonoBehaviour
         string outcome = dailyActivityState.AttendIcsOutcome;
         string title = dailyActivityState.BuildAttendIcsObjectiveTitle();
         string description = dailyActivityState.BuildAttendIcsObjectiveDescription();
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            description = icsObjectiveDescriptionFallback;
+        }
 
         if (string.Equals(outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
         {
@@ -346,6 +376,16 @@ public sealed class StatsHUD : MonoBehaviour
             icsDescriptionText);
     }
 
+    private void RebuildPanelLayout()
+    {
+        if (panelRect == null)
+        {
+            return;
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+    }
+
     private static void ApplyProxyObjectiveVisual(
         string title,
         string description,
@@ -361,6 +401,7 @@ public sealed class StatsHUD : MonoBehaviour
         {
             descriptionLabel.text = description;
             descriptionLabel.color = UiTheme.Grey;
+            descriptionLabel.gameObject.SetActive(true);
         }
     }
 
@@ -460,6 +501,7 @@ public sealed class StatsHUD : MonoBehaviour
         label.text = text;
         label.color = targetColor;
         label.gameObject.SetActive(true);
+        RebuildPanelLayout();
 
         yield return new WaitForSeconds(feedbackHoldDuration);
 
@@ -473,6 +515,7 @@ public sealed class StatsHUD : MonoBehaviour
         }
 
         label.gameObject.SetActive(false);
+        RebuildPanelLayout();
     }
 
     private void StopAllFeedback()
@@ -502,30 +545,52 @@ public sealed class StatsHUD : MonoBehaviour
 
     private void BuildUI()
     {
-        GameObject canvasGo = new GameObject("StatsHUDCanvas");
-        canvasGo.transform.SetParent(transform, false);
+        if (panelRoot != null)
+        {
+            return;
+        }
 
-        Canvas canvas = canvasGo.AddComponent<Canvas>();
+        // Remove any stale runtime HUD children from a previous domain-reload edge case.
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = transform.GetChild(i);
+            if (child != null && child.name == "StatsHUDCanvas")
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(child.gameObject);
+                }
+            }
+        }
+
+        canvasRoot = new GameObject("StatsHUDCanvas");
+        canvasRoot.transform.SetParent(transform, false);
+
+        Canvas canvas = canvasRoot.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 50;
 
-        CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
+        CanvasScaler scaler = canvasRoot.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
         scaler.matchWidthOrHeight = 0.5f;
 
         panelRoot = new GameObject("StatsPanel");
-        panelRoot.transform.SetParent(canvasGo.transform, false);
+        panelRoot.transform.SetParent(canvasRoot.transform, false);
 
-        RectTransform panelRect = panelRoot.AddComponent<RectTransform>();
+        panelRect = panelRoot.AddComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0f, 1f);
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = screenOffset;
 
-        Image bg = panelRoot.AddComponent<Image>();
-        bg.color = backgroundColor;
-        bg.raycastTarget = false;
+        panelBackground = panelRoot.AddComponent<Image>();
+        panelBackground.color = backgroundColor;
+        panelBackground.raycastTarget = false;
 
         VerticalLayoutGroup layout = panelRoot.AddComponent<VerticalLayoutGroup>();
         layout.padding = new RectOffset(16, 16, 12, 12);
@@ -540,92 +605,96 @@ public sealed class StatsHUD : MonoBehaviour
         fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        auraText = CreateLabel(panelRoot.transform, "AuraText", fontSize, textColor, FontStyles.Bold);
-        academicText = CreateLabel(panelRoot.transform, "AcademicText", fontSize, textColor, FontStyles.Bold);
+        LayoutElement panelWidth = panelRoot.AddComponent<LayoutElement>();
+        panelWidth.preferredWidth = PanelContentWidth;
 
-        auraFeedbackText = CreateLabel(panelRoot.transform, "AuraFeedbackText", feedbackFontSize, positiveDeltaColor, FontStyles.Bold);
+        auraText = CreateLabel(panelRoot.transform, "AuraText", fontSize, textColor, FontStyles.Bold, wrap: false);
+        academicText = CreateLabel(panelRoot.transform, "AcademicText", fontSize, textColor, FontStyles.Bold, wrap: false);
+
+        auraFeedbackText = CreateLabel(panelRoot.transform, "AuraFeedbackText", feedbackFontSize, positiveDeltaColor, FontStyles.Bold, wrap: false);
         auraFeedbackText.gameObject.SetActive(false);
 
-        academicFeedbackText = CreateLabel(panelRoot.transform, "AcademicFeedbackText", feedbackFontSize, positiveDeltaColor, FontStyles.Bold);
+        academicFeedbackText = CreateLabel(panelRoot.transform, "AcademicFeedbackText", feedbackFontSize, positiveDeltaColor, FontStyles.Bold, wrap: false);
         academicFeedbackText.gameObject.SetActive(false);
 
         CreateDivider(panelRoot.transform);
-        dayHeaderText = CreateLabel(panelRoot.transform, "DayHeader", 14f, UiTheme.BrightOrange, FontStyles.Bold);
+        dayHeaderText = CreateLabel(panelRoot.transform, "DayHeader", 14f, UiTheme.BrightOrange, FontStyles.Bold, wrap: false);
         dayHeaderText.text = "SEMESTER 1 · DAY 1";
         dayHeaderText.gameObject.SetActive(false);
 
-        todayHeaderText = CreateLabel(panelRoot.transform, "TodayHeader", 12f, UiTheme.Grey, FontStyles.Bold);
+        todayHeaderText = CreateLabel(panelRoot.transform, "TodayHeader", 12f, UiTheme.Grey, FontStyles.Bold, wrap: false);
         todayHeaderText.text = "TODAY";
         todayHeaderText.gameObject.SetActive(false);
 
-        idCardObjectiveRoot = new GameObject("IdCardObjectiveBlock");
-        idCardObjectiveRoot.transform.SetParent(panelRoot.transform, false);
-        VerticalLayoutGroup idLayout = idCardObjectiveRoot.AddComponent<VerticalLayoutGroup>();
-        idLayout.spacing = 4f;
-        idLayout.childAlignment = TextAnchor.UpperLeft;
-        idLayout.childControlWidth = true;
-        idLayout.childControlHeight = true;
-        idLayout.childForceExpandWidth = false;
-        idLayout.childForceExpandHeight = false;
-        ContentSizeFitter idFitter = idCardObjectiveRoot.AddComponent<ContentSizeFitter>();
-        idFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        idFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        idCardObjectiveRoot = CreateObjectiveBlock(
+            panelRoot.transform,
+            "IdCardObjectiveBlock",
+            "IdCard",
+            idCardObjectiveTitle,
+            idCardObjectiveDescription,
+            out idMarkerText,
+            out idTitleText,
+            out idDescriptionText);
 
-        BuildObjectiveRow(idCardObjectiveRoot.transform, "IdCard", out idMarkerText, out idTitleText);
-        idDescriptionText = CreateLabel(idCardObjectiveRoot.transform, "IdCardDescription", objectiveBodySize, UiTheme.Grey, FontStyles.Normal);
-        idDescriptionText.textWrappingMode = TextWrappingModes.Normal;
-        idDescriptionText.text = idCardObjectiveDescription;
-        idTitleText.text = idCardObjectiveTitle;
-
-        breakfastObjectiveRoot = new GameObject("BreakfastObjectiveBlock");
-        breakfastObjectiveRoot.transform.SetParent(panelRoot.transform, false);
-        VerticalLayoutGroup breakfastLayout = breakfastObjectiveRoot.AddComponent<VerticalLayoutGroup>();
-        breakfastLayout.spacing = 4f;
-        breakfastLayout.childAlignment = TextAnchor.UpperLeft;
-        breakfastLayout.childControlWidth = true;
-        breakfastLayout.childControlHeight = true;
-        breakfastLayout.childForceExpandWidth = false;
-        breakfastLayout.childForceExpandHeight = false;
-        ContentSizeFitter breakfastFitter = breakfastObjectiveRoot.AddComponent<ContentSizeFitter>();
-        breakfastFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        breakfastFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        BuildObjectiveRow(breakfastObjectiveRoot.transform, "Breakfast", out breakfastMarkerText, out breakfastTitleText);
-        breakfastDescriptionText = CreateLabel(
-            breakfastObjectiveRoot.transform,
-            "BreakfastDescription",
-            objectiveBodySize,
-            UiTheme.Grey,
-            FontStyles.Normal);
-        breakfastDescriptionText.textWrappingMode = TextWrappingModes.Normal;
-        breakfastDescriptionText.text = breakfastObjectiveDescription;
-        breakfastTitleText.text = breakfastObjectiveTitle;
+        breakfastObjectiveRoot = CreateObjectiveBlock(
+            panelRoot.transform,
+            "BreakfastObjectiveBlock",
+            "Breakfast",
+            breakfastObjectiveTitle,
+            breakfastObjectiveDescription,
+            out breakfastMarkerText,
+            out breakfastTitleText,
+            out breakfastDescriptionText);
         breakfastObjectiveRoot.SetActive(false);
 
-        icsObjectiveRoot = new GameObject("IcsObjectiveBlock");
-        icsObjectiveRoot.transform.SetParent(panelRoot.transform, false);
-        VerticalLayoutGroup icsLayout = icsObjectiveRoot.AddComponent<VerticalLayoutGroup>();
-        icsLayout.spacing = 4f;
-        icsLayout.childAlignment = TextAnchor.UpperLeft;
-        icsLayout.childControlWidth = true;
-        icsLayout.childControlHeight = true;
-        icsLayout.childForceExpandWidth = false;
-        icsLayout.childForceExpandHeight = false;
-        ContentSizeFitter icsFitter = icsObjectiveRoot.AddComponent<ContentSizeFitter>();
-        icsFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        icsFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        icsObjectiveRoot = CreateObjectiveBlock(
+            panelRoot.transform,
+            "IcsObjectiveBlock",
+            "Ics",
+            icsObjectiveTitle,
+            icsObjectiveDescriptionFallback,
+            out icsMarkerText,
+            out icsTitleText,
+            out icsDescriptionText);
+        icsObjectiveRoot.SetActive(false);
+    }
 
-        BuildObjectiveRow(icsObjectiveRoot.transform, "Ics", out icsMarkerText, out icsTitleText);
-        icsDescriptionText = CreateLabel(
-            icsObjectiveRoot.transform,
-            "IcsDescription",
+    private GameObject CreateObjectiveBlock(
+        Transform parent,
+        string rootName,
+        string namePrefix,
+        string title,
+        string description,
+        out TextMeshProUGUI marker,
+        out TextMeshProUGUI titleLabel,
+        out TextMeshProUGUI descriptionLabel)
+    {
+        GameObject root = new GameObject(rootName);
+        root.transform.SetParent(parent, false);
+
+        // One VerticalLayoutGroup per objective — no nested ContentSizeFitter.
+        // Nested CSF was causing the parent Image to under-size so ICS text looked
+        // like a second HUD floating outside the background.
+        VerticalLayoutGroup blockLayout = root.AddComponent<VerticalLayoutGroup>();
+        blockLayout.spacing = 4f;
+        blockLayout.childAlignment = TextAnchor.UpperLeft;
+        blockLayout.childControlWidth = true;
+        blockLayout.childControlHeight = true;
+        blockLayout.childForceExpandWidth = true;
+        blockLayout.childForceExpandHeight = false;
+
+        BuildObjectiveRow(root.transform, namePrefix, out marker, out titleLabel);
+        titleLabel.text = title;
+
+        descriptionLabel = CreateLabel(
+            root.transform,
+            namePrefix + "Description",
             objectiveBodySize,
             UiTheme.Grey,
-            FontStyles.Normal);
-        icsDescriptionText.textWrappingMode = TextWrappingModes.Normal;
-        icsDescriptionText.text = icsObjectiveDescriptionFallback;
-        icsTitleText.text = icsObjectiveTitle;
-        icsObjectiveRoot.SetActive(false);
+            FontStyles.Normal,
+            wrap: true);
+        descriptionLabel.text = description;
+        return root;
     }
 
     private void BuildObjectiveRow(
@@ -639,16 +708,23 @@ public sealed class StatsHUD : MonoBehaviour
 
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
         hlg.spacing = 8f;
-        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childAlignment = TextAnchor.UpperLeft;
         hlg.childControlWidth = true;
         hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
         hlg.childForceExpandHeight = false;
 
-        marker = CreateLabel(row.transform, namePrefix + "Marker", objectiveTitleSize, UiTheme.BrightOrange, FontStyles.Bold);
+        marker = CreateLabel(row.transform, namePrefix + "Marker", objectiveTitleSize, UiTheme.BrightOrange, FontStyles.Bold, wrap: false);
         marker.text = "[ ]";
+        LayoutElement markerLe = marker.gameObject.AddComponent<LayoutElement>();
+        markerLe.minWidth = 28f;
+        markerLe.preferredWidth = 28f;
+        markerLe.flexibleWidth = 0f;
 
-        title = CreateLabel(row.transform, namePrefix + "Title", objectiveTitleSize, UiTheme.White, FontStyles.Bold);
+        title = CreateLabel(row.transform, namePrefix + "Title", objectiveTitleSize, UiTheme.White, FontStyles.Bold, wrap: true);
+        LayoutElement titleLe = title.gameObject.AddComponent<LayoutElement>();
+        titleLe.flexibleWidth = 1f;
+        titleLe.minWidth = 120f;
     }
 
     private void CreateDivider(Transform parent)
@@ -663,7 +739,13 @@ public sealed class StatsHUD : MonoBehaviour
         image.raycastTarget = false;
     }
 
-    private TextMeshProUGUI CreateLabel(Transform parent, string name, float size, Color color, FontStyles style)
+    private TextMeshProUGUI CreateLabel(
+        Transform parent,
+        string name,
+        float size,
+        Color color,
+        FontStyles style,
+        bool wrap)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -673,7 +755,7 @@ public sealed class StatsHUD : MonoBehaviour
         tmp.color = color;
         tmp.fontStyle = style;
         tmp.alignment = TextAlignmentOptions.Left;
-        tmp.textWrappingMode = TextWrappingModes.NoWrap;
+        tmp.textWrappingMode = wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
         tmp.raycastTarget = false;
 
         return tmp;
@@ -693,5 +775,35 @@ public sealed class StatsHUD : MonoBehaviour
             ? Mathf.RoundToInt(delta).ToString()
             : delta.ToString("F1");
         return $"{statName} {sign}{formattedValue}";
+    }
+
+    /// <summary>EditMode test seam: count Image backgrounds under this HUD.</summary>
+    public int CountBackgroundImagesForTesting()
+    {
+        if (panelRoot == null)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        Image[] images = panelRoot.GetComponentsInChildren<Image>(true);
+        for (int i = 0; i < images.Length; i++)
+        {
+            // Divider is a 1px Image; the panel background is the only full HUD plate.
+            if (images[i] != null && images[i].gameObject.name == "StatsPanel")
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>EditMode test seam: whether the ICS block lives under the same StatsPanel.</summary>
+    public bool IsIcsInsideStatsPanelForTesting()
+    {
+        return icsObjectiveRoot != null
+            && panelRoot != null
+            && icsObjectiveRoot.transform.IsChildOf(panelRoot.transform);
     }
 }

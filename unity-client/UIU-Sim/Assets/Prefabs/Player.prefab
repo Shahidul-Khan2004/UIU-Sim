@@ -266,6 +266,8 @@ MonoBehaviour:
   breakfastTitle: Have Breakfast
   breakfastDescription: Go to Neptune in the canteen to get your breakfast.
   breakfastStallDisplayName: Neptune
+  icsLocationConfig: {fileID: 11400000, guid: e2a8c4f16d9b47a3b5e0c8f1a24d6e90, type: 2}
+  icsClassroom: {fileID: 0}
 --- !u!114 &6238491823749123841
 MonoBehaviour:
   m_ObjectHideFlags: 0

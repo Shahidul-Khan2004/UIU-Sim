@@ -32,7 +32,12 @@ namespace UIU.Simulator.Gameplay.Activities
         [SerializeField] private string breakfastStallDisplayName = "Neptune";
 
         [Header("ICS Classroom Activity")]
-        [Tooltip("Optional scene classroom used to build the objective HUD text.")]
+        [Tooltip(
+            "Persistent ICS classroom location used by the HUD even when Floor04 is unloaded. " +
+            "Assign Assets/Data/Gameplay/IcsClassroomLocation.asset.")]
+        [SerializeField] private IcsClassroomLocationConfig icsLocationConfig;
+
+        [Tooltip("Optional loaded-floor classroom. Not required for HUD location text.")]
         [SerializeField] private IcsClassroomInteractable icsClassroom;
 
         private ActivityStatus getIdCardStatus = ActivityStatus.Pending;
@@ -53,12 +58,16 @@ namespace UIU.Simulator.Gameplay.Activities
 
         private int dayNumber = 1;
 
+        // Cached from the floor scene classroom so the HUD stays correct when that
+        // additive floor unloads (Unity destroyed references become fake-null).
+        private bool hasCachedClassroomConfig;
+        private int cachedScheduledDay = 1;
+        private string cachedDepartmentCode = "CSE";
+        private string cachedObjectiveDescription = string.Empty;
+
         private void Awake()
         {
-            if (icsClassroom == null)
-            {
-                icsClassroom = FindFirstObjectByType<IcsClassroomInteractable>();
-            }
+            ResolveClassroomReference();
         }
 
         public string GetIdCardTitle => getIdCardTitle;
@@ -85,8 +94,20 @@ namespace UIU.Simulator.Gameplay.Activities
 
         public IcsClassroomInteractable IcsClassroom
         {
-            get => icsClassroom;
-            set => icsClassroom = value;
+            get
+            {
+                ResolveClassroomReference();
+                return icsClassroom;
+            }
+            set
+            {
+                icsClassroom = value;
+                if (value != null)
+                {
+                    CacheClassroomConfig(value);
+                    OnAttendIcsStatusChanged?.Invoke();
+                }
+            }
         }
 
         /// <summary>True once GET_ID_CARD is COMPLETED for this journey.</summary>
@@ -147,29 +168,40 @@ namespace UIU.Simulator.Gameplay.Activities
 
         public string BuildAttendIcsObjectiveDescription()
         {
-            if (icsClassroom == null)
+            ResolveClassroomReference();
+
+            if (icsClassroom != null && icsClassroom.HasClassroomConfigured)
             {
-                return "ICS classroom is not configured. Assign floor, room number, and classroom interaction in the Inspector.";
+                string live = icsClassroom.BuildObjectiveDescription();
+                cachedObjectiveDescription = live;
+                return live;
             }
 
-            if (!icsClassroom.HasClassroomConfigured)
+            if (icsLocationConfig != null && icsLocationConfig.IsConfigured)
+            {
+                cachedObjectiveDescription = icsLocationConfig.BuildObjectiveDescription();
+                return cachedObjectiveDescription;
+            }
+
+            if (!string.IsNullOrEmpty(cachedObjectiveDescription))
+            {
+                return cachedObjectiveDescription;
+            }
+
+            if (icsClassroom != null)
             {
                 return icsClassroom.MissingSetupMessage;
             }
 
-            return icsClassroom.BuildObjectiveDescription();
+            return "ICS classroom is not configured. Assign floor, room number, and classroom interaction in the Inspector.";
         }
 
         /// <summary>
         /// Whether the HUD should show ICS today for this player save.
+        /// Uses a cached classroom schedule so the objective survives floor unload.
         /// </summary>
         public bool ShouldShowAttendIcsObjective(PlayerSaveState saveState)
         {
-            if (icsClassroom == null)
-            {
-                return false;
-            }
-
             if (saveState == null || !saveState.HasActiveUniversityDay)
             {
                 return false;
@@ -180,12 +212,143 @@ namespace UIU.Simulator.Gameplay.Activities
                 return false;
             }
 
-            if (!string.Equals(saveState.Department, icsClassroom.DepartmentCode, StringComparison.OrdinalIgnoreCase))
+            ResolveClassroomReference();
+
+            string departmentCode = ResolveIcsDepartmentCode();
+            int scheduledDay = ResolveIcsScheduledDay();
+
+            if (!string.Equals(saveState.Department, departmentCode, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return saveState.CurrentDay == icsClassroom.ScheduledGameplayDay;
+            return saveState.CurrentDay == scheduledDay;
+        }
+
+        /// <summary>
+        /// Called by floor classroom objects when they load so the HUD can bind without
+        /// requiring the classroom scene to stay loaded.
+        /// </summary>
+        public void RegisterClassroom(IcsClassroomInteractable classroom)
+        {
+            if (classroom == null)
+            {
+                return;
+            }
+
+            IcsClassroom = classroom;
+        }
+
+        public void SetLocationConfigForTesting(IcsClassroomLocationConfig config)
+        {
+            icsLocationConfig = config;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+
+        private void ResolveClassroomReference()
+        {
+            // Destroyed Unity objects compare equal to null.
+            if (icsClassroom != null)
+            {
+                CacheClassroomConfig(icsClassroom);
+                return;
+            }
+
+            icsClassroom = FindFirstObjectByType<IcsClassroomInteractable>();
+            if (icsClassroom != null)
+            {
+                CacheClassroomConfig(icsClassroom);
+            }
+        }
+
+        private void CacheClassroomConfig(IcsClassroomInteractable classroom)
+        {
+            if (classroom == null)
+            {
+                return;
+            }
+
+            cachedScheduledDay = Mathf.Max(1, classroom.ScheduledGameplayDay);
+            cachedDepartmentCode = string.IsNullOrWhiteSpace(classroom.DepartmentCode)
+                ? "CSE"
+                : classroom.DepartmentCode.Trim();
+            hasCachedClassroomConfig = true;
+
+            if (classroom.HasClassroomConfigured)
+            {
+                cachedObjectiveDescription = classroom.BuildObjectiveDescription();
+            }
+
+            WarnIfLiveClassroomDiffersFromPersistentConfig(classroom);
+        }
+
+        private string ResolveIcsDepartmentCode()
+        {
+            if (icsClassroom != null && !string.IsNullOrWhiteSpace(icsClassroom.DepartmentCode))
+            {
+                return icsClassroom.DepartmentCode;
+            }
+
+            if (icsLocationConfig != null && !string.IsNullOrWhiteSpace(icsLocationConfig.DepartmentCode))
+            {
+                return icsLocationConfig.DepartmentCode;
+            }
+
+            if (hasCachedClassroomConfig && !string.IsNullOrWhiteSpace(cachedDepartmentCode))
+            {
+                return cachedDepartmentCode;
+            }
+
+            // Match AttendIcsDefinition.REQUIRED_DEPARTMENT_CODE so Day 1 CSE students
+            // still see the objective before Floor04 has loaded.
+            return "CSE";
+        }
+
+        private int ResolveIcsScheduledDay()
+        {
+            if (icsClassroom != null)
+            {
+                return Mathf.Max(1, icsClassroom.ScheduledGameplayDay);
+            }
+
+            if (icsLocationConfig != null)
+            {
+                return icsLocationConfig.ScheduledGameplayDay;
+            }
+
+            if (hasCachedClassroomConfig)
+            {
+                return Mathf.Max(1, cachedScheduledDay);
+            }
+
+            // Match AttendIcsDefinition.SCHEDULED_DAY.
+            return 1;
+        }
+
+        private void WarnIfLiveClassroomDiffersFromPersistentConfig(IcsClassroomInteractable classroom)
+        {
+            if (icsLocationConfig == null
+                || !icsLocationConfig.IsConfigured
+                || classroom == null
+                || !classroom.HasClassroomConfigured)
+            {
+                return;
+            }
+
+            bool roomMatches = string.Equals(
+                classroom.ClassroomNumber.Trim(),
+                icsLocationConfig.ClassroomNumber.Trim(),
+                StringComparison.Ordinal);
+            if (roomMatches && classroom.Floor == icsLocationConfig.Floor)
+            {
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[DailyActivityState] Loaded ICS classroom (Room {classroom.ClassroomNumber}, Floor {classroom.Floor}) " +
+                $"differs from persistent location config (Room {icsLocationConfig.ClassroomNumber}, Floor {icsLocationConfig.Floor}). " +
+                "Update Assets/Data/Gameplay/IcsClassroomLocation.asset so the HUD and classroom stay aligned.",
+                this);
         }
 
         public void ResetForNewDay(int newDayNumber = 1)

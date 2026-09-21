@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using TMPro;
 using UIU.Simulator.Gameplay.Activities;
@@ -20,12 +23,19 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         private GameObject classroomObject;
         private IcsClassroomInteractable classroom;
 
+        private IcsClassroomLocationConfig locationConfigAsset;
+
         [SetUp]
         public void SetUp()
         {
             if (PlayerSaveState.Instance != null)
             {
-                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+                UnityEngine.Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            if (StatsHUD.Instance != null)
+            {
+                UnityEngine.Object.DestroyImmediate(StatsHUD.Instance.gameObject);
             }
 
             playerObject = new GameObject("IcsTestPlayer");
@@ -48,27 +58,39 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             if (playerObject != null)
             {
-                Object.DestroyImmediate(playerObject);
+                UnityEngine.Object.DestroyImmediate(playerObject);
             }
 
             if (classroomObject != null)
             {
-                Object.DestroyImmediate(classroomObject);
+                UnityEngine.Object.DestroyImmediate(classroomObject);
+            }
+
+            if (locationConfigAsset != null)
+            {
+                UnityEngine.Object.DestroyImmediate(locationConfigAsset);
+                locationConfigAsset = null;
             }
 
             if (ClassroomChoiceUI.Instance != null)
             {
-                Object.DestroyImmediate(ClassroomChoiceUI.Instance.gameObject);
+                UnityEngine.Object.DestroyImmediate(ClassroomChoiceUI.Instance.gameObject);
             }
 
             if (ClassroomLectureUI.Instance != null)
             {
-                Object.DestroyImmediate(ClassroomLectureUI.Instance.gameObject);
+                UnityEngine.Object.DestroyImmediate(ClassroomLectureUI.Instance.gameObject);
             }
 
             if (DailySummaryUI.Instance != null)
             {
-                Object.DestroyImmediate(DailySummaryUI.Instance.gameObject);
+                UnityEngine.Object.DestroyImmediate(DailySummaryUI.Instance.gameObject);
+            }
+
+            SystemNotificationUI notification = UnityEngine.Object.FindFirstObjectByType<SystemNotificationUI>();
+            if (notification != null)
+            {
+                UnityEngine.Object.DestroyImmediate(notification.gameObject);
             }
         }
 
@@ -105,6 +127,105 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
+        public void Hud_SingleInstance_SingleBackground_UnifiedObjectives()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+
+            Assert.That(UnityEngine.Object.FindObjectsByType<StatsHUD>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(statsHud.CountBackgroundImagesForTesting(), Is.EqualTo(1));
+            Assert.That(statsHud.IsIcsInsideStatsPanelForTesting(), Is.True);
+
+            Transform panel = FindChild(statsHud.transform, "StatsPanel");
+            Assert.That(FindChild(panel, "IdCardObjectiveBlock"), Is.Not.Null);
+            Assert.That(FindChild(panel, "BreakfastObjectiveBlock"), Is.Not.Null);
+            Assert.That(FindChild(panel, "IcsObjectiveBlock"), Is.Not.Null);
+            Assert.That(FindChild(panel, "IcsObjectiveBlock").gameObject.activeSelf, Is.True);
+            Assert.That(FindChild(panel, "BreakfastObjectiveBlock").gameObject.activeSelf, Is.True);
+        }
+
+        [Test]
+        public void Hud_IcsRemainsVisible_WhenClassroomDestroyed()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+            Assert.That(dailyActivityState.ShouldShowAttendIcsObjective(saveState), Is.True);
+
+            UnityEngine.Object.DestroyImmediate(classroomObject);
+            classroomObject = null;
+            classroom = null;
+
+            Assert.That(dailyActivityState.ShouldShowAttendIcsObjective(saveState), Is.True,
+                "ICS objective must survive additive floor unload via cached classroom config.");
+
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+            Transform icsRoot = FindChild(statsHud.transform, "IcsObjectiveBlock");
+            Assert.That(icsRoot.gameObject.activeSelf, Is.True);
+            TextMeshProUGUI description = FindLabel(statsHud.transform, "IcsDescription");
+            Assert.That(description.text, Does.Contain("Room 205"));
+        }
+
+        [Test]
+        public void Objective_UsesPersistentLocationConfig_WhenClassroomNeverLoaded()
+        {
+            DestroyClassroomWithoutCache();
+            locationConfigAsset = CreateLocationConfig("427", 4);
+            dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
+
+            Assert.That(
+                dailyActivityState.BuildAttendIcsObjectiveDescription(),
+                Is.EqualTo("Go to Room 427 on Floor 4 to attend Introduction to Computer Science."));
+        }
+
+        [Test]
+        public void Hud_ShowsPersistentClassroomLocation_WhenFloor04IsUnloaded()
+        {
+            DestroyClassroomWithoutCache();
+            locationConfigAsset = CreateLocationConfig("427", 4);
+            dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+
+            Transform icsRoot = FindChild(statsHud.transform, "IcsObjectiveBlock");
+            Assert.That(icsRoot, Is.Not.Null);
+            Assert.That(icsRoot.gameObject.activeSelf, Is.True);
+            TextMeshProUGUI description = FindLabel(statsHud.transform, "IcsDescription");
+            Assert.That(description.text, Does.Contain("Room 427"));
+            Assert.That(description.text, Does.Contain("Floor 4"));
+            Assert.That(
+                description.text,
+                Is.EqualTo("Go to Room 427 on Floor 4 to attend Introduction to Computer Science."));
+        }
+
+        [Test]
+        public void Hud_CompletedIcs_StaysVisibleAndGreen_SameDay()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            dailyActivityState.SetAttendIcsStatusForTesting(
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                12,
+                90);
+
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+
+            Transform icsRoot = FindChild(statsHud.transform, "IcsObjectiveBlock");
+            Assert.That(icsRoot.gameObject.activeSelf, Is.True);
+            TextMeshProUGUI marker = FindLabel(statsHud.transform, "IcsMarker");
+            TextMeshProUGUI title = FindLabel(statsHud.transform, "IcsTitle");
+            Assert.That(marker.text, Is.EqualTo("[x]"));
+            Assert.That(marker.color, Is.EqualTo(UiTheme.Success));
+            Assert.That(title.color, Is.EqualTo(UiTheme.Success));
+        }
+
+        [Test]
         public void Hud_HidesIcs_ForBbaStudent()
         {
             SetClassroomConfig(classroom, "205", 2);
@@ -127,6 +248,17 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
+        public void Hud_HidesIcs_OnDay2()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            saveState.SetDayProgressForTesting(1, 2);
+            dailyActivityState.ResetForNewDay(2);
+
+            Transform icsRoot = FindChild(statsHud.transform, "IcsObjectiveBlock");
+            Assert.That(icsRoot.gameObject.activeSelf, Is.False);
+        }
+
+        [Test]
         public void IneligiblePlayer_CannotOpenClassroomChoices()
         {
             SetClassroomConfig(classroom, "205", 2);
@@ -135,6 +267,23 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             string result = classroom.Interact();
             Assert.That(result, Does.Contain("CSE"));
             Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+        }
+
+        [Test]
+        public void CompletedClass_ShowsTerminalMessage_NotLectureUi()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            dailyActivityState.SetAttendIcsStatusForTesting(
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                12,
+                90);
+
+            string result = classroom.Interact();
+            Assert.That(result, Does.Contain("already completed"));
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+            Assert.That(ClassroomLectureUI.IsOpen, Is.False);
         }
 
         [Test]
@@ -161,7 +310,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(body.text, Does.Contain("Aura: +5"));
             Assert.That(body.text, Does.Contain("Academic Reputation: 0"));
 
-            Object.DestroyImmediate(summaryObject);
+            UnityEngine.Object.DestroyImmediate(summaryObject);
         }
 
         [Test]
@@ -187,7 +336,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(body.text, Does.Contain("Left Early"));
             Assert.That(body.text, Does.Contain("Academic Reputation: -1"));
 
-            Object.DestroyImmediate(summaryObject);
+            UnityEngine.Object.DestroyImmediate(summaryObject);
         }
 
         [Test]
@@ -330,7 +479,153 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
 
             RectTransform panel = FindChild(lecture.transform, "LecturePanel") as RectTransform;
+            Assert.That(panel, Is.Not.Null);
             Assert.That(panel.sizeDelta.x, Is.InRange(550f, 700f));
+        }
+
+        [Test]
+        public void Lecture_FinalMilestoneSuccess_AutoClosesAndRestoresControls()
+        {
+            playerObject.AddComponent<CharacterController>();
+            PlayerMovement movement = playerObject.AddComponent<PlayerMovement>();
+            FirstPersonLook look = playerObject.AddComponent<FirstPersonLook>();
+            InteractionController interaction = playerObject.AddComponent<InteractionController>();
+
+            var sync = new FakeAttendIcsSync();
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+            lecture.SetCompletionCloseDelayForTesting(0f);
+
+            var start = new AttendIcsSessionResult(
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                false,
+                true,
+                60000,
+                0,
+                0,
+                0,
+                0,
+                50f,
+                58f);
+
+            lecture.BeginLecture(classroom, sync, start, () => { });
+            Assert.That(ClassroomLectureUI.IsOpen, Is.True);
+            Assert.That(movement.enabled, Is.False);
+
+            RunToCompletion(lecture.ClaimMilestoneForTesting(90));
+
+            Assert.That(ClassroomLectureUI.IsOpen, Is.False);
+            Assert.That(lecture.IsLecturePanelActiveForTesting(), Is.False);
+            Assert.That(lecture.IsLeaveButtonInteractableForTesting(), Is.False);
+            Assert.That(sync.MilestoneRequestCount, Is.EqualTo(1));
+            Assert.That(movement.enabled, Is.True);
+            Assert.That(look.enabled, Is.True);
+            Assert.That(interaction.enabled, Is.True);
+            Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.Locked));
+            Assert.That(Cursor.visible, Is.False);
+        }
+
+        [Test]
+        public void Lecture_FinalMilestoneFailure_DoesNotComplete_AllowsRetry()
+        {
+            var sync = new FakeAttendIcsSync();
+            sync.QueueMilestoneFailure();
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+            lecture.SetCompletionCloseDelayForTesting(0f);
+
+            var start = new AttendIcsSessionResult(
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                false,
+                true,
+                60000,
+                0,
+                0,
+                0,
+                0,
+                50f,
+                58f);
+
+            lecture.BeginLecture(classroom, sync, start, () => { });
+
+            RunToCompletion(lecture.ClaimMilestoneForTesting(90));
+            Assert.That(ClassroomLectureUI.IsOpen, Is.True);
+            Assert.That(lecture.StatusTextForTesting(), Does.Contain("Retrying"));
+            Assert.That(lecture.IsLeaveButtonInteractableForTesting(), Is.True);
+            Assert.That(lecture.ClaimedMilestoneForTesting(), Is.EqualTo(60));
+
+            RunToCompletion(lecture.ClaimMilestoneForTesting(90));
+            Assert.That(ClassroomLectureUI.IsOpen, Is.False);
+            Assert.That(sync.MilestoneRequestCount, Is.EqualTo(2));
+            Assert.That(lecture.FinalMilestoneAttemptsForTesting(), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Lecture_DoesNotResubmitAlreadyClaimedMilestone()
+        {
+            var sync = new FakeAttendIcsSync();
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+            lecture.SetCompletionCloseDelayForTesting(0f);
+
+            var start = new AttendIcsSessionResult(
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                false,
+                true,
+                60000,
+                0,
+                0,
+                0,
+                0,
+                50f,
+                58f);
+
+            lecture.BeginLecture(classroom, sync, start, () => { });
+            RunToCompletion(lecture.ClaimMilestoneForTesting(30));
+            Assert.That(sync.MilestoneRequestCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Hud_SurvivesLectureClose()
+        {
+            SetClassroomConfig(classroom, "205", 2);
+            dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
+
+            var sync = new FakeAttendIcsSync();
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+
+            ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
+            lecture.SetCompletionCloseDelayForTesting(0f);
+            var start = new AttendIcsSessionResult(
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                false,
+                true,
+                60000,
+                0,
+                0,
+                0,
+                0,
+                50f,
+                58f);
+
+            lecture.BeginLecture(classroom, sync, start, () => { });
+            RunToCompletion(lecture.ClaimMilestoneForTesting(90));
+
+            Assert.That(statsHud, Is.Not.Null);
+            Assert.That(statsHud.enabled, Is.True);
+            Assert.That(FindChild(statsHud.transform, "StatsPanel"), Is.Not.Null);
+            Assert.That(FindChild(statsHud.transform, "StatsPanel").gameObject.activeInHierarchy, Is.True);
+        }
+
+        private static void RunToCompletion(IEnumerator routine)
+        {
+            int guard = 0;
+            while (routine.MoveNext())
+            {
+                guard++;
+                Assert.That(guard, Is.LessThan(10000), "Coroutine did not finish");
+            }
         }
 
         private static void SetClassroomConfig(IcsClassroomInteractable target, string room, int floor)
@@ -340,6 +635,35 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 ?.SetValue(target, room);
             type.GetField("floor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.SetValue(target, floor);
+
+            DailyActivityState activities = UnityEngine.Object.FindFirstObjectByType<DailyActivityState>();
+            activities?.RegisterClassroom(target);
+        }
+
+        private void DestroyClassroomWithoutCache()
+        {
+            if (classroomObject != null)
+            {
+                UnityEngine.Object.DestroyImmediate(classroomObject);
+                classroomObject = null;
+                classroom = null;
+            }
+
+            dailyActivityState.IcsClassroom = null;
+        }
+
+        private static IcsClassroomLocationConfig CreateLocationConfig(string room, int floor)
+        {
+            IcsClassroomLocationConfig config = ScriptableObject.CreateInstance<IcsClassroomLocationConfig>();
+            var type = typeof(IcsClassroomLocationConfig);
+            const System.Reflection.BindingFlags flags =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            type.GetField("classroomNumber", flags)?.SetValue(config, room);
+            type.GetField("floor", flags)?.SetValue(config, floor);
+            type.GetField("courseName", flags)?.SetValue(config, "Introduction to Computer Science");
+            type.GetField("departmentCode", flags)?.SetValue(config, "CSE");
+            type.GetField("scheduledGameplayDay", flags)?.SetValue(config, 1);
+            return config;
         }
 
         private static Transform FindChild(Transform root, string name)
@@ -360,6 +684,92 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Transform child = FindChild(root, name);
             Assert.That(child, Is.Not.Null, $"Missing label {name}");
             return child.GetComponent<TextMeshProUGUI>();
+        }
+
+        private sealed class FakeAttendIcsSync : IAttendIcsProgressSync
+        {
+            private readonly Queue<Action<Action<AttendIcsSessionResult>, Action>> milestoneQueue =
+                new Queue<Action<Action<AttendIcsSessionResult>, Action>>();
+
+            public bool IsHydrated => true;
+            public bool IsMutationInFlight => false;
+            public int MilestoneRequestCount { get; private set; }
+
+            public void QueueMilestoneSuccess(
+                int milestoneSeconds,
+                ActivityStatus status,
+                string outcome,
+                int appliedRep,
+                int totalRepDelta)
+            {
+                milestoneQueue.Enqueue((onSuccess, _) =>
+                {
+                    var record = new ActivityRecord(
+                        ActivityIds.AttendIcs,
+                        status,
+                        outcome,
+                        0,
+                        totalRepDelta,
+                        1,
+                        milestoneSeconds);
+                    onSuccess(new AttendIcsSessionResult(
+                        record,
+                        false,
+                        status != ActivityStatus.Completed,
+                        milestoneSeconds * 1000L,
+                        0,
+                        4,
+                        0,
+                        appliedRep,
+                        50f,
+                        50f + totalRepDelta));
+                });
+            }
+
+            public void QueueMilestoneFailure()
+            {
+                milestoneQueue.Enqueue((_, onFailure) => onFailure());
+            }
+
+            public void RequestAttendIcsStart(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+            {
+                onFailure?.Invoke();
+            }
+
+            public void RequestAttendIcsPause(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+            {
+                onSuccess?.Invoke(default);
+            }
+
+            public void RequestAttendIcsResume(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+            {
+                onSuccess?.Invoke(default);
+            }
+
+            public void RequestAttendIcsMilestone(
+                int milestoneSeconds,
+                Action<AttendIcsSessionResult> onSuccess,
+                Action onFailure)
+            {
+                MilestoneRequestCount++;
+                if (milestoneQueue.Count == 0)
+                {
+                    onFailure?.Invoke();
+                    return;
+                }
+
+                milestoneQueue.Dequeue().Invoke(onSuccess, onFailure);
+            }
+
+            public void RequestAttendIcsLeaveEarly(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+            {
+                onFailure?.Invoke();
+            }
+
+            public void RequestAttendIcsProxy(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+            {
+                onFailure?.Invoke();
+            }
         }
     }
 }
