@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f3c9e1a4b8d2e6f0c5a9173d48e2b10, type: 3}
-  m_Name: IcsClassroomLocation
+  m_Name: EnglishClassroomLocation
   m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Classroom.IcsClassroomLocationConfig
-  activityId: ATTEND_ICS
-  courseId: ICS
-  courseName: Introduction to Computer Science
+  activityId: ATTEND_ENGLISH
+  courseId: ENGLISH
+  courseName: English
   departmentCode: CSE
   studentRole: STUDENT
-  classroomNumber: 427
-  floor: 4
+  classroomNumber: 702
+  floor: 7
   scheduledGameplayDay: 1
