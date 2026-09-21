@@ -2,8 +2,11 @@ using System.Collections;
 using TMPro;
 using UIU.Simulator.Authentication;
 using UIU.Simulator.Core;
+using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Networking;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -143,6 +146,12 @@ namespace UIU.Simulator.UI
                 return;
             }
 
+            if (IdCardUI.IsOpen)
+            {
+                IdCardUI.Instance?.Hide();
+                return;
+            }
+
             if (IsConfirmOpen)
             {
                 HideConfirm();
@@ -200,6 +209,11 @@ namespace UIU.Simulator.UI
 
         public void Close(bool restoreGameplayControls = true)
         {
+            if (IdCardUI.IsOpen)
+            {
+                IdCardUI.Instance?.Hide();
+            }
+
             HideConfirm();
             StopInFlightMenuWork();
             SetStatus(string.Empty, UiTheme.Grey);
@@ -247,7 +261,12 @@ namespace UIU.Simulator.UI
 
         private static bool IsBlockingModalOpen()
         {
-            return ElevatorUI.IsOpen || AdvisorUI.IsOpen || DialogueUI.IsOpen || CanteenQueueUI.IsOpen;
+            return ElevatorUI.IsOpen
+                || AdvisorUI.IsOpen
+                || DialogueUI.IsOpen
+                || CanteenQueueUI.IsOpen
+                || AdmissionUI.IsOpen
+                || IdCardUI.IsOpen;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -381,6 +400,34 @@ namespace UIU.Simulator.UI
             }
 
             ShowConfirm();
+        }
+
+        private void OnIdCardClicked()
+        {
+            if (isBusy || isNavigating || IsConfirmOpen)
+            {
+                return;
+            }
+
+            PlayerSaveState saveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+
+            if (saveState == null || !saveState.IsHydrated)
+            {
+                SetStatus("Checking ID card…", UiTheme.Grey);
+                PlayerSaveState.EnsureExists().RefreshFromServer();
+                return;
+            }
+
+            if (!saveState.HasSave || !saveState.IdCardIssued)
+            {
+                SetStatus("No ID card yet. Visit the receptionist.", UiTheme.Red);
+                return;
+            }
+
+            SetStatus(string.Empty, UiTheme.Grey);
+            IdCardUI.EnsureExists().Show();
         }
 
         private void OnPlaceholderClicked(string featureName)
@@ -676,13 +723,13 @@ namespace UIU.Simulator.UI
             Button resume = CreateMenuButton(panel.transform, "Button_Resume", "Resume", OnResumeClicked);
             Button save = CreateMenuButton(panel.transform, "Button_SaveGame", "Save Game", OnSaveGameClicked);
             Button newGame = CreateMenuButton(panel.transform, "Button_NewGame", "New Game", OnNewGameClicked);
-            Button studentCard = CreateMenuButton(panel.transform, "Button_StudentCard", "Student Card", () => OnPlaceholderClicked("Student Card"));
+            Button idCard = CreateMenuButton(panel.transform, "Button_IdCard", "ID Card", OnIdCardClicked);
             Button classRoutine = CreateMenuButton(panel.transform, "Button_ClassRoutine", "Class Routine", () => OnPlaceholderClicked("Class Routine"));
             Button settings = CreateMenuButton(panel.transform, "Button_Settings", "Settings", () => OnPlaceholderClicked("Settings"));
             Button logout = CreateMenuButton(panel.transform, "Button_Logout", "Logout", OnLogoutClicked);
             Button quit = CreateMenuButton(panel.transform, "Button_QuitGame", "Quit Game", OnQuitClicked);
 
-            menuButtons = new[] { resume, save, newGame, studentCard, classRoutine, settings, logout, quit };
+            menuButtons = new[] { resume, save, newGame, idCard, classRoutine, settings, logout, quit };
 
             GameObject statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(panel.transform, false);

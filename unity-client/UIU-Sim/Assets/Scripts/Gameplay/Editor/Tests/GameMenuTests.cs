@@ -1,6 +1,9 @@
 using NUnit.Framework;
 using TMPro;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -128,7 +131,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindButton("Button_Resume"), Is.Not.Null);
             Assert.That(FindButton("Button_SaveGame"), Is.Not.Null);
             Assert.That(FindButton("Button_NewGame"), Is.Not.Null);
-            Assert.That(FindButton("Button_StudentCard"), Is.Not.Null);
+            Assert.That(FindButton("Button_IdCard"), Is.Not.Null);
             Assert.That(FindButton("Button_ClassRoutine"), Is.Not.Null);
             Assert.That(FindButton("Button_Settings"), Is.Not.Null);
             Assert.That(FindButton("Button_Logout"), Is.Not.Null);
@@ -137,7 +140,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindButtonLabel("Button_Resume"), Is.EqualTo("Resume"));
             Assert.That(FindButtonLabel("Button_SaveGame"), Is.EqualTo("Save Game"));
             Assert.That(FindButtonLabel("Button_NewGame"), Is.EqualTo("New Game"));
-            Assert.That(FindButtonLabel("Button_StudentCard"), Is.EqualTo("Student Card"));
+            Assert.That(FindButtonLabel("Button_IdCard"), Is.EqualTo("ID Card"));
             Assert.That(FindButtonLabel("Button_ClassRoutine"), Is.EqualTo("Class Routine"));
             Assert.That(FindButtonLabel("Button_Settings"), Is.EqualTo("Settings"));
             Assert.That(FindButtonLabel("Button_Logout"), Is.EqualTo("Logout"));
@@ -194,13 +197,98 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             menu.Open();
 
-            FindButton("Button_StudentCard").onClick.Invoke();
             FindButton("Button_ClassRoutine").onClick.Invoke();
             FindButton("Button_Settings").onClick.Invoke();
 
             Assert.That(GameMenuManager.IsOpen, Is.True);
             Assert.That(playerMovement.enabled, Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Test08b_IdCard_WithoutAdmission_ShowsStatusAndKeepsMenuOpen()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestPlayerSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false);
+
+            try
+            {
+                menu.Open();
+                FindButton("Button_IdCard").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(IdCardUI.IsOpen, Is.False);
+
+                TextMeshProUGUI status = FindNamedTmp("StatusLabel");
+                Assert.That(status, Is.Not.Null);
+                Assert.That(status.text, Does.Contain("receptionist").IgnoreCase);
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test08c_IdCard_AfterAdmission_OpensIdCardPanel()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestPlayerSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetStateForTesting(hasSaveValue: true, idCardIssuedValue: true);
+
+            var dto = new ApiClient.PlayerSaveStatusDto
+            {
+                hasSave = true,
+                save = new ApiClient.PlayerSaveDto
+                {
+                    playerName = "Alex Student",
+                    role = "STUDENT",
+                    department = "CSE",
+                    universityId = "22112345",
+                    admissionCompleted = true,
+                    idCardIssued = true
+                }
+            };
+            saveState.ApplyCreatedSave(dto);
+
+            try
+            {
+                menu.Open();
+                FindButton("Button_IdCard").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(IdCardUI.IsOpen, Is.True);
+                Assert.That(IdCardUI.Instance, Is.Not.Null);
+
+                menu.HandleEscape();
+                Assert.That(IdCardUI.IsOpen, Is.False);
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+            }
+            finally
+            {
+                if (IdCardUI.IsOpen)
+                {
+                    IdCardUI.Instance.Hide();
+                }
+
+                if (IdCardUI.Instance != null)
+                {
+                    Object.DestroyImmediate(IdCardUI.Instance.gameObject);
+                }
+
+                Object.DestroyImmediate(saveObject);
+            }
         }
 
         [Test]
