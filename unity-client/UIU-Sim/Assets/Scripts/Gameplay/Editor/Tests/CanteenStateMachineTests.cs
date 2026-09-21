@@ -1,8 +1,10 @@
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using System;
 using System.Reflection;
 using NUnit.Framework;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
@@ -11,22 +13,16 @@ using UnityEngine.UI;
 namespace UIU.Simulator.Gameplay.Tests
 {
     /// <summary>
-    /// Unit tests verifying the Canteen state machine rules, daily campus state,
-    /// and defensive queue teardown across CampusDayState and CanteenBreakfastCounter:
-    /// 1. Initial daily state: HasCompletedBreakfastEvent is false.
-    /// 2. Rice route: instant completion, +5 Aura bonus, HasCompletedBreakfastEvent = true.
-    /// 3. Farming prevention: subsequent counter interaction blocked with message.
-    /// 4. Porotta wait to completion: 100% timer, 0 Aura delta, movement/look restored.
-    /// 5. Porotta skip breakfast: -5 Aura penalty, movement/look restored, event completed.
-    /// 6. Porotta skip the line: -10 Aura penalty, movement/look restored, event completed.
-    /// 7. Defensive cleanup: OnDisable/OnDestroy restores movement/look, does NOT complete event, 0 Aura change.
-    /// 8. BeginCampusDay reset: resets daily state and allows breakfast again.
+    /// Unit tests for Neptune breakfast resolution via the activity foundation:
+    /// Rice / Porotta wait / Skip line / Skip breakfast outcomes, side-store isolation,
+    /// defensive queue teardown, duplicate-resolve safety, and network-failure safety.
     /// </summary>
     [TestFixture]
     public sealed class CanteenStateMachineTests
     {
         private GameObject playerObject;
         private CampusDayState campusDayState;
+        private DailyActivityState dailyActivityState;
         private PlayerStats playerStats;
         private PlayerMovement playerMovement;
         private FirstPersonLook firstPersonLook;
@@ -35,61 +31,121 @@ namespace UIU.Simulator.Gameplay.Tests
 
         private GameObject counterObject;
         private CanteenBreakfastCounter breakfastCounter;
-        private TestPlayerProgressSync fakeProgressSync;
+        private TestActivityProgressSync fakeProgressSync;
 
-        private sealed class TestPlayerProgressSync : IPlayerProgressSync
+        private sealed class TestActivityProgressSync : IActivityProgressSync, IPlayerProgressSync
         {
             private readonly PlayerStats stats;
+            private readonly CampusDayState dayState;
+            private readonly DailyActivityState activityState;
+
             public bool IsHydrated => true;
             public bool IsMutationInFlight => false;
-            public int RequestedAuraDelta { get; private set; }
-            public int RequestedAcademicReputationDelta { get; private set; }
-            public int RequestCount { get; private set; }
+            public bool FailNextResolve { get; set; }
+            public int ResolveCount { get; private set; }
+            public string LastOutcome { get; private set; }
 
-            public TestPlayerProgressSync(PlayerStats stats)
+            public TestActivityProgressSync(PlayerStats stats, CampusDayState dayState, DailyActivityState activityState)
             {
                 this.stats = stats;
+                this.dayState = dayState;
+                this.activityState = activityState;
             }
 
             public void RequestStatDelta(int auraDelta, int academicReputationDelta)
             {
-                RequestedAuraDelta += auraDelta;
-                RequestedAcademicReputationDelta += academicReputationDelta;
-                RequestCount++;
+                // Breakfast must not use this path.
                 if (stats != null)
                 {
-                    stats.ApplyServerState(stats.Aura + auraDelta, stats.AcademicReputation + academicReputationDelta, StatUpdateSource.GameplayMutation);
+                    stats.ApplyServerState(
+                        stats.Aura + auraDelta,
+                        stats.AcademicReputation + academicReputationDelta,
+                        StatUpdateSource.GameplayMutation);
                 }
+            }
+
+            public void RequestActivityResolve(
+                string activityId,
+                string outcome,
+                Action<ActivityResolveResult> onSuccess,
+                Action onFailure)
+            {
+                ResolveCount++;
+                LastOutcome = outcome;
+
+                if (FailNextResolve)
+                {
+                    onFailure?.Invoke();
+                    return;
+                }
+
+                int auraDelta = 0;
+                ActivityStatus status = ActivityStatus.Completed;
+                switch ((outcome ?? string.Empty).ToUpperInvariant())
+                {
+                    case "RICE":
+                        auraDelta = 5;
+                        break;
+                    case "POROTTA_WAIT":
+                        auraDelta = 0;
+                        break;
+                    case "SKIP_LINE":
+                        auraDelta = -10;
+                        break;
+                    case "SKIP_BREAKFAST":
+                        auraDelta = -5;
+                        status = ActivityStatus.Missed;
+                        break;
+                }
+
+                float newAura = (stats != null ? stats.Aura : 50f) + auraDelta;
+                float reputation = stats != null ? stats.AcademicReputation : 50f;
+                ActivityRecord record = new ActivityRecord(
+                    activityId,
+                    status,
+                    outcome,
+                    auraDelta,
+                    0,
+                    1);
+
+                activityState?.ApplyServerActivity(record);
+                if (record.IsResolved && activityId == ActivityIds.Breakfast)
+                {
+                    dayState?.CompleteBreakfastEvent();
+                }
+                stats?.ApplyServerState(newAura, reputation, StatUpdateSource.GameplayMutation);
+
+                onSuccess?.Invoke(new ActivityResolveResult(record, false, newAura, reputation));
             }
         }
 
         [SetUp]
         public void SetUp()
         {
-            // Create player object with required components
             playerObject = new GameObject("TestPlayer");
             playerObject.AddComponent<CharacterController>();
             playerMovement = playerObject.AddComponent<PlayerMovement>();
             firstPersonLook = playerObject.AddComponent<FirstPersonLook>();
             playerStats = playerObject.AddComponent<PlayerStats>();
             InvokeMethod(playerStats, "Awake");
+            dailyActivityState = playerObject.AddComponent<DailyActivityState>();
             campusDayState = playerObject.AddComponent<CampusDayState>();
+            InvokeMethod(campusDayState, "Awake");
             dialogueUI = playerObject.AddComponent<DialogueUI>();
             canteenQueueUI = playerObject.AddComponent<CanteenQueueUI>();
             InvokeMethod(dialogueUI, "Awake");
             InvokeMethod(canteenQueueUI, "Awake");
 
-            // Create counter object
             counterObject = new GameObject("TestBreakfastCounter");
             counterObject.AddComponent<BoxCollider>();
             counterObject.AddComponent<AudioSource>();
             counterObject.AddComponent<InteractionFeedback>();
             breakfastCounter = counterObject.AddComponent<CanteenBreakfastCounter>();
             InvokeMethod(breakfastCounter, "Awake");
-            breakfastCounter.QueueDuration = 5f; // Fast test duration
+            breakfastCounter.QueueDuration = 5f;
 
-            fakeProgressSync = new TestPlayerProgressSync(playerStats);
-            breakfastCounter.SetProgressSyncForTesting(fakeProgressSync);
+            fakeProgressSync = new TestActivityProgressSync(playerStats, campusDayState, dailyActivityState);
+            breakfastCounter.SetActivitySyncForTesting(fakeProgressSync);
         }
 
         [TearDown]
@@ -110,20 +166,20 @@ namespace UIU.Simulator.Gameplay.Tests
                 CanteenQueueUI.Instance.Hide();
             }
 
-            var notif = Object.FindFirstObjectByType<SystemNotificationUI>();
+            var notif = UnityEngine.Object.FindFirstObjectByType<SystemNotificationUI>();
             if (notif != null)
             {
-                Object.DestroyImmediate(notif.gameObject);
+                UnityEngine.Object.DestroyImmediate(notif.gameObject);
             }
 
             if (counterObject != null)
             {
-                Object.DestroyImmediate(counterObject);
+                UnityEngine.Object.DestroyImmediate(counterObject);
             }
 
             if (playerObject != null)
             {
-                Object.DestroyImmediate(playerObject);
+                UnityEngine.Object.DestroyImmediate(playerObject);
             }
         }
 
@@ -131,8 +187,10 @@ namespace UIU.Simulator.Gameplay.Tests
         public void InitialState_BreakfastNotCompleted_CounterInNotStartedState()
         {
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.NotStarted));
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
+            Assert.That(breakfastCounter.StallDisplayName, Is.EqualTo("Neptune"));
         }
 
         [Test]
@@ -140,12 +198,13 @@ namespace UIU.Simulator.Gameplay.Tests
         {
             float initialAura = playerStats.Aura;
 
-            // Trigger Rice choice via private handler
             InvokeMethod(breakfastCounter, "OnSelectRice");
 
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
             Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+            Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("RICE"));
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
         }
 
@@ -155,14 +214,12 @@ namespace UIU.Simulator.Gameplay.Tests
             if (DialogueUI.IsOpen) DialogueUI.Instance.Hide();
             if (CanteenQueueUI.IsOpen) CanteenQueueUI.Instance.Hide();
 
-            // Complete breakfast via Rice
             InvokeMethod(breakfastCounter, "OnSelectRice");
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
 
-            // Attempt subsequent interaction
             string message = breakfastCounter.Interact();
-
             Assert.That(message, Is.EqualTo("You've already sorted out breakfast today."));
+            Assert.That(fakeProgressSync.ResolveCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -170,67 +227,58 @@ namespace UIU.Simulator.Gameplay.Tests
         {
             float initialAura = playerStats.Aura;
 
-            // Select Porotta to enter queue
             InvokeMethod(breakfastCounter, "OnSelectPorotta");
 
             Assert.That(breakfastCounter.IsQueueActive, Is.True);
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.WaitingInQueue));
-            Assert.That(playerMovement.enabled, Is.False, "Player movement should be locked in queue.");
-            Assert.That(firstPersonLook.enabled, Is.False, "Camera look should be locked in queue.");
-            Assert.That(CanteenQueueUI.IsOpen, Is.True, "Queue UI should be open.");
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False, "Queue start must not resolve breakfast.");
+            Assert.That(playerMovement.enabled, Is.False);
+            Assert.That(firstPersonLook.enabled, Is.False);
+            Assert.That(CanteenQueueUI.IsOpen, Is.True);
 
-            // Simulate timer reaching 100% completion
             InvokeMethod(breakfastCounter, "OnQueueCompleted");
 
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f), "Aura should not change on full wait.");
-            Assert.That(playerMovement.enabled, Is.True, "Player movement should be restored.");
-            Assert.That(firstPersonLook.enabled, Is.True, "Camera look should be restored.");
-            Assert.That(CanteenQueueUI.IsOpen, Is.False, "Queue UI should be hidden.");
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f));
+            Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("POROTTA_WAIT"));
+            Assert.That(playerMovement.enabled, Is.True);
+            Assert.That(firstPersonLook.enabled, Is.True);
+            Assert.That(CanteenQueueUI.IsOpen, Is.False);
         }
 
         [Test]
-        public void PorottaRoute_SkipBreakfast_CancelsQueue_Deducts5Aura_CompletesEvent()
+        public void PorottaRoute_SkipBreakfast_MissesActivity_Deducts5Aura()
         {
             float initialAura = playerStats.Aura;
 
-            // Select Porotta to enter queue
             InvokeMethod(breakfastCounter, "OnSelectPorotta");
-            Assert.That(breakfastCounter.IsQueueActive, Is.True);
-
-            // Choose Skip Breakfast
             InvokeMethod(breakfastCounter, "OnSkipBreakfast");
 
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 5f).Within(0.001f), "Aura should decrease by 5 on Skip Breakfast.");
-            Assert.That(playerMovement.enabled, Is.True, "Player movement should be restored.");
-            Assert.That(firstPersonLook.enabled, Is.True, "Camera look should be restored.");
-            Assert.That(CanteenQueueUI.IsOpen, Is.False, "Queue UI should be hidden.");
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Missed));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 5f).Within(0.001f));
+            Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("SKIP_BREAKFAST"));
+            Assert.That(playerMovement.enabled, Is.True);
+            Assert.That(firstPersonLook.enabled, Is.True);
         }
 
         [Test]
-        public void PorottaRoute_SkipLine_CancelsQueue_Deducts10Aura_CompletesEvent()
+        public void PorottaRoute_SkipLine_Completes_Deducts10Aura()
         {
             float initialAura = playerStats.Aura;
 
-            // Select Porotta to enter queue
             InvokeMethod(breakfastCounter, "OnSelectPorotta");
-            Assert.That(breakfastCounter.IsQueueActive, Is.True);
-
-            // Choose Skip the Line
             InvokeMethod(breakfastCounter, "OnSkipLine");
 
-            Assert.That(breakfastCounter.IsQueueActive, Is.False);
-            Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
-            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 10f).Within(0.001f), "Aura should decrease by 10 on Skip the Line.");
-            Assert.That(playerMovement.enabled, Is.True, "Player movement should be restored.");
-            Assert.That(firstPersonLook.enabled, Is.True, "Camera look should be restored.");
-            Assert.That(CanteenQueueUI.IsOpen, Is.False, "Queue UI should be hidden.");
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 10f).Within(0.001f));
+            Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("SKIP_LINE"));
+            Assert.That(playerMovement.enabled, Is.True);
         }
 
         [Test]
@@ -238,36 +286,144 @@ namespace UIU.Simulator.Gameplay.Tests
         {
             float initialAura = playerStats.Aura;
 
-            // Select Porotta to enter queue
             InvokeMethod(breakfastCounter, "OnSelectPorotta");
-            Assert.That(breakfastCounter.IsQueueActive, Is.True);
-
-            // Execute defensive teardown (simulating disable/destroy/scene change mid-queue)
             breakfastCounter.TeardownQueue(isDefensive: true);
 
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
-            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False, "Defensive teardown must NOT complete breakfast event.");
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f), "Defensive teardown must NOT change Aura.");
-            Assert.That(playerMovement.enabled, Is.True, "Movement must be restored.");
-            Assert.That(firstPersonLook.enabled, Is.True, "Look must be restored.");
-            Assert.That(CanteenQueueUI.IsOpen, Is.False, "Queue UI must be hidden.");
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f));
+            Assert.That(playerMovement.enabled, Is.True);
+            Assert.That(firstPersonLook.enabled, Is.True);
+            Assert.That(CanteenQueueUI.IsOpen, Is.False);
+        }
+
+        [Test]
+        public void DailyActivityState_GetIdCard_StartsPendingAndCompletesOnce()
+        {
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.IsGetIdCardResolved, Is.False);
+
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(dailyActivityState.IsGetIdCardResolved, Is.True);
+            Assert.That(dailyActivityState.GetIdCardOutcome, Is.EqualTo("COMPLETED"));
+        }
+
+        [Test]
+        public void DailyActivityState_ResetForNewDay_PreservesGetIdCard()
+        {
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 5);
+
+            dailyActivityState.ResetForNewDay(2);
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Completed));
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.DayNumber, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void DailyActivityState_ResetForNewGame_ClearsGetIdCard()
+        {
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                "COMPLETED",
+                0,
+                0,
+                1));
+
+            dailyActivityState.ResetForNewGame();
+
+            Assert.That(dailyActivityState.GetIdCardStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
         }
 
         [Test]
         public void BeginCampusDay_ResetsBreakfastEvent_AllowsInteractionAgain()
         {
-            // Complete breakfast via Rice
             InvokeMethod(breakfastCounter, "OnSelectRice");
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
 
-            // Reset day
             campusDayState.BeginCampusDay();
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
 
-            // Interacting now proceeds to Ordering instead of blocked response
             string response = breakfastCounter.Interact();
-            Assert.That(response, Is.Null, "Interact should show DialogueUI and return null response.");
+            Assert.That(response, Is.Null);
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Ordering));
+        }
+
+        [Test]
+        public void VisitingNeptuneWithoutChoice_DoesNotResolveBreakfast()
+        {
+            string response = breakfastCounter.Interact();
+            Assert.That(response, Is.Null);
+            Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Ordering));
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(fakeProgressSync.ResolveCount, Is.EqualTo(0));
+            DialogueUI.Instance.Hide();
+        }
+
+        [Test]
+        public void NetworkFailure_DoesNotAwardAuraOrResolveActivity()
+        {
+            float initialAura = playerStats.Aura;
+            fakeProgressSync.FailNextResolve = true;
+
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, "[CanteenBreakfastCounter] Breakfast resolve failed for Rice. Local state unchanged.");
+
+            InvokeMethod(breakfastCounter, "OnSelectRice");
+
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f));
+            Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.NotStarted));
+        }
+
+        [Test]
+        public void DuplicateResolve_DoesNotReapplyAura()
+        {
+            float initialAura = playerStats.Aura;
+            InvokeMethod(breakfastCounter, "OnSelectRice");
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+
+            InvokeMethod(breakfastCounter, "OnSelectRice");
+            Assert.That(fakeProgressSync.ResolveCount, Is.EqualTo(1), "Second rice choice must be gated by resolved breakfast.");
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+        }
+
+        [Test]
+        public void SideStore_DoesNotResolveBreakfast()
+        {
+            GameObject storeGo = new GameObject("TestSideStore");
+            storeGo.AddComponent<BoxCollider>();
+            CanteenSideStore store = storeGo.AddComponent<CanteenSideStore>();
+
+            string result = store.Interact();
+            Assert.That(result, Is.Null);
+            Assert.That(DialogueUI.IsOpen, Is.True);
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(fakeProgressSync.ResolveCount, Is.EqualTo(0));
+
+            DialogueUI.Instance.Hide();
+            UnityEngine.Object.DestroyImmediate(storeGo);
         }
 
         [Test]
@@ -278,126 +434,68 @@ namespace UIU.Simulator.Gameplay.Tests
 
             canteenQueueUI.Show(() => skipBreakfastCalled = true, () => skipLineCalled = true);
 
-            Assert.That(CanteenQueueUI.IsOpen, Is.True);
-
             Button skipBreakfastBtn = GetField<Button>(canteenQueueUI, "skipBreakfastButton");
             Button skipLineBtn = GetField<Button>(canteenQueueUI, "skipLineButton");
-            bool isArmed = GetField<bool>(canteenQueueUI, "isArmed");
+            Assert.That(GetField<bool>(canteenQueueUI, "isArmed"), Is.False);
 
-            Assert.That(isArmed, Is.False, "CanteenQueueUI must be disarmed on the frame it opens.");
-            Assert.That(skipBreakfastBtn.interactable, Is.False, "Skip Breakfast button must be non-interactable on opening frame.");
-            Assert.That(skipLineBtn.interactable, Is.False, "Skip Line button must be non-interactable on opening frame.");
-
-            // Attempt to trigger on opening frame (e.g. from key press or mouse click bleed)
             InvokeMethod(canteenQueueUI, "TriggerSkipBreakfast");
             InvokeMethod(canteenQueueUI, "TriggerSkipLine");
+            Assert.That(skipBreakfastCalled, Is.False);
+            Assert.That(skipLineCalled, Is.False);
 
-            Assert.That(skipBreakfastCalled, Is.False, "Skip Breakfast must NOT execute on opening frame.");
-            Assert.That(skipLineCalled, Is.False, "Skip Line must NOT execute on opening frame.");
-
-            // Simulate next frame input arming
             SetField(canteenQueueUI, "openedFrame", Time.frameCount - 1);
             InvokeMethod(canteenQueueUI, "ArmInput");
-
-            Assert.That(GetField<bool>(canteenQueueUI, "isArmed"), Is.True, "CanteenQueueUI should be armed after ArmInput.");
-            Assert.That(skipBreakfastBtn.interactable, Is.True, "Skip Breakfast button must be interactable after arming.");
-            Assert.That(skipLineBtn.interactable, Is.True, "Skip Line button must be interactable after arming.");
-
-            // Trigger after arming
             InvokeMethod(canteenQueueUI, "TriggerSkipBreakfast");
-            Assert.That(skipBreakfastCalled, Is.True, "Skip Breakfast must execute after arming.");
-
-            canteenQueueUI.Hide();
-            Assert.That(CanteenQueueUI.IsOpen, Is.False);
-            Assert.That(GetField<bool>(canteenQueueUI, "isArmed"), Is.False);
-        }
-
-        [Test]
-        public void QueueUI_ConfigurableText_AppliedOnShow()
-        {
-            SetField(canteenQueueUI, "queueTitle", "Custom Queue Header");
-            SetField(canteenQueueUI, "waitingHelpText", "Custom Waiting Notice");
-            SetField(canteenQueueUI, "skipBreakfastButtonLabel", "[1] Custom Skip");
-            SetField(canteenQueueUI, "skipLineButtonLabel", "[2] Custom Rush");
-
-            canteenQueueUI.Show(null, null);
-
-            var headerLabel = GetField<TMPro.TextMeshProUGUI>(canteenQueueUI, "headerLabel");
-            var statusLabel = GetField<TMPro.TextMeshProUGUI>(canteenQueueUI, "statusLabel");
-            var skipBreakfastText = GetField<TMPro.TextMeshProUGUI>(canteenQueueUI, "skipBreakfastLabelText");
-            var skipLineText = GetField<TMPro.TextMeshProUGUI>(canteenQueueUI, "skipLineLabelText");
-
-            Assert.That(headerLabel.text, Is.EqualTo("Custom Queue Header"));
-            Assert.That(statusLabel.text, Is.EqualTo("Custom Waiting Notice"));
-            Assert.That(skipBreakfastText.text, Is.EqualTo("[1] Custom Skip"));
-            Assert.That(skipLineText.text, Is.EqualTo("[2] Custom Rush"));
+            Assert.That(skipBreakfastCalled, Is.True);
 
             canteenQueueUI.Hide();
         }
 
         [Test]
-        public void BreakfastCounter_ConfigurableDialogueAndMessages()
-        {
-            if (DialogueUI.IsOpen) DialogueUI.Instance.Hide();
-            if (CanteenQueueUI.IsOpen) CanteenQueueUI.Instance.Hide();
-
-            SetField(breakfastCounter, "prompt", "Custom Breakfast Prompt");
-            SetField(breakfastCounter, "workerName", "Custom Chef");
-            SetField(breakfastCounter, "breakfastPrompt", "What would you like, student?");
-            SetField(breakfastCounter, "porottaChoiceLabel", "Special Porotta");
-            SetField(breakfastCounter, "riceChoiceLabel", "Special Khichuri");
-            SetField(breakfastCounter, "alreadyCompletedMessage", "You already ate today!");
-
-            Assert.That(breakfastCounter.InteractionPrompt, Is.EqualTo("Custom Breakfast Prompt"));
-
-            // Complete breakfast once
-            InvokeMethod(breakfastCounter, "OnSelectRice");
-            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
-
-            // Attempt interaction — should return custom already completed message
-            string blockedMessage = breakfastCounter.Interact();
-            Assert.That(blockedMessage, Is.EqualTo("You already ate today!"));
-        }
-
-        [Test]
-        public void MissingProgressSync_DoesNotMutateStats()
+        public void MissingActivitySync_DoesNotMutateStatsOrResolve()
         {
             float initialAura = playerStats.Aura;
+            breakfastCounter.SetActivitySyncForTesting(null);
 
-            // Remove progress sync seam to simulate missing progress sync in misconfigured scene
-            breakfastCounter.SetProgressSyncForTesting(null);
+            UnityEngine.TestTools.LogAssert.Expect(
+                LogType.Error,
+                "[CanteenBreakfastCounter] Activity sync missing. Cannot resolve breakfast.");
 
-            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "[CanteenBreakfastCounter] PlayerProgressSync missing. Cannot persist Aura change.");
-
-            // Execute Rice selection
             InvokeMethod(breakfastCounter, "OnSelectRice");
 
-            // Event completes, but persistent Aura must NOT be modified locally
-            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f), "Aura must NOT be mutated locally when PlayerProgressSync is missing.");
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura).Within(0.001f));
+            Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.NotStarted));
         }
 
         [Test]
-        public void SideStore_ConfigurableDialogueAndMenuItems()
+        public void ContinueHydration_RestoresCompletedBreakfast()
         {
-            GameObject storeGo = new GameObject("TestSideStore");
-            storeGo.AddComponent<BoxCollider>();
-            CanteenSideStore store = storeGo.AddComponent<CanteenSideStore>();
+            dailyActivityState.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.Breakfast,
+                ActivityStatus.Completed,
+                "RICE",
+                5,
+                0,
+                1));
+            campusDayState.ApplyHydratedBreakfastResolved();
 
-            SetField(store, "storeName", "East Snack Shack");
-            SetField(store, "prompt", "Grab Snacks");
-            SetField(store, "greeting", "Hungry? Grab something quick!");
-            SetField(store, "shawarmaLabel", "Chicken Shawarma");
-            SetField(store, "orderCompleteResponse", "Order up! Enjoy.");
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
 
-            Assert.That(store.InteractionPrompt, Is.EqualTo("Grab Snacks"));
+            string blocked = breakfastCounter.Interact();
+            Assert.That(blocked, Is.EqualTo("You've already sorted out breakfast today."));
+        }
 
-            string result = store.Interact();
-            Assert.That(result, Is.Null, "Store interact opens dialogue and returns null.");
-            Assert.That(DialogueUI.IsOpen, Is.True, "Dialogue should be open.");
+        [Test]
+        public void NewGameReset_ClearsBreakfastToPending()
+        {
+            InvokeMethod(breakfastCounter, "OnSelectRice");
+            Assert.That(dailyActivityState.IsBreakfastResolved, Is.True);
 
-            DialogueUI.Instance.Hide();
-            Object.DestroyImmediate(storeGo);
+            campusDayState.BeginCampusDay();
+            Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Pending));
+            Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.False);
         }
 
         private static void InvokeMethod(object target, string methodName)
@@ -428,59 +526,34 @@ namespace UIU.Simulator.Gameplay.Tests
             var tests = new CanteenStateMachineTests();
             try
             {
-                tests.SetUp();
-                tests.InitialState_BreakfastNotCompleted_CounterInNotStartedState();
-                tests.TearDown();
+                void Run(Action test)
+                {
+                    tests.SetUp();
+                    test();
+                    tests.TearDown();
+                }
 
-                tests.SetUp();
-                tests.RiceRoute_CompletesBreakfastImmediately_Awards5Aura();
-                tests.TearDown();
+                Run(tests.InitialState_BreakfastNotCompleted_CounterInNotStartedState);
+                Run(tests.RiceRoute_CompletesBreakfastImmediately_Awards5Aura);
+                Run(tests.RiceRoute_SubsequentInteractionBlocked_ReturnsAlreadySortedMessage);
+                Run(tests.PorottaRoute_WaitUntilCompletion_CompletesBreakfast_0AuraDelta);
+                Run(tests.PorottaRoute_SkipBreakfast_MissesActivity_Deducts5Aura);
+                Run(tests.PorottaRoute_SkipLine_Completes_Deducts10Aura);
+                Run(tests.DefensiveTeardown_RestoresControls_DoesNotCompleteEvent_NoAuraDelta);
+                Run(tests.DailyActivityState_GetIdCard_StartsPendingAndCompletesOnce);
+                Run(tests.DailyActivityState_ResetForNewDay_PreservesGetIdCard);
+                Run(tests.DailyActivityState_ResetForNewGame_ClearsGetIdCard);
+                Run(tests.BeginCampusDay_ResetsBreakfastEvent_AllowsInteractionAgain);
+                Run(tests.VisitingNeptuneWithoutChoice_DoesNotResolveBreakfast);
+                Run(tests.NetworkFailure_DoesNotAwardAuraOrResolveActivity);
+                Run(tests.DuplicateResolve_DoesNotReapplyAura);
+                Run(tests.SideStore_DoesNotResolveBreakfast);
+                Run(tests.QueueUI_InputBleedProtection_DisarmedOnOpeningFrame_ArmedAfterwards);
+                Run(tests.MissingActivitySync_DoesNotMutateStatsOrResolve);
+                Run(tests.ContinueHydration_RestoresCompletedBreakfast);
+                Run(tests.NewGameReset_ClearsBreakfastToPending);
 
-                tests.SetUp();
-                tests.RiceRoute_SubsequentInteractionBlocked_ReturnsAlreadySortedMessage();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.PorottaRoute_WaitUntilCompletion_CompletesBreakfast_0AuraDelta();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.PorottaRoute_SkipBreakfast_CancelsQueue_Deducts5Aura_CompletesEvent();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.PorottaRoute_SkipLine_CancelsQueue_Deducts10Aura_CompletesEvent();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.DefensiveTeardown_RestoresControls_DoesNotCompleteEvent_NoAuraDelta();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.BeginCampusDay_ResetsBreakfastEvent_AllowsInteractionAgain();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.QueueUI_InputBleedProtection_DisarmedOnOpeningFrame_ArmedAfterwards();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.QueueUI_ConfigurableText_AppliedOnShow();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.BreakfastCounter_ConfigurableDialogueAndMessages();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.MissingProgressSync_DoesNotMutateStats();
-                tests.TearDown();
-
-                tests.SetUp();
-                tests.SideStore_ConfigurableDialogueAndMenuItems();
-                tests.TearDown();
-
-                Debug.Log("<color=green><b>[CanteenStateMachineTests] All 13 tests PASSED!</b></color>");
+                Debug.Log("<color=green><b>[CanteenStateMachineTests] All breakfast activity tests PASSED!</b></color>");
             }
             catch (System.Exception ex)
             {

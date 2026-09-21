@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
@@ -12,40 +13,55 @@ public enum CanteenBreakfastState
     NotStarted,
     Ordering,
     WaitingInQueue,
+    Completing,
     Completed
 }
 
 /// <summary>
-/// Interactive middle counter at the campus canteen.
+/// Interactive middle counter at the campus canteen (Neptune).
 /// Implements <see cref="IInteractable"/> to provide the breakfast dilemma:
 /// <list type="bullet">
 ///   <item><b>Rice</b>: Instant breakfast, +5 Aura bonus (shortcut).</item>
 ///   <item><b>Porotta</b>: Real-time queue timer. Player enters a modal waiting state.</item>
-///   <item><b>Wait to Completion</b>: Progress reaches 100%, 0 Aura delta, breakfast received.</item>
-///   <item><b>Skip Breakfast</b>: -5 Aura penalty, no food received, breakfast event completed.</item>
-///   <item><b>Skip the Line</b>: -10 Aura penalty, instant food received, breakfast event completed.</item>
+///   <item><b>Wait to Completion</b>: Progress reaches 100%, 0 Aura delta, breakfast COMPLETED.</item>
+///   <item><b>Skip Breakfast</b>: -5 Aura penalty, no food, breakfast MISSED.</item>
+///   <item><b>Skip the Line</b>: -10 Aura penalty, instant food, breakfast COMPLETED.</item>
 /// </list>
 /// Gated by <see cref="CampusDayState.HasCompletedBreakfastEvent"/> to prevent farming.
+/// Aura and activity status are committed together via <see cref="IActivityProgressSync"/>.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
 public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
 {
-    private IPlayerProgressSync progressSync;
+    private IActivityProgressSync activitySync;
 
-    /// <summary>Explicit test seam for unit tests to inject a mock/fake progress sync.</summary>
+    /// <summary>Explicit test seam for unit tests to inject a mock/fake activity sync.</summary>
+    public void SetActivitySyncForTesting(IActivityProgressSync testSync)
+    {
+        activitySync = testSync;
+    }
+
+    /// <summary>Legacy seam kept for older tests; routes to activity sync when compatible.</summary>
     public void SetProgressSyncForTesting(IPlayerProgressSync testSync)
     {
-        progressSync = testSync;
+        if (testSync is IActivityProgressSync activity)
+        {
+            activitySync = activity;
+        }
     }
 
     [Header("Interaction")]
     [Tooltip("Label shown when the player looks at the counter.")]
     [SerializeField] private string prompt = "Order Breakfast";
 
+    [Header("Stall Identity")]
+    [Tooltip("Display name for this breakfast stall (Neptune is the middle counter).")]
+    [SerializeField] private string stallDisplayName = "Neptune";
+
     [Header("Dialogue - Speaker & Prompt")]
-    [Tooltip("Speaker name displayed in DialogueUI header.")]
-    [SerializeField] private string workerName = "Canteen Worker";
+    [Tooltip("Speaker name displayed in DialogueUI header. Defaults to stall display name when blank.")]
+    [SerializeField] private string workerName = "";
 
     [Tooltip("Prompt asked by the worker when ordering breakfast.")]
     [SerializeField, TextArea] private string breakfastPrompt = "What are you having?";
@@ -88,6 +104,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     private CanteenBreakfastState currentState = CanteenBreakfastState.NotStarted;
     private bool isQueueActive;
     private Coroutine queueCoroutine;
+    private bool isResolving;
 
     // Cached references for defensive restoration
     private PlayerMovement cachedPlayerMovement;
@@ -106,6 +123,9 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     /// <summary>True while the player is waiting in the modal porotta queue.</summary>
     public bool IsQueueActive => isQueueActive;
 
+    /// <summary>Inspector-configurable stall display name (default Neptune).</summary>
+    public string StallDisplayName => stallDisplayName;
+
     /// <summary>
     /// Configurable duration of the queue in seconds.
     /// Can be tuned down to 5–10 seconds for dev/automated testing.
@@ -123,7 +143,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     public string Interact()
     {
         // Guard: Queue or dialogue already open
-        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || isQueueActive)
+        if (DialogueUI.IsOpen || CanteenQueueUI.IsOpen || isQueueActive || isResolving)
         {
             return null;
         }
@@ -133,18 +153,20 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
             return unavailableMessage;
         }
 
-        // Check if breakfast has already been completed today
+        // Check if breakfast has already been resolved today (COMPLETED or MISSED)
         if (cachedDayState.HasCompletedBreakfastEvent)
         {
-            Debug.Log("[CanteenBreakfastCounter] Player already completed breakfast event today.");
+            Debug.Log("[CanteenBreakfastCounter] Player already resolved breakfast today.");
             return alreadyCompletedMessage;
         }
 
         // Open breakfast dialogue choices
         currentState = CanteenBreakfastState.Ordering;
 
+        string speaker = string.IsNullOrWhiteSpace(workerName) ? stallDisplayName : workerName;
+
         DialogueUI.Instance.Show(
-            workerName,
+            speaker,
             breakfastPrompt,
             new[]
             {
@@ -156,50 +178,28 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
         return null;
     }
 
-    // ── Stat Persistence ──────────────────────────────────────────────
-
-    private void RequestAuraDelta(int delta)
-    {
-        if (progressSync != null)
-        {
-            progressSync.RequestStatDelta(delta, 0);
-        }
-        else
-        {
-            Debug.LogError("[CanteenBreakfastCounter] PlayerProgressSync missing. Cannot persist Aura change.", this);
-            SystemNotificationUI.Show("Progress system unavailable.");
-        }
-    }
-
     // ── Choice Handlers ────────────────────────────────────────────────
 
     /// <summary>
-    /// Rice route: Instant breakfast, +5 Aura bonus, event completed.
-    /// Consequence is hidden until after choice.
+    /// Rice route: Instant breakfast after successful resolve (+5 Aura, COMPLETED).
     /// </summary>
     private void OnSelectRice()
     {
-        if (!EnsureReferences())
+        if (!EnsureReferences() || isResolving)
         {
             return;
         }
 
-        currentState = CanteenBreakfastState.Completed;
-        cachedDayState.CompleteBreakfastEvent();
-        SystemNotificationUI.Show(riceSuccessReason);
-        RequestAuraDelta(5);
-
-        if (feedback != null)
-        {
-            feedback.PlaySuccess();
-        }
-
-        Debug.Log($"[CanteenBreakfastCounter] {riceChoiceLabel} chosen: Instant breakfast (+5 Aura requested). Reason: {riceSuccessReason}.");
+        ResolveBreakfast(
+            BreakfastOutcome.Rice,
+            playSuccessFeedback: true,
+            successNotice: riceSuccessReason);
     }
 
     /// <summary>
     /// Porotta route: Enters the modal waiting queue.
     /// Disables player movement and camera look, shows queue UI with progress bar.
+    /// Starting the queue alone does not resolve the breakfast activity.
     /// </summary>
     private void OnSelectPorotta()
     {
@@ -271,59 +271,98 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     // ── Terminal Outcomes ──────────────────────────────────────────────
 
     /// <summary>
-    /// Wait until completion: 100% progress, 0 Aura delta, breakfast received.
+    /// Wait until completion: 100% progress, 0 Aura delta, breakfast COMPLETED.
     /// </summary>
     private void OnQueueCompleted()
     {
         TeardownQueue(isDefensive: false);
-
-        currentState = CanteenBreakfastState.Completed;
-        cachedDayState?.CompleteBreakfastEvent();
-
-        if (feedback != null)
-        {
-            feedback.PlaySuccess();
-        }
-
-        Debug.Log($"[CanteenBreakfastCounter] {porottaReadyMessage} Waited full queue duration. 0 Aura delta.");
+        ResolveBreakfast(
+            BreakfastOutcome.PorottaWait,
+            playSuccessFeedback: true,
+            successNotice: porottaReadyMessage);
     }
 
     /// <summary>
-    /// Skip Breakfast: Cancels queue, -5 Aura penalty, no food received, event completed.
+    /// Skip Breakfast: Cancels queue, -5 Aura, MISSED (resolved but not successful).
     /// </summary>
     private void OnSkipBreakfast()
     {
         TeardownQueue(isDefensive: false);
-
-        currentState = CanteenBreakfastState.Completed;
-        cachedDayState?.CompleteBreakfastEvent();
-        RequestAuraDelta(-5);
-
-        if (feedback != null)
-        {
-            feedback.PlayFailure();
-        }
-
-        Debug.Log($"[CanteenBreakfastCounter] Skip Breakfast chosen: Queue cancelled (-5 Aura requested). Reason: {skipBreakfastReason}.");
+        ResolveBreakfast(
+            BreakfastOutcome.SkipBreakfast,
+            playSuccessFeedback: false,
+            successNotice: skipBreakfastReason);
     }
 
     /// <summary>
-    /// Skip the Line: Cancels queue, -10 Aura penalty, breakfast received immediately, event completed.
+    /// Skip the Line: Cancels queue, -10 Aura, breakfast COMPLETED.
     /// </summary>
     private void OnSkipLine()
     {
         TeardownQueue(isDefensive: false);
+        ResolveBreakfast(
+            BreakfastOutcome.SkipLine,
+            playSuccessFeedback: true,
+            successNotice: skipLineReason);
+    }
 
-        currentState = CanteenBreakfastState.Completed;
-        cachedDayState?.CompleteBreakfastEvent();
-        RequestAuraDelta(-10);
-
-        if (feedback != null)
+    private void ResolveBreakfast(BreakfastOutcome outcome, bool playSuccessFeedback, string successNotice)
+    {
+        if (isResolving)
         {
-            feedback.PlaySuccess();
+            return;
         }
 
-        Debug.Log($"[CanteenBreakfastCounter] Skip the Line chosen: Queue cancelled (-10 Aura requested). Reason: {skipLineReason}.");
+        if (cachedDayState != null && cachedDayState.HasCompletedBreakfastEvent)
+        {
+            currentState = CanteenBreakfastState.Completed;
+            return;
+        }
+
+        if (activitySync == null)
+        {
+            Debug.LogError("[CanteenBreakfastCounter] Activity sync missing. Cannot resolve breakfast.", this);
+            SystemNotificationUI.Show("Progress system unavailable.");
+            currentState = CanteenBreakfastState.NotStarted;
+            return;
+        }
+
+        isResolving = true;
+        currentState = CanteenBreakfastState.Completing;
+
+        activitySync.RequestActivityResolve(
+            ActivityIds.Breakfast,
+            BreakfastOutcomeApi.ToApiValue(outcome),
+            onSuccess: _ =>
+            {
+                isResolving = false;
+                currentState = CanteenBreakfastState.Completed;
+
+                if (!string.IsNullOrEmpty(successNotice))
+                {
+                    SystemNotificationUI.Show(successNotice);
+                }
+
+                if (feedback != null)
+                {
+                    if (playSuccessFeedback)
+                    {
+                        feedback.PlaySuccess();
+                    }
+                    else
+                    {
+                        feedback.PlayFailure();
+                    }
+                }
+
+                Debug.Log($"[CanteenBreakfastCounter] Breakfast resolved: {outcome}.");
+            },
+            onFailure: () =>
+            {
+                isResolving = false;
+                currentState = CanteenBreakfastState.NotStarted;
+                Debug.LogWarning($"[CanteenBreakfastCounter] Breakfast resolve failed for {outcome}. Local state unchanged.");
+            });
     }
 
     // ── Centralized Idempotent Teardown ────────────────────────────────
@@ -398,7 +437,10 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
         if (isQueueActive)
         {
             TeardownQueue(isDefensive: true);
-            currentState = CanteenBreakfastState.NotStarted;
+            if (!isResolving && currentState != CanteenBreakfastState.Completed)
+            {
+                currentState = CanteenBreakfastState.NotStarted;
+            }
         }
     }
 
@@ -419,9 +461,9 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
             cachedDayState = FindFirstObjectByType<CampusDayState>();
         }
 
-        if (progressSync == null)
+        if (activitySync == null)
         {
-            progressSync = FindFirstObjectByType<PlayerProgressSync>();
+            activitySync = FindFirstObjectByType<PlayerProgressSync>();
         }
 
         if (cachedPlayerMovement == null)

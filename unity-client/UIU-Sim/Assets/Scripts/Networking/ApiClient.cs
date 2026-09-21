@@ -160,6 +160,51 @@ namespace UIU.Simulator.Networking
             }
         }
 
+        [Serializable]
+        public class ActivityStateDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int auraDelta;
+            public int reputationDelta;
+            public int dayNumber;
+        }
+
+        [Serializable]
+        public class ActivityListResponseDto
+        {
+            public int dayNumber;
+            public ActivityStateDto[] activities;
+        }
+
+        [Serializable]
+        public class ActivityResolveRequestDto
+        {
+            public string activityId;
+            public string outcome;
+
+            public ActivityResolveRequestDto(string activityId, string outcome)
+            {
+                this.activityId = activityId;
+                this.outcome = outcome;
+            }
+        }
+
+        [Serializable]
+        public class ActivityResolveResponseDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int auraDelta;
+            public int reputationDelta;
+            public int dayNumber;
+            public bool alreadyResolved;
+            public int aura;
+            public int academicReputation;
+        }
+
         public IEnumerator PollDevAuthBridge(
             string sessionId,
             float timeoutSeconds,

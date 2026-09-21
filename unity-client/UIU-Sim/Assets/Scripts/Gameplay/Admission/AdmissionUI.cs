@@ -1,5 +1,6 @@
 using System.Collections;
 using UIU.Simulator.Authentication;
+using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
@@ -279,11 +280,72 @@ namespace UIU.Simulator.Gameplay.Admission
                 saveState.SetStateForTesting(hasSaveValue: true, idCardIssuedValue: true);
             }
 
+            // Resolve GET_ID_CARD through the shared activity system before issuing local ID state.
+            yield return ResolveGetIdCardActivityRoutine();
+
             ApplyLocalIdCardReady();
 
             SystemNotificationUI.Show("ID Card Issued Successfully");
-            Debug.Log("[AdmissionUI] Admission complete — ID card issued. Player must walk to the scanner.");
+            Debug.Log("[AdmissionUI] Admission complete — GET_ID_CARD resolved and ID card issued.");
             Hide();
+        }
+
+        private IEnumerator ResolveGetIdCardActivityRoutine()
+        {
+            PlayerProgressSync progressSync = FindFirstObjectByType<PlayerProgressSync>();
+            if (progressSync == null)
+            {
+                Debug.LogWarning("[AdmissionUI] PlayerProgressSync missing — applying GET_ID_CARD locally.");
+                ApplyGetIdCardCompletedLocally();
+                yield break;
+            }
+
+            if (!progressSync.IsHydrated)
+            {
+                Debug.LogWarning("[AdmissionUI] Progress not hydrated — applying GET_ID_CARD locally.");
+                ApplyGetIdCardCompletedLocally();
+                yield break;
+            }
+
+            bool resolveDone = false;
+            bool resolveSucceeded = false;
+
+            progressSync.RequestActivityResolve(
+                ActivityIds.GetIdCard,
+                GetIdCardOutcomeApi.ToApiValue(GetIdCardOutcome.Completed),
+                _ =>
+                {
+                    resolveSucceeded = true;
+                    resolveDone = true;
+                },
+                () =>
+                {
+                    resolveDone = true;
+                });
+
+            while (!resolveDone)
+            {
+                yield return null;
+            }
+
+            if (!resolveSucceeded)
+            {
+                Debug.LogWarning(
+                    "[AdmissionUI] GET_ID_CARD resolve failed after save create. " +
+                    "ID card flag remains issued; activity may stay pending until Continue.");
+            }
+        }
+
+        private static void ApplyGetIdCardCompletedLocally()
+        {
+            DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
+            activityState?.ApplyServerActivity(new ActivityRecord(
+                ActivityIds.GetIdCard,
+                ActivityStatus.Completed,
+                GetIdCardOutcomeApi.ToApiValue(GetIdCardOutcome.Completed),
+                auraDelta: 0,
+                reputationDelta: 0,
+                dayNumber: 1));
         }
 
         private void ApplyLocalIdCardReady()
