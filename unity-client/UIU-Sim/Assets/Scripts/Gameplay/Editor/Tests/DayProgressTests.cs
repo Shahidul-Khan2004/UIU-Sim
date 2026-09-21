@@ -445,7 +445,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 results: toUnload);
 
             Assert.That(toUnload, Is.EquivalentTo(new[] { 4, 7 }));
-            Assert.That(toUnload, Does.Not.Contain(0));
+            Assert.That(toUnload, Has.No.Member(0));
         }
 
         [Test]
