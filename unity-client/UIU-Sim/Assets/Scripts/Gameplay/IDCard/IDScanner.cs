@@ -71,6 +71,26 @@ public sealed class IDScanner : MonoBehaviour, IInteractable
     {
         Debug.Log($"[IDScanner] Interact() started on '{gameObject.name}'.", this);
 
+        // Admission gate: only when PlayerSaveState is present (gameplay). EditMode tests omit it.
+        PlayerSaveState saveState = PlayerSaveState.Instance != null
+            ? PlayerSaveState.Instance
+            : FindFirstObjectByType<PlayerSaveState>();
+        if (saveState != null)
+        {
+            if (!saveState.IsHydrated)
+            {
+                Debug.Log("[IDScanner] Scan deferred: save state still loading.", this);
+                return "Checking ID status…";
+            }
+
+            if (saveState.NeedsAdmission)
+            {
+                Debug.Log("[IDScanner] Scan FAILED: No ID card issued yet (admission required).", this);
+                OnScanFailed();
+                return "You do not have an ID card yet. Please visit the receptionist.";
+            }
+        }
+
         if (!EnsurePlayerInventory())
         {
             Debug.LogError("[IDScanner] Interact() aborted: PlayerInventory not found in scene.", this);

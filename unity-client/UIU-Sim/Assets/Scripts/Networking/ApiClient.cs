@@ -123,6 +123,43 @@ namespace UIU.Simulator.Networking
             public long expiresInSeconds;
         }
 
+        [Serializable]
+        public class PlayerSaveDto
+        {
+            public string role;
+            public string playerName;
+            public string department;
+            public string universityId;
+            public int semester;
+            public int currentDay;
+            public bool admissionCompleted;
+            public bool idCardIssued;
+        }
+
+        [Serializable]
+        public class PlayerSaveStatusDto
+        {
+            public bool hasSave;
+            public PlayerSaveDto save;
+        }
+
+        [Serializable]
+        public class PlayerSaveCreateRequestDto
+        {
+            public string role;
+            public string playerName;
+            public string departmentId;
+            public string universityId;
+
+            public PlayerSaveCreateRequestDto(string role, string playerName, string departmentId, string universityId)
+            {
+                this.role = role;
+                this.playerName = playerName;
+                this.departmentId = departmentId;
+                this.universityId = universityId;
+            }
+        }
+
         public IEnumerator PollDevAuthBridge(
             string sessionId,
             float timeoutSeconds,
@@ -387,6 +424,33 @@ namespace UIU.Simulator.Networking
                 },
                 jwtToken,
                 $"POST {relativePath}",
+                onSuccess,
+                onError
+            );
+        }
+
+        public IEnumerator Delete(
+            string relativePath,
+            string jwtToken,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
+            string url = $"{BackendBaseUrl}/{relativePath.TrimStart('/')}";
+
+            yield return ExecuteRequestWithAuthRetry(
+                token =>
+                {
+                    UnityWebRequest req = UnityWebRequest.Delete(url);
+                    req.downloadHandler = new DownloadHandlerBuffer();
+                    req.SetRequestHeader("Accept", "application/json");
+                    if (!string.IsNullOrWhiteSpace(token))
+                    {
+                        req.SetRequestHeader("Authorization", $"Bearer {token}");
+                    }
+                    return req;
+                },
+                jwtToken,
+                $"DELETE {relativePath}",
                 onSuccess,
                 onError
             );

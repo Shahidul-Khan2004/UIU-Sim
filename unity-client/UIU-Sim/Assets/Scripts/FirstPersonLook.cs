@@ -1,4 +1,6 @@
 using UIU.Simulator.Gameplay.Advisor;
+using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -84,18 +86,14 @@ public class FirstPersonLook : MonoBehaviour
             return;
         }
 
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            UnlockCursor();
-            return;
-        }
-
-        // Allow clicking into the game window to re-lock cursor if no modal UI is open
+        // Escape is owned by GameMenuManager. Do not unlock-or-quit from look.
+        // Allow clicking into the game window to re-lock cursor if no modal UI is open.
         if (Cursor.lockState != CursorLockMode.Locked &&
             Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
-            !UIU.Simulator.Gameplay.Elevator.ElevatorUI.IsOpen &&
-            !AdvisorUI.IsOpen)
+            !ElevatorUI.IsOpen &&
+            !AdvisorUI.IsOpen &&
+            !GameMenuManager.IsOpen)
         {
             LockCursor();
         }

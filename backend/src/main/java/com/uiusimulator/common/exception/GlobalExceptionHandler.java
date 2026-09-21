@@ -71,6 +71,16 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("Player state error", request.getRequestURI()));
     }
 
+    @ExceptionHandler(com.uiusimulator.player.exception.PlayerSaveAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePlayerSaveAlreadyExists(
+            com.uiusimulator.player.exception.PlayerSaveAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Player save conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiErrorResponse.of(ex.getMessage(), request.getRequestURI()));
+    }
+
     @ExceptionHandler(com.uiusimulator.advisor.exception.AdvisorRateLimitException.class)
     public ResponseEntity<ApiErrorResponse> handleAdvisorRateLimit(
             com.uiusimulator.advisor.exception.AdvisorRateLimitException ex,

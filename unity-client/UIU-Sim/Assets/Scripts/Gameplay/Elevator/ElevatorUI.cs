@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UIU.Simulator.Building.Generation;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -24,8 +25,8 @@ namespace UIU.Simulator.Gameplay.Elevator
 
         [Header("Appearance")]
         [SerializeField] private Color panelBackground = new Color(0.06f, 0.07f, 0.09f, 0.95f);
-        [SerializeField] private Color headerColor = new Color(1f, 0.82f, 0.35f, 1f); // warm amber
-        [SerializeField] private Color subtitleColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+        [SerializeField] private Color headerColor = UiTheme.BrightOrange;
+        [SerializeField] private Color subtitleColor = UiTheme.Grey;
         [SerializeField] private Color buttonTextColor = Color.white;
         [SerializeField] private Color buttonNormalColor = new Color(0.18f, 0.20f, 0.24f, 1f);
         [SerializeField] private Color buttonHighlightedColor = new Color(0.28f, 0.32f, 0.38f, 1f);
@@ -620,7 +621,7 @@ namespace UIU.Simulator.Gameplay.Elevator
             statusLabel.text = "";
             statusLabel.fontSize = 15f;
             statusLabel.fontStyle = FontStyles.Bold;
-            statusLabel.color = new Color(1f, 0.78f, 0.28f, 1f);
+            statusLabel.color = UiTheme.BrightOrange;
             statusLabel.alignment = TextAlignmentOptions.Center;
             statusLabel.richText = false;
             statusGo.SetActive(false);

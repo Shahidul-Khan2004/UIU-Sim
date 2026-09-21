@@ -33394,7 +33394,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0.1
   gateToOpen: {fileID: 768763106}
 --- !u!114 &152808034
 MonoBehaviour:
@@ -93082,7 +93082,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0.1
   gateToOpen: {fileID: 427837770}
 --- !u!114 &401425576
 MonoBehaviour:
@@ -116187,7 +116187,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0
   gateToOpen: {fileID: 814415386}
 --- !u!114 &486372882
 MonoBehaviour:
@@ -203455,7 +203455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0
   gateToOpen: {fileID: 1561107253}
 --- !u!114 &847983509
 MonoBehaviour:
@@ -302540,7 +302540,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0.1
   gateToOpen: {fileID: 1859005218}
 --- !u!114 &1282874320
 MonoBehaviour:
@@ -346855,7 +346855,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDScanner
   prompt: Scan ID
-  permanentFailChance: 0.2
+  permanentFailChance: 0.1
   gateToOpen: {fileID: 645695851}
 --- !u!114 &1474706267
 MonoBehaviour:
@@ -438905,8 +438905,8 @@ Transform:
   m_GameObject: {fileID: 1902188723}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.5, y: 0, z: 13.5}
-  m_LocalScale: {x: 0.9937128, y: 1.076489, z: 0.9937128}
+  m_LocalPosition: {x: -45.7, y: 0, z: 55}
+  m_LocalScale: {x: 0.3213823, y: 1.076489, z: 0.26823312}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 182019516}
