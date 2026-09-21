@@ -6,5 +6,12 @@ namespace UIU.Simulator.Gameplay.Activities
         public const string Breakfast = "BREAKFAST";
         public const string GetIdCard = "GET_ID_CARD";
         public const string AttendIcs = "ATTEND_ICS";
+        public const string AttendEnglish = "ATTEND_ENGLISH";
+        public const string AttendDm = "ATTEND_DM";
+
+        public static bool IsClassroomActivity(string activityId)
+        {
+            return activityId == AttendIcs || activityId == AttendEnglish || activityId == AttendDm;
+        }
     }
 }

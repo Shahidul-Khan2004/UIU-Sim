@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
@@ -40,6 +41,12 @@ namespace UIU.Simulator.Gameplay.Activities
         [Tooltip("Optional loaded-floor classroom. Not required for HUD location text.")]
         [SerializeField] private IcsClassroomInteractable icsClassroom;
 
+        [Header("Additional CSE Classrooms")]
+        [Tooltip(
+            "English and Discrete Mathematics location assets. The HUD reads these even when " +
+            "Floor07 or Floor04 is unloaded. Order is the objective order after ICS.")]
+        [SerializeField] private IcsClassroomLocationConfig[] additionalClassroomLocations;
+
         private ActivityStatus getIdCardStatus = ActivityStatus.Pending;
         private string getIdCardOutcome = string.Empty;
         private int getIdCardAuraDelta;
@@ -55,6 +62,8 @@ namespace UIU.Simulator.Gameplay.Activities
         private int attendIcsAuraDelta;
         private int attendIcsReputationDelta;
         private int attendIcsMilestoneSeconds;
+
+        private readonly Dictionary<string, ClassroomRuntime> extraClassrooms = new Dictionary<string, ClassroomRuntime>();
 
         private int dayNumber = 1;
 
@@ -236,7 +245,146 @@ namespace UIU.Simulator.Gameplay.Activities
                 return;
             }
 
-            IcsClassroom = classroom;
+            if (classroom.IsIcsCourse)
+            {
+                IcsClassroom = classroom;
+                return;
+            }
+
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+
+        public bool IsClassroomResolved(string activityId)
+        {
+            if (string.IsNullOrEmpty(activityId) || activityId == AttendIcsActivityId)
+            {
+                return IsAttendIcsResolved;
+            }
+
+            ClassroomRuntime runtime = GetExtra(activityId);
+            return runtime.Status == ActivityStatus.Completed || runtime.Status == ActivityStatus.Missed;
+        }
+
+        public string GetClassroomOutcome(string activityId)
+        {
+            if (string.IsNullOrEmpty(activityId) || activityId == AttendIcsActivityId)
+            {
+                return attendIcsOutcome;
+            }
+
+            return GetExtra(activityId).Outcome;
+        }
+
+        public string CourseNameForActivity(string activityId)
+        {
+            IcsClassroomLocationConfig config = FindLocationConfig(activityId);
+            if (config != null && !string.IsNullOrWhiteSpace(config.CourseName))
+            {
+                return config.CourseName.Trim();
+            }
+
+            if (activityId == ActivityIds.AttendEnglish)
+            {
+                return "English";
+            }
+
+            if (activityId == ActivityIds.AttendDm)
+            {
+                return "Discrete Mathematics";
+            }
+
+            return "Introduction to Computer Science";
+        }
+
+        public ClassroomObjectiveView[] BuildAdditionalClassroomObjectives(PlayerSaveState saveState)
+        {
+            if (additionalClassroomLocations == null || additionalClassroomLocations.Length == 0)
+            {
+                return Array.Empty<ClassroomObjectiveView>();
+            }
+
+            var views = new List<ClassroomObjectiveView>(additionalClassroomLocations.Length);
+            for (int i = 0; i < additionalClassroomLocations.Length; i++)
+            {
+                IcsClassroomLocationConfig config = additionalClassroomLocations[i];
+                if (config == null || !ShouldShowConfiguredClassroom(saveState, config))
+                {
+                    continue;
+                }
+
+                ClassroomRuntime runtime = GetExtra(config.ActivityId);
+                string description = config.IsConfigured
+                    ? config.BuildObjectiveDescription()
+                    : "Classroom location is not configured.";
+                views.Add(new ClassroomObjectiveView(
+                    config.ActivityId,
+                    config.BuildObjectiveTitle(),
+                    description,
+                    runtime.Status,
+                    runtime.Outcome));
+            }
+
+            return views.ToArray();
+        }
+
+        public void SetAdditionalLocationConfigsForTesting(IcsClassroomLocationConfig[] configs)
+        {
+            additionalClassroomLocations = configs;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+
+        public void SetClassroomStatusForTesting(
+            string activityId,
+            ActivityStatus status,
+            string outcome = null,
+            int auraDelta = 0,
+            int reputationDelta = 0,
+            int milestoneSeconds = 0)
+        {
+            if (activityId == AttendIcsActivityId)
+            {
+                SetAttendIcsStatusForTesting(status, outcome, auraDelta, reputationDelta, milestoneSeconds);
+                return;
+            }
+
+            ClassroomRuntime runtime = GetExtra(activityId);
+            runtime.Status = status;
+            runtime.Outcome = outcome ?? string.Empty;
+            runtime.AuraDelta = auraDelta;
+            runtime.ReputationDelta = reputationDelta;
+            runtime.MilestoneSeconds = milestoneSeconds;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// After hydration, classroom rows missing from the current-day payload return to pending.
+        /// </summary>
+        public void ResetAbsentClassrooms(ICollection<string> presentActivityIds)
+        {
+            presentActivityIds ??= Array.Empty<string>();
+            if (!ContainsActivity(presentActivityIds, AttendIcsActivityId)
+                && attendIcsStatus != ActivityStatus.Pending)
+            {
+                attendIcsStatus = ActivityStatus.Pending;
+                attendIcsOutcome = string.Empty;
+                attendIcsAuraDelta = 0;
+                attendIcsReputationDelta = 0;
+                attendIcsMilestoneSeconds = 0;
+            }
+
+            if (extraClassrooms.Count > 0)
+            {
+                var keys = new List<string>(extraClassrooms.Keys);
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    if (!ContainsActivity(presentActivityIds, keys[i]))
+                    {
+                        extraClassrooms[keys[i]] = new ClassroomRuntime();
+                    }
+                }
+            }
+
+            OnAttendIcsStatusChanged?.Invoke();
         }
 
         public void SetLocationConfigForTesting(IcsClassroomLocationConfig config)
@@ -254,10 +402,16 @@ namespace UIU.Simulator.Gameplay.Activities
                 return;
             }
 
-            icsClassroom = FindFirstObjectByType<IcsClassroomInteractable>();
-            if (icsClassroom != null)
+            IcsClassroomInteractable[] loaded =
+                FindObjectsByType<IcsClassroomInteractable>(FindObjectsSortMode.None);
+            for (int i = 0; i < loaded.Length; i++)
             {
-                CacheClassroomConfig(icsClassroom);
+                if (loaded[i] != null && loaded[i].IsIcsCourse)
+                {
+                    icsClassroom = loaded[i];
+                    CacheClassroomConfig(icsClassroom);
+                    return;
+                }
             }
         }
 
@@ -363,10 +517,11 @@ namespace UIU.Simulator.Gameplay.Activities
             attendIcsAuraDelta = 0;
             attendIcsReputationDelta = 0;
             attendIcsMilestoneSeconds = 0;
+            extraClassrooms.Clear();
             OnActivitiesReset?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
             OnAttendIcsStatusChanged?.Invoke();
-            Debug.Log($"[DailyActivityState] Reset for day {dayNumber} — breakfast/ICS PENDING (GET_ID_CARD preserved).");
+            Debug.Log($"[DailyActivityState] Reset for day {dayNumber} — breakfast and classrooms PENDING (GET_ID_CARD preserved).");
         }
 
         public void ResetForNewGame()
@@ -385,11 +540,12 @@ namespace UIU.Simulator.Gameplay.Activities
             attendIcsAuraDelta = 0;
             attendIcsReputationDelta = 0;
             attendIcsMilestoneSeconds = 0;
+            extraClassrooms.Clear();
             OnActivitiesReset?.Invoke();
             OnGetIdCardStatusChanged?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
             OnAttendIcsStatusChanged?.Invoke();
-            Debug.Log("[DailyActivityState] New Game reset — GET_ID_CARD, breakfast, and ICS PENDING.");
+            Debug.Log("[DailyActivityState] New Game reset — GET_ID_CARD, breakfast, and classrooms PENDING.");
         }
 
         public void ApplyServerActivity(ActivityRecord record)
@@ -408,14 +564,7 @@ namespace UIU.Simulator.Gameplay.Activities
             if (record.ActivityId == AttendIcsActivityId)
             {
                 dayNumber = Mathf.Max(1, record.DayNumber);
-                attendIcsStatus = record.Status == ActivityStatus.Pending && !string.IsNullOrEmpty(record.Outcome)
-                    ? ActivityStatus.InProgress
-                    : record.Status;
-                if (string.Equals(record.Outcome, "ATTENDING", StringComparison.OrdinalIgnoreCase))
-                {
-                    attendIcsStatus = ActivityStatus.InProgress;
-                }
-
+                attendIcsStatus = NormalizeClassroomStatus(record.Status, record.Outcome);
                 attendIcsOutcome = record.Outcome ?? string.Empty;
                 attendIcsAuraDelta = record.AuraDelta;
                 attendIcsReputationDelta = record.ReputationDelta;
@@ -423,6 +572,21 @@ namespace UIU.Simulator.Gameplay.Activities
                 OnAttendIcsStatusChanged?.Invoke();
                 Debug.Log(
                     $"[DailyActivityState] Applied server ATTEND_ICS: status={attendIcsStatus}, outcome={attendIcsOutcome}, milestone={attendIcsMilestoneSeconds}");
+                return;
+            }
+
+            if (ActivityIds.IsClassroomActivity(record.ActivityId))
+            {
+                dayNumber = Mathf.Max(1, record.DayNumber);
+                ClassroomRuntime runtime = GetExtra(record.ActivityId);
+                runtime.Status = NormalizeClassroomStatus(record.Status, record.Outcome);
+                runtime.Outcome = record.Outcome ?? string.Empty;
+                runtime.AuraDelta = record.AuraDelta;
+                runtime.ReputationDelta = record.ReputationDelta;
+                runtime.MilestoneSeconds = record.MilestoneSeconds;
+                OnAttendIcsStatusChanged?.Invoke();
+                Debug.Log(
+                    $"[DailyActivityState] Applied server {record.ActivityId}: status={runtime.Status}, outcome={runtime.Outcome}, milestone={runtime.MilestoneSeconds}");
                 return;
             }
 
@@ -480,5 +644,134 @@ namespace UIU.Simulator.Gameplay.Activities
             dayNumber = Mathf.Max(1, newDayNumber);
             OnActivitiesReset?.Invoke();
         }
+
+        private bool ShouldShowConfiguredClassroom(PlayerSaveState saveState, IcsClassroomLocationConfig config)
+        {
+            if (saveState == null || config == null || !saveState.HasActiveUniversityDay)
+            {
+                return false;
+            }
+
+            if (!string.Equals(saveState.Role, config.StudentRole, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!string.Equals(saveState.Department, config.DepartmentCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return saveState.CurrentDay == config.ScheduledGameplayDay;
+        }
+
+        private IcsClassroomLocationConfig FindLocationConfig(string activityId)
+        {
+            if (icsLocationConfig != null
+                && string.Equals(icsLocationConfig.ActivityId, activityId, StringComparison.Ordinal))
+            {
+                return icsLocationConfig;
+            }
+
+            if (additionalClassroomLocations == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < additionalClassroomLocations.Length; i++)
+            {
+                IcsClassroomLocationConfig config = additionalClassroomLocations[i];
+                if (config != null && string.Equals(config.ActivityId, activityId, StringComparison.Ordinal))
+                {
+                    return config;
+                }
+            }
+
+            return null;
+        }
+
+        private ClassroomRuntime GetExtra(string activityId)
+        {
+            if (!extraClassrooms.TryGetValue(activityId, out ClassroomRuntime runtime))
+            {
+                runtime = new ClassroomRuntime();
+                extraClassrooms[activityId] = runtime;
+            }
+
+            return runtime;
+        }
+
+        private static ActivityStatus NormalizeClassroomStatus(ActivityStatus parsed, string outcome)
+        {
+            if (string.Equals(outcome, "LEFT_EARLY", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(outcome, "SKIPPED", StringComparison.OrdinalIgnoreCase))
+            {
+                return ActivityStatus.Missed;
+            }
+
+            if (string.Equals(outcome, "COMPLETED", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(outcome, "PROXY", StringComparison.OrdinalIgnoreCase))
+            {
+                return ActivityStatus.Completed;
+            }
+
+            if (string.Equals(outcome, "ATTENDING", StringComparison.OrdinalIgnoreCase)
+                || parsed == ActivityStatus.InProgress)
+            {
+                return ActivityStatus.InProgress;
+            }
+
+            if (parsed == ActivityStatus.Pending && !string.IsNullOrEmpty(outcome))
+            {
+                return ActivityStatus.InProgress;
+            }
+
+            return parsed;
+        }
+
+        private static bool ContainsActivity(ICollection<string> activityIds, string activityId)
+        {
+            foreach (string id in activityIds)
+            {
+                if (id == activityId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private sealed class ClassroomRuntime
+        {
+            public ActivityStatus Status = ActivityStatus.Pending;
+            public string Outcome = string.Empty;
+            public int AuraDelta;
+            public int ReputationDelta;
+            public int MilestoneSeconds;
+        }
+    }
+
+    public readonly struct ClassroomObjectiveView
+    {
+        public ClassroomObjectiveView(
+            string activityId,
+            string title,
+            string description,
+            ActivityStatus status,
+            string outcome)
+        {
+            ActivityId = activityId ?? string.Empty;
+            Title = title ?? string.Empty;
+            Description = description ?? string.Empty;
+            Status = status;
+            Outcome = outcome ?? string.Empty;
+        }
+
+        public string ActivityId { get; }
+        public string Title { get; }
+        public string Description { get; }
+        public ActivityStatus Status { get; }
+        public string Outcome { get; }
     }
 }

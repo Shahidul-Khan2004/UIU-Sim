@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UIU.Simulator.Authentication;
@@ -17,23 +18,38 @@ namespace UIU.Simulator.Gameplay.UI
     /// <summary>
     /// Modal daily summary shown after End Day finalization.
     /// Continue advances the day once; failed advances keep the modal open for retry.
+    /// Layout: fixed header + scrollable activity rows + fixed footer (totals + Continue).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DailySummaryUI : MonoBehaviour
     {
         private const int CanvasSortOrder = 245;
-        private const float PanelWidth = 520f;
-        private const float PanelHeight = 560f;
+        private const float PanelWidth = 580f;
+        private const float PanelMinHeight = 380f;
+        private const float PanelMaxHeight = 680f;
+        private const float HeaderPreferredHeight = 96f;
+        private const float FooterPreferredHeight = 168f;
+        private const float ScrollMinHeight = 80f;
+        private const float ActivityTitleFontSize = 18f;
+        private const float ActivityDetailFontSize = 15f;
+        private const float SectionHeadingFontSize = 20f;
 
         public static DailySummaryUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
 
         private GameObject overlayRoot;
+        private RectTransform panelRect;
+        private LayoutElement scrollLayoutElement;
+        private RectTransform activityContentRect;
+        private Transform activityContent;
+        private ScrollRect scrollRect;
         private TextMeshProUGUI headerLabel;
-        private TextMeshProUGUI bodyLabel;
+        private TextMeshProUGUI resultsHeadingLabel;
         private TextMeshProUGUI totalsLabel;
         private TextMeshProUGUI errorLabel;
         private Button continueButton;
+
+        private readonly List<GameObject> activityRows = new List<GameObject>(8);
 
         private DayFinalizeResult pendingSummary;
         private bool hasPendingSummary;
@@ -140,6 +156,33 @@ namespace UIU.Simulator.Gameplay.UI
             advanceSucceeded = true;
             HideImmediate();
             ReleaseGameplayAfterSuccessfulAdvance();
+        }
+
+        /// <summary>Test seam: concatenated activity-row text for EditMode assertions.</summary>
+        public string GetActivityBodyTextForTesting()
+        {
+            StringBuilder sb = new StringBuilder(256);
+            for (int i = 0; i < activityRows.Count; i++)
+            {
+                GameObject row = activityRows[i];
+                if (row == null)
+                {
+                    continue;
+                }
+
+                TextMeshProUGUI[] labels = row.GetComponentsInChildren<TextMeshProUGUI>(true);
+                for (int j = 0; j < labels.Length; j++)
+                {
+                    if (j > 0 || sb.Length > 0)
+                    {
+                        sb.Append('\n');
+                    }
+
+                    sb.Append(labels[j].text);
+                }
+            }
+
+            return sb.ToString();
         }
 
         private void OnContinueClicked()
@@ -290,37 +333,147 @@ namespace UIU.Simulator.Gameplay.UI
         private void RenderSummary(DayFinalizeResult summary)
         {
             headerLabel.text = $"SEMESTER {summary.Semester}\nDAY {summary.Day} COMPLETE";
+            resultsHeadingLabel.text = "TODAY'S RESULTS";
 
-            StringBuilder body = new StringBuilder(256);
-            body.AppendLine("TODAY'S RESULTS");
-            body.AppendLine();
+            ClearActivityRows();
 
             DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
             DaySummaryActivity[] activities = summary.Activities;
             for (int i = 0; i < activities.Length; i++)
             {
-                DaySummaryActivity item = activities[i];
-                string title = ResolveActivityTitle(item.ActivityId, activityState);
-                if (item.ActivityId == ActivityIds.AttendIcs)
-                {
-                    title = AttendIcsOutcomeApi.SummaryLabel(item.Outcome);
-                }
-
-                string marker = StatusMarkerForActivity(item);
-                string hex = ColorUtility.ToHtmlStringRGB(StatusColorForActivity(item));
-                body.AppendLine($"<color=#{hex}>{marker} {title}</color>");
-                body.AppendLine($"    Aura: {FormatSigned(item.AuraDelta)}");
-                body.AppendLine($"    Academic Reputation: {FormatSigned(item.AcademicReputationDelta)}");
-                body.AppendLine();
+                CreateActivityRow(activities[i], activityState, i);
             }
 
-            bodyLabel.richText = true;
-            bodyLabel.text = body.ToString().TrimEnd();
-
             totalsLabel.text =
-                "TODAY\n" +
+                "TODAY'S TOTAL\n" +
                 $"Aura: {FormatSigned(summary.TotalAuraDelta)}\n" +
                 $"Academic Reputation: {FormatSigned(summary.TotalAcademicReputationDelta)}";
+
+            RefreshPanelLayout();
+        }
+
+        private void ClearActivityRows()
+        {
+            for (int i = 0; i < activityRows.Count; i++)
+            {
+                if (activityRows[i] != null)
+                {
+                    Destroy(activityRows[i]);
+                }
+            }
+
+            activityRows.Clear();
+        }
+
+        private void CreateActivityRow(DaySummaryActivity item, DailyActivityState activityState, int index)
+        {
+            string title = ResolveActivityTitle(item.ActivityId, activityState);
+            if (ActivityIds.IsClassroomActivity(item.ActivityId))
+            {
+                string courseName = activityState != null
+                    ? activityState.CourseNameForActivity(item.ActivityId)
+                    : null;
+                title = AttendIcsOutcomeApi.SummaryLabel(item.Outcome, courseName);
+            }
+
+            string marker = StatusMarkerForActivity(item);
+            Color statusColor = StatusColorForActivity(item);
+
+            GameObject row = new GameObject($"ActivityRow_{index}");
+            row.transform.SetParent(activityContent, false);
+
+            VerticalLayoutGroup rowLayout = row.AddComponent<VerticalLayoutGroup>();
+            rowLayout.padding = new RectOffset(0, 0, 2, 6);
+            rowLayout.spacing = 2f;
+            rowLayout.childAlignment = TextAnchor.UpperLeft;
+            rowLayout.childControlWidth = true;
+            rowLayout.childControlHeight = true;
+            rowLayout.childForceExpandWidth = true;
+            rowLayout.childForceExpandHeight = false;
+
+            // Prefer content-driven height; avoid nested ContentSizeFitter (conflicts with parent CSF).
+            LayoutElement rowLe = row.AddComponent<LayoutElement>();
+            rowLe.flexibleWidth = 1f;
+            rowLe.minHeight = 36f;
+
+            TextMeshProUGUI titleLabel = CreateText(
+                row.transform,
+                "Title",
+                $"{marker} {title}",
+                ActivityTitleFontSize,
+                FontStyles.Bold,
+                statusColor,
+                TextAlignmentOptions.TopLeft);
+            titleLabel.textWrappingMode = TextWrappingModes.Normal;
+            titleLabel.overflowMode = TextOverflowModes.Overflow;
+
+            LayoutElement titleLe = titleLabel.gameObject.AddComponent<LayoutElement>();
+            titleLe.minHeight = 22f;
+            titleLe.preferredHeight = 22f;
+            titleLe.flexibleWidth = 1f;
+
+            // Grow title height when the course name wraps.
+            titleLabel.enableAutoSizing = false;
+            ContentSizeFitter titleFitter = titleLabel.gameObject.AddComponent<ContentSizeFitter>();
+            titleFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            titleFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            TextMeshProUGUI detailLabel = CreateText(
+                row.transform,
+                "Details",
+                $"Aura: {FormatSigned(item.AuraDelta)} | Academic: {FormatSigned(item.AcademicReputationDelta)}",
+                ActivityDetailFontSize,
+                FontStyles.Normal,
+                UiTheme.Grey,
+                TextAlignmentOptions.TopLeft);
+            detailLabel.textWrappingMode = TextWrappingModes.Normal;
+
+            LayoutElement detailLe = detailLabel.gameObject.AddComponent<LayoutElement>();
+            detailLe.minHeight = 18f;
+            detailLe.preferredHeight = 20f;
+            detailLe.flexibleWidth = 1f;
+
+            activityRows.Add(row);
+        }
+
+        private void RefreshPanelLayout()
+        {
+            if (panelRect == null || activityContentRect == null || scrollLayoutElement == null)
+            {
+                return;
+            }
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(activityContentRect);
+
+            float contentHeight = Mathf.Max(activityContentRect.rect.height, activityContentRect.sizeDelta.y);
+            float padding = 48f; // panel VerticalLayoutGroup padding top+bottom
+            float spacing = 10f * 2f; // header↔scroll and scroll↔footer
+            float desired = HeaderPreferredHeight + FooterPreferredHeight + contentHeight + padding + spacing;
+            float panelHeight = Mathf.Clamp(desired, PanelMinHeight, ResolveMaxPanelHeight());
+
+            float scrollHeight = panelHeight - HeaderPreferredHeight - FooterPreferredHeight - padding - spacing;
+            scrollHeight = Mathf.Max(ScrollMinHeight, scrollHeight);
+
+            panelRect.sizeDelta = new Vector2(PanelWidth, panelHeight);
+            scrollLayoutElement.minHeight = ScrollMinHeight;
+            scrollLayoutElement.preferredHeight = scrollHeight;
+            scrollLayoutElement.flexibleHeight = 1f;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+
+            if (scrollRect != null)
+            {
+                scrollRect.verticalNormalizedPosition = 1f;
+            }
+        }
+
+        private static float ResolveMaxPanelHeight()
+        {
+            // Stay within ~70% of reference-height canvas units so Free Aspect still fits.
+            float viewportCap = 1080f * 0.7f;
+            return Mathf.Min(PanelMaxHeight, viewportCap);
         }
 
         private static string ResolveActivityTitle(string activityId, DailyActivityState state)
@@ -335,9 +488,11 @@ namespace UIU.Simulator.Gameplay.UI
                 return state != null ? state.BreakfastTitle : "Have Breakfast";
             }
 
-            if (activityId == ActivityIds.AttendIcs)
+            if (ActivityIds.IsClassroomActivity(activityId))
             {
-                return AttendIcsOutcomeApi.SummaryLabel(state != null ? state.AttendIcsOutcome : null);
+                string courseName = state != null ? state.CourseNameForActivity(activityId) : null;
+                string outcome = state != null ? state.GetClassroomOutcome(activityId) : null;
+                return AttendIcsOutcomeApi.SummaryLabel(outcome, courseName);
             }
 
             return activityId;
@@ -371,7 +526,7 @@ namespace UIU.Simulator.Gameplay.UI
 
         private static string StatusMarkerForActivity(DaySummaryActivity item)
         {
-            if (item.ActivityId == ActivityIds.AttendIcs
+            if (ActivityIds.IsClassroomActivity(item.ActivityId)
                 && string.Equals(item.Outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
             {
                 return "[~]";
@@ -382,13 +537,13 @@ namespace UIU.Simulator.Gameplay.UI
 
         private static Color StatusColorForActivity(DaySummaryActivity item)
         {
-            if (item.ActivityId == ActivityIds.AttendIcs
+            if (ActivityIds.IsClassroomActivity(item.ActivityId)
                 && string.Equals(item.Outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
             {
                 return UiTheme.BrightOrange;
             }
 
-            if (item.ActivityId == ActivityIds.AttendIcs
+            if (ActivityIds.IsClassroomActivity(item.ActivityId)
                 && string.Equals(item.Outcome, "LEFT_EARLY", System.StringComparison.OrdinalIgnoreCase))
             {
                 return UiTheme.Danger;
@@ -528,58 +683,190 @@ namespace UIU.Simulator.Gameplay.UI
 
             GameObject panel = new GameObject("DailySummaryPanel");
             panel.transform.SetParent(overlayRoot.transform, false);
-            RectTransform panelRect = panel.AddComponent<RectTransform>();
+            panelRect = panel.AddComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
+            panelRect.sizeDelta = new Vector2(PanelWidth, PanelMinHeight);
             panel.AddComponent<Image>().color = UiTheme.Black;
 
-            VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(28, 28, 24, 24);
-            layout.spacing = 10f;
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
+            VerticalLayoutGroup panelLayout = panel.AddComponent<VerticalLayoutGroup>();
+            panelLayout.padding = new RectOffset(28, 28, 24, 24);
+            panelLayout.spacing = 10f;
+            panelLayout.childAlignment = TextAnchor.UpperCenter;
+            panelLayout.childControlWidth = true;
+            panelLayout.childControlHeight = true;
+            panelLayout.childForceExpandWidth = true;
+            panelLayout.childForceExpandHeight = false;
 
-            headerLabel = CreateLabel(panel.transform, "Header", 24f, FontStyles.Bold, UiTheme.BrightOrange, 64f);
-            headerLabel.alignment = TextAlignmentOptions.Center;
-
-            bodyLabel = CreateLabel(panel.transform, "Body", 16f, FontStyles.Normal, UiTheme.White, 260f);
-            bodyLabel.alignment = TextAlignmentOptions.TopLeft;
-            bodyLabel.textWrappingMode = TextWrappingModes.Normal;
-            bodyLabel.richText = true;
-
-            CreateDivider(panel.transform);
-
-            totalsLabel = CreateLabel(panel.transform, "Totals", 18f, FontStyles.Bold, UiTheme.White, 72f);
-            totalsLabel.alignment = TextAlignmentOptions.Center;
-
-            errorLabel = CreateLabel(panel.transform, "Error", 15f, FontStyles.Bold, UiTheme.Red, 28f);
-            errorLabel.alignment = TextAlignmentOptions.Center;
-            errorLabel.gameObject.SetActive(false);
-
-            continueButton = CreateButton(panel.transform, "Button_Continue", "CONTINUE", OnContinueClicked);
+            BuildHeader(panel.transform);
+            BuildScrollArea(panel.transform);
+            BuildFooter(panel.transform);
         }
 
-        private static TextMeshProUGUI CreateLabel(
+        private void BuildHeader(Transform parent)
+        {
+            GameObject header = new GameObject("HeaderRegion");
+            header.transform.SetParent(parent, false);
+
+            LayoutElement headerLe = header.AddComponent<LayoutElement>();
+            headerLe.minHeight = HeaderPreferredHeight;
+            headerLe.preferredHeight = HeaderPreferredHeight;
+            headerLe.flexibleHeight = 0f;
+            headerLe.flexibleWidth = 1f;
+
+            VerticalLayoutGroup headerLayout = header.AddComponent<VerticalLayoutGroup>();
+            headerLayout.spacing = 8f;
+            headerLayout.childAlignment = TextAnchor.UpperCenter;
+            headerLayout.childControlWidth = true;
+            headerLayout.childControlHeight = true;
+            headerLayout.childForceExpandWidth = true;
+            headerLayout.childForceExpandHeight = false;
+
+            headerLabel = CreateText(
+                header.transform,
+                "Header",
+                string.Empty,
+                24f,
+                FontStyles.Bold,
+                UiTheme.BrightOrange,
+                TextAlignmentOptions.Center);
+            LayoutElement headerTextLe = headerLabel.gameObject.AddComponent<LayoutElement>();
+            headerTextLe.minHeight = 56f;
+            headerTextLe.preferredHeight = 56f;
+
+            resultsHeadingLabel = CreateText(
+                header.transform,
+                "ResultsHeading",
+                "TODAY'S RESULTS",
+                SectionHeadingFontSize,
+                FontStyles.Bold,
+                UiTheme.White,
+                TextAlignmentOptions.Center);
+            LayoutElement resultsLe = resultsHeadingLabel.gameObject.AddComponent<LayoutElement>();
+            resultsLe.minHeight = 28f;
+            resultsLe.preferredHeight = 28f;
+        }
+
+        private void BuildScrollArea(Transform parent)
+        {
+            GameObject scrollGo = new GameObject("ActivityScroll");
+            scrollGo.transform.SetParent(parent, false);
+
+            scrollLayoutElement = scrollGo.AddComponent<LayoutElement>();
+            scrollLayoutElement.minHeight = ScrollMinHeight;
+            scrollLayoutElement.preferredHeight = 200f;
+            scrollLayoutElement.flexibleHeight = 1f;
+            scrollLayoutElement.flexibleWidth = 1f;
+
+            scrollRect = scrollGo.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 24f;
+
+            // Transparent hit target so the scroll area receives pointer events.
+            Image scrollBg = scrollGo.AddComponent<Image>();
+            scrollBg.color = new Color(0f, 0f, 0f, 0.01f);
+
+            GameObject viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(scrollGo.transform, false);
+            RectTransform viewportRect = viewportGo.AddComponent<RectTransform>();
+            StretchFull(viewportRect);
+            viewportGo.AddComponent<RectMask2D>();
+            scrollRect.viewport = viewportRect;
+
+            GameObject contentGo = new GameObject("ActivityContent");
+            contentGo.transform.SetParent(viewportGo.transform, false);
+            activityContentRect = contentGo.AddComponent<RectTransform>();
+            activityContentRect.anchorMin = new Vector2(0f, 1f);
+            activityContentRect.anchorMax = new Vector2(1f, 1f);
+            activityContentRect.pivot = new Vector2(0.5f, 1f);
+            activityContentRect.sizeDelta = Vector2.zero;
+
+            VerticalLayoutGroup contentLayout = contentGo.AddComponent<VerticalLayoutGroup>();
+            contentLayout.padding = new RectOffset(4, 4, 4, 8);
+            contentLayout.spacing = 10f;
+            contentLayout.childAlignment = TextAnchor.UpperLeft;
+            contentLayout.childControlWidth = true;
+            contentLayout.childControlHeight = true;
+            contentLayout.childForceExpandWidth = true;
+            contentLayout.childForceExpandHeight = false;
+
+            ContentSizeFitter contentFitter = contentGo.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.content = activityContentRect;
+            activityContent = contentGo.transform;
+        }
+
+        private void BuildFooter(Transform parent)
+        {
+            GameObject footer = new GameObject("FooterRegion");
+            footer.transform.SetParent(parent, false);
+
+            LayoutElement footerLe = footer.AddComponent<LayoutElement>();
+            footerLe.minHeight = FooterPreferredHeight;
+            footerLe.preferredHeight = FooterPreferredHeight;
+            footerLe.flexibleHeight = 0f;
+            footerLe.flexibleWidth = 1f;
+
+            VerticalLayoutGroup footerLayout = footer.AddComponent<VerticalLayoutGroup>();
+            footerLayout.spacing = 8f;
+            footerLayout.padding = new RectOffset(0, 0, 4, 0);
+            footerLayout.childAlignment = TextAnchor.UpperCenter;
+            footerLayout.childControlWidth = true;
+            footerLayout.childControlHeight = true;
+            footerLayout.childForceExpandWidth = true;
+            footerLayout.childForceExpandHeight = false;
+
+            CreateDivider(footer.transform);
+
+            totalsLabel = CreateText(
+                footer.transform,
+                "Totals",
+                string.Empty,
+                18f,
+                FontStyles.Bold,
+                UiTheme.White,
+                TextAlignmentOptions.Center);
+            LayoutElement totalsLe = totalsLabel.gameObject.AddComponent<LayoutElement>();
+            totalsLe.minHeight = 64f;
+            totalsLe.preferredHeight = 64f;
+
+            errorLabel = CreateText(
+                footer.transform,
+                "Error",
+                string.Empty,
+                15f,
+                FontStyles.Bold,
+                UiTheme.Red,
+                TextAlignmentOptions.Center);
+            LayoutElement errorLe = errorLabel.gameObject.AddComponent<LayoutElement>();
+            errorLe.minHeight = 22f;
+            errorLe.preferredHeight = 22f;
+            errorLabel.gameObject.SetActive(false);
+
+            continueButton = CreateButton(footer.transform, "Button_Continue", "CONTINUE", OnContinueClicked);
+        }
+
+        private static TextMeshProUGUI CreateText(
             Transform parent,
             string name,
+            string text,
             float fontSize,
             FontStyles style,
             Color color,
-            float height)
+            TextAlignmentOptions alignment)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            LayoutElement le = go.AddComponent<LayoutElement>();
-            le.minHeight = height;
-            le.preferredHeight = height;
             TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.fontStyle = style;
             tmp.color = color;
+            tmp.alignment = alignment;
             tmp.richText = false;
             tmp.raycastTarget = false;
             return tmp;
@@ -590,8 +877,9 @@ namespace UIU.Simulator.Gameplay.UI
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
             LayoutElement le = go.AddComponent<LayoutElement>();
-            le.minHeight = 48f;
-            le.preferredHeight = 48f;
+            le.minHeight = 52f;
+            le.preferredHeight = 52f;
+            le.flexibleWidth = 1f;
 
             Image image = go.AddComponent<Image>();
             image.color = UiTheme.BrightOrange;

@@ -50,21 +50,48 @@ namespace UIU.Simulator.Gameplay.Activities
             }
         }
 
-        public static string SummaryLabel(string outcomeRaw)
+        /// <summary>
+        /// HUD objective title. Terminal failure outcomes stay on the same row as the pending title.
+        /// </summary>
+        public static string HudTitle(string baseTitle, string outcomeRaw)
         {
+            string title = string.IsNullOrWhiteSpace(baseTitle) ? "Attend Class" : baseTitle.Trim();
             if (!TryParse(outcomeRaw, out AttendIcsOutcome outcome))
             {
-                return "Introduction to Computer Science";
+                return title;
             }
 
             return outcome switch
             {
-                AttendIcsOutcome.Completed => "Introduction to Computer Science",
-                AttendIcsOutcome.LeftEarly => "Introduction to Computer Science (Left Early)",
+                AttendIcsOutcome.LeftEarly => title + " — Left Early",
+                AttendIcsOutcome.Skipped => title + " — Missed",
+                _ => title
+            };
+        }
+
+        public static string SummaryLabel(string outcomeRaw)
+        {
+            return SummaryLabel(outcomeRaw, "Introduction to Computer Science");
+        }
+
+        public static string SummaryLabel(string outcomeRaw, string courseName)
+        {
+            string name = string.IsNullOrWhiteSpace(courseName)
+                ? "Class"
+                : courseName.Trim();
+            if (!TryParse(outcomeRaw, out AttendIcsOutcome outcome))
+            {
+                return name;
+            }
+
+            return outcome switch
+            {
+                AttendIcsOutcome.Completed => name,
+                AttendIcsOutcome.LeftEarly => name + " (Left Early)",
                 AttendIcsOutcome.Proxy => "Proxy — Punched ID and Left",
-                AttendIcsOutcome.Skipped => "Introduction to Computer Science (Missed)",
-                AttendIcsOutcome.Attending => "Introduction to Computer Science (In Progress)",
-                _ => "Introduction to Computer Science"
+                AttendIcsOutcome.Skipped => name + " (Missed)",
+                AttendIcsOutcome.Attending => name + " (In Progress)",
+                _ => name
             };
         }
     }

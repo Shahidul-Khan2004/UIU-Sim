@@ -246,7 +246,7 @@ namespace UIU.Simulator.Gameplay.Player
 
             bool breakfastFound = false;
             bool getIdCardFound = false;
-            bool attendIcsFound = false;
+            var presentClassrooms = new System.Collections.Generic.List<string>();
             if (dto.activities != null)
             {
                 for (int i = 0; i < dto.activities.Length; i++)
@@ -274,9 +274,9 @@ namespace UIU.Simulator.Gameplay.Player
                         continue;
                     }
 
-                    if (activity.activityId == ActivityIds.AttendIcs)
+                    if (ActivityIds.IsClassroomActivity(activity.activityId))
                     {
-                        attendIcsFound = true;
+                        presentClassrooms.Add(activity.activityId);
                         dailyActivityState?.ApplyServerActivity(record);
                         continue;
                     }
@@ -313,19 +313,14 @@ namespace UIU.Simulator.Gameplay.Player
                 dailyActivityState?.SetDayNumber(dto.dayNumber);
             }
 
-            if (!attendIcsFound && dailyActivityState != null && dto.dayNumber > 0
-                && dailyActivityState.AttendIcsStatus != ActivityStatus.Pending)
+            if (breakfastFound && dailyActivityState != null && dto.dayNumber > 0)
             {
-                // Day advance cleared ICS — keep pending unless ResetForNewDay already handled it.
-                if (breakfastFound)
-                {
-                    dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
-                }
+                dailyActivityState.ResetAbsentClassrooms(presentClassrooms);
             }
 
             Debug.Log(
                 $"[PlayerProgressSync] Hydrated activities for day={dto.dayNumber}, " +
-                $"getIdCardResolved={getIdCardFound}, breakfastResolved={breakfastFound}, attendIcsFound={attendIcsFound}");
+                $"getIdCardResolved={getIdCardFound}, breakfastResolved={breakfastFound}, classrooms={presentClassrooms.Count}");
         }
 
         /// <summary>
@@ -771,6 +766,107 @@ namespace UIU.Simulator.Gameplay.Player
             StartAttendIcsMutation(AttendIcsProxyPath, null, onSuccess, onFailure);
         }
 
+        public void RequestClassroomStart(
+            string activityId,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsStart(onSuccess, onFailure);
+                return;
+            }
+
+            StartAttendIcsMutation(ClassroomActionPath(activityId, "start"), null, onSuccess, onFailure);
+        }
+
+        public void RequestClassroomPause(
+            string activityId,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsPause(onSuccess, onFailure);
+                return;
+            }
+
+            StartAttendIcsMutation(
+                ClassroomActionPath(activityId, "pause"),
+                null,
+                onSuccess,
+                onFailure,
+                requireMutationSlot: false);
+        }
+
+        public void RequestClassroomResume(
+            string activityId,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsResume(onSuccess, onFailure);
+                return;
+            }
+
+            StartAttendIcsMutation(
+                ClassroomActionPath(activityId, "resume"),
+                null,
+                onSuccess,
+                onFailure,
+                requireMutationSlot: false);
+        }
+
+        public void RequestClassroomMilestone(
+            string activityId,
+            int milestoneSeconds,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsMilestone(milestoneSeconds, onSuccess, onFailure);
+                return;
+            }
+
+            string body = JsonUtility.ToJson(new ApiClient.AttendIcsMilestoneRequestDto(milestoneSeconds));
+            StartAttendIcsMutation(ClassroomActionPath(activityId, "milestone"), body, onSuccess, onFailure);
+        }
+
+        public void RequestClassroomLeaveEarly(
+            string activityId,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsLeaveEarly(onSuccess, onFailure);
+                return;
+            }
+
+            StartAttendIcsMutation(ClassroomActionPath(activityId, "leave-early"), null, onSuccess, onFailure);
+        }
+
+        public void RequestClassroomProxy(
+            string activityId,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (activityId == ActivityIds.AttendIcs)
+            {
+                RequestAttendIcsProxy(onSuccess, onFailure);
+                return;
+            }
+
+            StartAttendIcsMutation(ClassroomActionPath(activityId, "proxy"), null, onSuccess, onFailure);
+        }
+
+        private static string ClassroomActionPath(string activityId, string action)
+        {
+            return "api/players/me/activities/classroom/" + activityId + "/" + action;
+        }
+
         private void StartAttendIcsMutation(
             string path,
             string jsonBody,
@@ -805,6 +901,68 @@ namespace UIU.Simulator.Gameplay.Player
             StartCoroutine(AttendIcsMutationRoutine(path, jsonBody, onSuccess, onFailure, requireMutationSlot));
         }
 
+        /// <summary>
+        /// Applies one authoritative classroom session body. Invalid JSON leaves activity state and stats unchanged.
+        /// </summary>
+        public bool ApplySessionResponseForTesting(string json)
+        {
+            EnsureDependencies();
+            return TryApplyAttendSessionJson(json, out _);
+        }
+
+        private bool TryApplyAttendSessionJson(string json, out AttendIcsSessionResult result)
+        {
+            result = default;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            ApiClient.AttendIcsSessionResponseDto response;
+            try
+            {
+                response = JsonUtility.FromJson<ApiClient.AttendIcsSessionResponseDto>(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[PlayerProgressSync] Failed to parse classroom session response: {ex.Message}");
+                return false;
+            }
+
+            if (response == null || string.IsNullOrWhiteSpace(response.activityId))
+            {
+                return false;
+            }
+
+            ActivityRecord record = new ActivityRecord(
+                response.activityId,
+                ParseActivityStatus(response.status),
+                response.outcome,
+                response.auraDelta,
+                response.reputationDelta,
+                response.dayNumber,
+                response.milestoneSeconds);
+
+            dailyActivityState?.ApplyServerActivity(record);
+            playerStats?.ApplyServerState(
+                response.aura,
+                response.academicReputation,
+                StatUpdateSource.GameplayMutation);
+
+            result = new AttendIcsSessionResult(
+                record,
+                response.alreadyApplied,
+                response.sessionActive,
+                response.activeElapsedMs,
+                response.requestedAuraDelta,
+                response.requestedReputationDelta,
+                response.appliedAuraDelta,
+                response.appliedReputationDelta,
+                response.aura,
+                response.academicReputation);
+            return true;
+        }
+
         private IEnumerator AttendIcsMutationRoutine(
             string path,
             string jsonBody,
@@ -830,40 +988,13 @@ namespace UIU.Simulator.Gameplay.Player
 
                     try
                     {
-                        ApiClient.AttendIcsSessionResponseDto response =
-                            JsonUtility.FromJson<ApiClient.AttendIcsSessionResponseDto>(json);
-                        if (response == null)
+                        if (!TryApplyAttendSessionJson(json, out AttendIcsSessionResult result))
                         {
                             onFailure?.Invoke();
                             return;
                         }
 
-                        ActivityRecord record = new ActivityRecord(
-                            response.activityId,
-                            ParseActivityStatus(response.status),
-                            response.outcome,
-                            response.auraDelta,
-                            response.reputationDelta,
-                            response.dayNumber,
-                            response.milestoneSeconds);
-
-                        dailyActivityState?.ApplyServerActivity(record);
-                        playerStats.ApplyServerState(
-                            response.aura,
-                            response.academicReputation,
-                            StatUpdateSource.GameplayMutation);
-
-                        onSuccess?.Invoke(new AttendIcsSessionResult(
-                            record,
-                            response.alreadyApplied,
-                            response.sessionActive,
-                            response.activeElapsedMs,
-                            response.requestedAuraDelta,
-                            response.requestedReputationDelta,
-                            response.appliedAuraDelta,
-                            response.appliedReputationDelta,
-                            response.aura,
-                            response.academicReputation));
+                        onSuccess?.Invoke(result);
                     }
                     catch (Exception ex)
                     {

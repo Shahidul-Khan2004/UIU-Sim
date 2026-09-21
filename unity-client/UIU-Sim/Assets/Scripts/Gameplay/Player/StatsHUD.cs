@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Minimal screen-space HUD displaying the player's Aura, Academic Reputation,
 /// and stacked objectives driven by <see cref="DailyActivityState"/>
-/// (GET_ID_CARD, BREAKFAST, ATTEND_ICS).
+/// (GET_ID_CARD, BREAKFAST, and each configured CSE classroom).
 /// Built at runtime — no canvas prefab required.
 /// Attach to the Player prefab root alongside <see cref="PlayerStats"/>.
 /// </summary>
@@ -85,6 +86,7 @@ public sealed class StatsHUD : MonoBehaviour
     private TextMeshProUGUI icsMarkerText;
     private TextMeshProUGUI icsTitleText;
     private TextMeshProUGUI icsDescriptionText;
+    private readonly List<ExtraObjectiveBlock> extraObjectiveBlocks = new List<ExtraObjectiveBlock>();
 
     private float lastAura;
     private float lastReputation;
@@ -96,8 +98,11 @@ public sealed class StatsHUD : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("[StatsHUD] Duplicate StatsHUD disabled — keeping the existing player HUD.");
+            Debug.LogWarning(
+                "[StatsHUD] Duplicate player disabled. A floor scene contained another Player, " +
+                "so classroom results were written to a DailyActivityState the visible HUD does not read.");
             enabled = false;
+            gameObject.SetActive(false);
             return;
         }
 
@@ -316,6 +321,7 @@ public sealed class StatsHUD : MonoBehaviour
         }
 
         RefreshIcsObjective(showBreakfast);
+        RefreshAdditionalClassrooms(showBreakfast);
         RebuildPanelLayout();
     }
 
@@ -344,36 +350,116 @@ public sealed class StatsHUD : MonoBehaviour
             description = icsObjectiveDescriptionFallback;
         }
 
-        if (string.Equals(outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
-        {
-            ApplyProxyObjectiveVisual(
-                title,
-                "Proxy — Punched ID and Left",
-                icsMarkerText,
-                icsTitleText,
-                icsDescriptionText);
-            return;
-        }
-
-        if (string.Equals(outcome, "LEFT_EARLY", System.StringComparison.OrdinalIgnoreCase))
-        {
-            ApplyObjectiveVisual(
-                ActivityStatus.Missed,
-                title,
-                description,
-                icsMarkerText,
-                icsTitleText,
-                icsDescriptionText);
-            return;
-        }
-
-        ApplyObjectiveVisual(
-            icsStatus == ActivityStatus.InProgress ? ActivityStatus.Pending : icsStatus,
+        ApplyClassroomOutcomeVisual(
             title,
             description,
+            icsStatus,
+            outcome,
             icsMarkerText,
             icsTitleText,
             icsDescriptionText);
+    }
+
+    private void RefreshAdditionalClassrooms(bool breakfastVisible)
+    {
+        if (panelRoot == null)
+        {
+            return;
+        }
+
+        ClassroomObjectiveView[] objectives = breakfastVisible && dailyActivityState != null
+            ? dailyActivityState.BuildAdditionalClassroomObjectives(playerSaveState)
+            : System.Array.Empty<ClassroomObjectiveView>();
+
+        while (extraObjectiveBlocks.Count < objectives.Length)
+        {
+            int index = extraObjectiveBlocks.Count;
+            string activityId = objectives[index].ActivityId;
+            ExtraObjectiveBlock created = new ExtraObjectiveBlock { ActivityId = activityId };
+            created.Root = CreateObjectiveBlock(
+                panelRoot.transform,
+                "Classroom_" + activityId,
+                activityId,
+                objectives[index].Title,
+                objectives[index].Description,
+                out created.Marker,
+                out created.Title,
+                out created.Description);
+            extraObjectiveBlocks.Add(created);
+        }
+
+        for (int i = 0; i < extraObjectiveBlocks.Count; i++)
+        {
+            ExtraObjectiveBlock block = extraObjectiveBlocks[i];
+            bool show = i < objectives.Length;
+            if (block.Root != null)
+            {
+                block.Root.SetActive(show);
+            }
+
+            if (!show)
+            {
+                continue;
+            }
+
+            ClassroomObjectiveView view = objectives[i];
+            block.ActivityId = view.ActivityId;
+            ApplyClassroomObjectiveVisual(view, block.Marker, block.Title, block.Description);
+        }
+    }
+
+    private static void ApplyClassroomObjectiveVisual(
+        ClassroomObjectiveView view,
+        TextMeshProUGUI marker,
+        TextMeshProUGUI titleLabel,
+        TextMeshProUGUI descriptionLabel)
+    {
+        ApplyClassroomOutcomeVisual(
+            view.Title,
+            view.Description,
+            view.Status,
+            view.Outcome,
+            marker,
+            titleLabel,
+            descriptionLabel);
+    }
+
+    private static void ApplyClassroomOutcomeVisual(
+        string baseTitle,
+        string description,
+        ActivityStatus status,
+        string outcome,
+        TextMeshProUGUI marker,
+        TextMeshProUGUI titleLabel,
+        TextMeshProUGUI descriptionLabel)
+    {
+        if (string.Equals(outcome, "PROXY", System.StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyProxyObjectiveVisual(
+                baseTitle,
+                "Proxy — Punched ID and Left",
+                marker,
+                titleLabel,
+                descriptionLabel);
+            return;
+        }
+
+        ActivityStatus visualStatus = status == ActivityStatus.InProgress
+            ? ActivityStatus.Pending
+            : status;
+        if (string.Equals(outcome, "LEFT_EARLY", System.StringComparison.OrdinalIgnoreCase)
+            || string.Equals(outcome, "SKIPPED", System.StringComparison.OrdinalIgnoreCase))
+        {
+            visualStatus = ActivityStatus.Missed;
+        }
+
+        ApplyObjectiveVisual(
+            visualStatus,
+            AttendIcsOutcomeApi.HudTitle(baseTitle, outcome),
+            description,
+            marker,
+            titleLabel,
+            descriptionLabel);
     }
 
     private void RebuildPanelLayout()
@@ -805,5 +891,14 @@ public sealed class StatsHUD : MonoBehaviour
         return icsObjectiveRoot != null
             && panelRoot != null
             && icsObjectiveRoot.transform.IsChildOf(panelRoot.transform);
+    }
+
+    private sealed class ExtraObjectiveBlock
+    {
+        public string ActivityId;
+        public GameObject Root;
+        public TextMeshProUGUI Marker;
+        public TextMeshProUGUI Title;
+        public TextMeshProUGUI Description;
     }
 }

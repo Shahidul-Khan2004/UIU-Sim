@@ -24,6 +24,7 @@ namespace UIU.Simulator.Gameplay.Classroom
         [SerializeField] private IcsClassroomLocationConfig locationConfig;
 
         [Header("Course Identity")]
+        [SerializeField] private string activityId = "ATTEND_ICS";
         [SerializeField] private string courseId = "ICS";
         [SerializeField] private string courseName = "Introduction to Computer Science";
         [SerializeField] private string departmentCode = "CSE";
@@ -61,10 +62,12 @@ namespace UIU.Simulator.Gameplay.Classroom
 
         private void OnEnable()
         {
-            DailyActivityState activities = FindFirstObjectByType<DailyActivityState>();
+            DailyActivityState activities = ActiveDailyActivityState();
             activities?.RegisterClassroom(this);
         }
 
+        public string ActivityId => ResolveText(locationConfig != null ? locationConfig.ActivityId : null, activityId);
+        public bool IsIcsCourse => string.Equals(ActivityId, ActivityIds.AttendIcs, StringComparison.Ordinal);
         public string CourseId => ResolveText(locationConfig != null ? locationConfig.CourseId : null, courseId);
         public string CourseName => ResolveText(locationConfig != null ? locationConfig.CourseName : null, courseName);
         public string DepartmentCode => ResolveText(locationConfig != null ? locationConfig.DepartmentCode : null, departmentCode);
@@ -116,7 +119,7 @@ namespace UIU.Simulator.Gameplay.Classroom
             }
 
             PlayerSaveState save = PlayerSaveState.Instance ?? FindFirstObjectByType<PlayerSaveState>();
-            DailyActivityState activities = FindFirstObjectByType<DailyActivityState>();
+            DailyActivityState activities = ActiveDailyActivityState();
 
             if (save == null || !save.HasActiveUniversityDay)
             {
@@ -128,12 +131,12 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return ineligibleMessage;
             }
 
-            if (activities != null && activities.IsAttendIcsResolved)
+            if (activities != null && activities.IsClassroomResolved(ActivityId))
             {
-                string outcome = activities.AttendIcsOutcome;
+                string outcome = activities.GetClassroomOutcome(ActivityId);
                 if (string.Equals(outcome, "COMPLETED", StringComparison.OrdinalIgnoreCase))
                 {
-                    return "You already completed Introduction to Computer Science today.";
+                    return $"You already completed {CourseName} today.";
                 }
 
                 if (string.Equals(outcome, "PROXY", StringComparison.OrdinalIgnoreCase))
@@ -265,7 +268,15 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return;
             }
 
-            attendIcsSync = FindFirstObjectByType<PlayerProgressSync>();
+            PlayerProgressSync progress = ActivePlayerProgress();
+            if (progress == null)
+            {
+                return;
+            }
+
+            attendIcsSync = IsIcsCourse
+                ? progress
+                : new ClassroomActivitySync(progress, ActivityId);
         }
 
         private void OnValidate()
@@ -281,7 +292,92 @@ namespace UIU.Simulator.Gameplay.Classroom
 
         private static string ResolveText(string fromConfig, string fallback)
         {
-            return !string.IsNullOrWhiteSpace(fromConfig) ? fromConfig : fallback;
+            return !string.IsNullOrWhiteSpace(fromConfig) ? fromConfig.Trim() : fallback;
+        }
+
+        /// <summary>
+        /// The visible HUD and the classroom door must share one player.
+        /// Floor scenes that also contain a Player would otherwise accept the
+        /// server result on a DailyActivityState the HUD never reads.
+        /// </summary>
+        private static DailyActivityState ActiveDailyActivityState()
+        {
+            if (StatsHUD.Instance != null)
+            {
+                DailyActivityState onHud = StatsHUD.Instance.GetComponent<DailyActivityState>();
+                if (onHud != null)
+                {
+                    return onHud;
+                }
+            }
+
+            return FindFirstObjectByType<DailyActivityState>();
+        }
+
+        private static PlayerProgressSync ActivePlayerProgress()
+        {
+            if (StatsHUD.Instance != null)
+            {
+                PlayerProgressSync onHud = StatsHUD.Instance.GetComponent<PlayerProgressSync>();
+                if (onHud != null)
+                {
+                    return onHud;
+                }
+            }
+
+            return FindFirstObjectByType<PlayerProgressSync>();
+        }
+    }
+
+    /// <summary>
+    /// Binds the shared lecture UI to one non-ICS classroom activity.
+    /// ICS keeps calling <see cref="PlayerProgressSync"/> directly so its existing routes stay intact.
+    /// </summary>
+    public sealed class ClassroomActivitySync : IAttendIcsProgressSync
+    {
+        private readonly PlayerProgressSync progress;
+        private readonly string activityId;
+
+        public ClassroomActivitySync(PlayerProgressSync progress, string activityId)
+        {
+            this.progress = progress;
+            this.activityId = activityId;
+        }
+
+        public bool IsHydrated => progress != null && progress.IsHydrated;
+        public bool IsMutationInFlight => progress != null && progress.IsMutationInFlight;
+
+        public void RequestAttendIcsStart(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            progress.RequestClassroomStart(activityId, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsPause(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            progress.RequestClassroomPause(activityId, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsResume(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            progress.RequestClassroomResume(activityId, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsMilestone(
+            int milestoneSeconds,
+            Action<AttendIcsSessionResult> onSuccess,
+            Action onFailure)
+        {
+            progress.RequestClassroomMilestone(activityId, milestoneSeconds, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsLeaveEarly(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            progress.RequestClassroomLeaveEarly(activityId, onSuccess, onFailure);
+        }
+
+        public void RequestAttendIcsProxy(Action<AttendIcsSessionResult> onSuccess, Action onFailure)
+        {
+            progress.RequestClassroomProxy(activityId, onSuccess, onFailure);
         }
     }
 }

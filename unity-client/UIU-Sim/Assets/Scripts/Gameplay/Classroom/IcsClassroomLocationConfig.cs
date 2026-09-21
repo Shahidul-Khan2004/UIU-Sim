@@ -3,9 +3,9 @@ using UnityEngine;
 namespace UIU.Simulator.Gameplay.Classroom
 {
     /// <summary>
-    /// Persistent ICS classroom location used by the HUD independently of whether
-    /// Floor04 (or any additive floor scene) is currently loaded.
-    /// Assign the same asset on <see cref="IcsClassroomInteractable"/> so interaction copy stays aligned.
+    /// Persistent classroom location used by the HUD independently of whether
+    /// the floor scene is loaded. ICS, English, and Discrete Mathematics each
+    /// have their own asset. Assign that same asset on the matching interactable.
     /// </summary>
     [CreateAssetMenu(
         fileName = "IcsClassroomLocation",
@@ -13,6 +13,7 @@ namespace UIU.Simulator.Gameplay.Classroom
     public sealed class IcsClassroomLocationConfig : ScriptableObject
     {
         [Header("Course Identity")]
+        [SerializeField] private string activityId = "ATTEND_ICS";
         [SerializeField] private string courseId = "ICS";
         [SerializeField] private string courseName = "Introduction to Computer Science";
         [SerializeField] private string departmentCode = "CSE";
@@ -26,9 +27,10 @@ namespace UIU.Simulator.Gameplay.Classroom
         [SerializeField] private int floor = 4;
 
         [Header("Schedule")]
-        [Tooltip("Must match backend AttendIcsDefinition.SCHEDULED_DAY (default 1).")]
+        [Tooltip("Must match backend ClassroomCourseDefinition.scheduledDay for this activity. Day 1 for ICS, English, and Discrete Mathematics.")]
         [SerializeField] private int scheduledGameplayDay = 1;
 
+        public string ActivityId => string.IsNullOrWhiteSpace(activityId) ? "ATTEND_ICS" : activityId.Trim();
         public string CourseId => courseId;
         public string CourseName => courseName;
         public string DepartmentCode => departmentCode;
@@ -39,6 +41,14 @@ namespace UIU.Simulator.Gameplay.Classroom
 
         public bool IsConfigured =>
             !string.IsNullOrWhiteSpace(classroomNumber) && floor >= 0;
+
+        public string BuildObjectiveTitle()
+        {
+            string name = string.IsNullOrWhiteSpace(courseName)
+                ? "Class"
+                : courseName.Trim();
+            return $"Attend {name}";
+        }
 
         public string BuildObjectiveDescription()
         {
