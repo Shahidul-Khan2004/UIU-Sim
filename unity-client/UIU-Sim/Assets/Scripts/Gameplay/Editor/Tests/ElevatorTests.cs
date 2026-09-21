@@ -8,6 +8,7 @@ using UIU.Simulator.Building.Generation;
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.UI;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -324,7 +325,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(ElevatorUI.IsOpen, Is.True);
 
             // InteractionController checks ElevatorUI.IsOpen in UpdateTarget and HandleInput
-            bool isBlocked = DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen;
+            bool isBlocked = DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || GameMenuManager.IsOpen;
             Assert.That(isBlocked, Is.True, "InteractionController must be blocked while ElevatorUI is open.");
 
             elevatorUI.Hide();
