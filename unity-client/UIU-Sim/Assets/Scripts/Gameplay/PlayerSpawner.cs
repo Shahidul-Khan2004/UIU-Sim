@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UIU.Simulator.Building.Generation;
 using UIU.Simulator.Gameplay.Player;
@@ -6,6 +7,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Instantiates the player into the persistent Main scene after the additive floor environment is ready.
+/// Also relocates the existing persistent player to the primary outdoor spawn on Next Day.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class PlayerSpawner : MonoBehaviour
@@ -48,6 +50,135 @@ public sealed class PlayerSpawner : MonoBehaviour
         }
 
         SpawnPlayer(floorScene);
+    }
+
+    /// <summary>
+    /// Moves the existing player to the primary outdoor <see cref="PlayerSpawnPoint"/>
+    /// (GroundFloor). Does not instantiate a second player or touch save/stats/ID ownership.
+    /// Ensures GroundFloor is loaded before reading its spawn transform.
+    /// </summary>
+    public IEnumerator RespawnExistingPlayerAtPrimarySpawnRoutine(
+        Action onComplete = null,
+        Action<string> onError = null)
+    {
+        FloorSceneLoader loader = FloorSceneLoader.Instance != null
+            ? FloorSceneLoader.Instance
+            : FindFirstObjectByType<FloorSceneLoader>();
+
+        Scene groundScene = default;
+        bool loadFailed = false;
+        string loadError = null;
+
+        if (loader != null)
+        {
+            yield return loader.EnsureFloorLoadedRoutine(
+                0,
+                (scene, _) => groundScene = scene,
+                err =>
+                {
+                    loadFailed = true;
+                    loadError = err;
+                });
+        }
+        else
+        {
+            string sceneName = ResolveFloorSceneName();
+            groundScene = SceneManager.GetSceneByName(sceneName);
+            if (!IsLoaded(groundScene))
+            {
+                loadFailed = true;
+                loadError = $"Floor scene '{sceneName}' is not loaded and FloorSceneLoader is missing.";
+            }
+        }
+
+        if (loadFailed || !IsLoaded(groundScene))
+        {
+            string error = loadError ?? "Could not load the primary spawn floor.";
+            Debug.LogError($"[PlayerSpawner] Respawn failed: {error}", this);
+            onError?.Invoke(error);
+            yield break;
+        }
+
+        PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+        if (player == null)
+        {
+            const string error = "No active player found to respawn.";
+            Debug.LogError($"[PlayerSpawner] {error}", this);
+            onError?.Invoke(error);
+            yield break;
+        }
+
+        spawnedPlayer = player.gameObject;
+
+        PlayerSpawnPoint spawnPoint = FindSpawnPoint(groundScene);
+        Vector3 position;
+        Quaternion rotation;
+        if (spawnPoint != null)
+        {
+            position = spawnPoint.transform.position;
+            rotation = spawnPoint.transform.rotation;
+        }
+        else
+        {
+            position = fallbackPosition;
+            rotation = Quaternion.identity;
+            Debug.LogWarning(
+                $"[PlayerSpawner] No PlayerSpawnPoint in '{groundScene.name}'. Using fallback {fallbackPosition}.",
+                this);
+        }
+
+        TeleportPlayer(player, position, rotation);
+        AssignCameraFollow(player.transform);
+
+        if (loader != null)
+        {
+            loader.CurrentFloorNumber = 0;
+        }
+
+        Debug.Log($"[PlayerSpawner] Respawned existing player at primary spawn in '{groundScene.name}'.");
+        onComplete?.Invoke();
+    }
+
+    /// <summary>EditMode/test seam: teleport without scene loading.</summary>
+    public static bool TryTeleportPlayerToSpawnPoint(PlayerMovement player, PlayerSpawnPoint spawnPoint)
+    {
+        if (player == null || spawnPoint == null)
+        {
+            return false;
+        }
+
+        TeleportPlayer(player, spawnPoint.transform.position, spawnPoint.transform.rotation);
+        return true;
+    }
+
+    private static void TeleportPlayer(PlayerMovement player, Vector3 position, Quaternion rotation)
+    {
+        Transform playerTransform = player.transform;
+        CharacterController controller = player.GetComponent<CharacterController>();
+        FirstPersonLook look = player.GetComponent<FirstPersonLook>();
+        bool controllerWasEnabled = controller != null && controller.enabled;
+
+        if (controller != null)
+        {
+            controller.enabled = false;
+        }
+
+        playerTransform.position = position;
+
+        if (look != null)
+        {
+            look.SetFacingRotation(rotation);
+        }
+        else
+        {
+            Vector3 euler = rotation.eulerAngles;
+            playerTransform.rotation = Quaternion.Euler(0f, euler.y, 0f);
+        }
+
+        if (controller != null)
+        {
+            controller.enabled = controllerWasEnabled;
+        }
     }
 
     private void SpawnPlayer(Scene floorScene)
