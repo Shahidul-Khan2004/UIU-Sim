@@ -169,6 +169,7 @@ namespace UIU.Simulator.Networking
             public int auraDelta;
             public int reputationDelta;
             public int dayNumber;
+            public int milestoneSeconds;
         }
 
         [Serializable]
@@ -201,6 +202,84 @@ namespace UIU.Simulator.Networking
             public int reputationDelta;
             public int dayNumber;
             public bool alreadyResolved;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class AttendIcsMilestoneRequestDto
+        {
+            public int milestoneSeconds;
+
+            public AttendIcsMilestoneRequestDto(int milestoneSeconds)
+            {
+                this.milestoneSeconds = milestoneSeconds;
+            }
+        }
+
+        [Serializable]
+        public class AttendIcsSessionResponseDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int milestoneSeconds;
+            public int auraDelta;
+            public int reputationDelta;
+            public int requestedAuraDelta;
+            public int requestedReputationDelta;
+            public int appliedAuraDelta;
+            public int appliedReputationDelta;
+            public bool alreadyApplied;
+            public bool sessionActive;
+            public long activeElapsedMs;
+            public int dayNumber;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class DaySummaryActivityDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int auraDelta;
+            public int academicReputationDelta;
+        }
+
+        [Serializable]
+        public class DayFinalizeResponseDto
+        {
+            public int semester;
+            public int day;
+            public DaySummaryActivityDto[] activities;
+            public int totalAuraDelta;
+            public int totalAcademicReputationDelta;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
+        public class DayAdvanceRequestDto
+        {
+            public int expectedSemester;
+            public int expectedDay;
+
+            public DayAdvanceRequestDto(int expectedSemester, int expectedDay)
+            {
+                this.expectedSemester = expectedSemester;
+                this.expectedDay = expectedDay;
+            }
+        }
+
+        [Serializable]
+        public class DayAdvanceResponseDto
+        {
+            public int semester;
+            public int currentDay;
+            public bool alreadyAdvanced;
+            public bool idCardIssued;
             public int aura;
             public int academicReputation;
         }

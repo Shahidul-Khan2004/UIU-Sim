@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f3c9e1a4b8d2e6f0c5a9173d48e2b10, type: 3}
+  m_Name: IcsClassroomLocation
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Classroom.IcsClassroomLocationConfig
+  activityId: ATTEND_ICS
+  courseId: ICS
+  courseName: Introduction to Computer Science
+  departmentCode: CSE
+  studentRole: STUDENT
+  classroomNumber: 427
+  floor: 4
+  scheduledGameplayDay: 1

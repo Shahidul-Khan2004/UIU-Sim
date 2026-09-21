@@ -11,6 +11,7 @@ namespace UIU.Simulator.Gameplay.Activities
         public int AuraDelta { get; }
         public int ReputationDelta { get; }
         public int DayNumber { get; }
+        public int MilestoneSeconds { get; }
 
         public ActivityRecord(
             string activityId,
@@ -18,7 +19,8 @@ namespace UIU.Simulator.Gameplay.Activities
             string outcome,
             int auraDelta,
             int reputationDelta,
-            int dayNumber)
+            int dayNumber,
+            int milestoneSeconds = 0)
         {
             ActivityId = activityId ?? string.Empty;
             Status = status;
@@ -26,6 +28,7 @@ namespace UIU.Simulator.Gameplay.Activities
             AuraDelta = auraDelta;
             ReputationDelta = reputationDelta;
             DayNumber = dayNumber;
+            MilestoneSeconds = milestoneSeconds;
         }
 
         public bool IsResolved => Status == ActivityStatus.Completed || Status == ActivityStatus.Missed;
@@ -43,6 +46,45 @@ namespace UIU.Simulator.Gameplay.Activities
         {
             Record = record;
             AlreadyResolved = alreadyResolved;
+            Aura = aura;
+            AcademicReputation = academicReputation;
+        }
+    }
+
+    /// <summary>Result of an ATTEND_ICS session mutation (start / milestone / leave / proxy).</summary>
+    public readonly struct AttendIcsSessionResult
+    {
+        public readonly ActivityRecord Record;
+        public readonly bool AlreadyApplied;
+        public readonly bool SessionActive;
+        public readonly long ActiveElapsedMs;
+        public readonly int RequestedAuraDelta;
+        public readonly int RequestedReputationDelta;
+        public readonly int AppliedAuraDelta;
+        public readonly int AppliedReputationDelta;
+        public readonly float Aura;
+        public readonly float AcademicReputation;
+
+        public AttendIcsSessionResult(
+            ActivityRecord record,
+            bool alreadyApplied,
+            bool sessionActive,
+            long activeElapsedMs,
+            int requestedAuraDelta,
+            int requestedReputationDelta,
+            int appliedAuraDelta,
+            int appliedReputationDelta,
+            float aura,
+            float academicReputation)
+        {
+            Record = record;
+            AlreadyApplied = alreadyApplied;
+            SessionActive = sessionActive;
+            ActiveElapsedMs = activeElapsedMs;
+            RequestedAuraDelta = requestedAuraDelta;
+            RequestedReputationDelta = requestedReputationDelta;
+            AppliedAuraDelta = appliedAuraDelta;
+            AppliedReputationDelta = appliedReputationDelta;
             Aura = aura;
             AcademicReputation = academicReputation;
         }

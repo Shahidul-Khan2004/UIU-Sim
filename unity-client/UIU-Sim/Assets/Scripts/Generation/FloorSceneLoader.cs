@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -265,6 +267,81 @@ namespace UIU.Simulator.Building.Generation
             }
 
             onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// Unloads every known gameplay floor scene (0..10) that is currently loaded,
+        /// except <paramref name="keepFloorNumber"/>. Does not touch UIU_Main, auth, or other support scenes.
+        /// </summary>
+        public IEnumerator UnloadOtherGameplayFloorsRoutine(
+            int keepFloorNumber,
+            Action onComplete = null,
+            Action<string> onError = null)
+        {
+            List<int> toUnload = new List<int>(MaxFloorNumber);
+
+            CollectOtherLoadedGameplayFloorNumbers(keepFloorNumber, IsFloorLoaded, toUnload);
+
+            StringBuilder remaining = null;
+            for (int i = 0; i < toUnload.Count; i++)
+            {
+                int floor = toUnload[i];
+                yield return UnloadFloorRoutine(floor);
+
+                if (IsFloorLoaded(floor))
+                {
+                    if (remaining == null)
+                    {
+                        remaining = new StringBuilder(64);
+                    }
+                    else
+                    {
+                        remaining.Append(", ");
+                    }
+
+                    remaining.Append(GetFloorSceneName(floor) ?? floor.ToString());
+                }
+            }
+
+            if (remaining != null && remaining.Length > 0)
+            {
+                string error =
+                    $"[FloorSceneLoader] Could not unload previous floor scene(s): {remaining}.";
+                Debug.LogError(error, this);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// EditMode/test seam: which known gameplay floors would be unloaded when keeping one floor.
+        /// Only floors reported loaded by <paramref name="isFloorLoaded"/> are included.
+        /// </summary>
+        public static void CollectOtherLoadedGameplayFloorNumbers(
+            int keepFloorNumber,
+            Func<int, bool> isFloorLoaded,
+            List<int> results)
+        {
+            if (results == null)
+            {
+                return;
+            }
+
+            results.Clear();
+            for (int floor = MinFloorNumber; floor <= MaxFloorNumber; floor++)
+            {
+                if (floor == keepFloorNumber)
+                {
+                    continue;
+                }
+
+                if (isFloorLoaded != null && isFloorLoaded(floor))
+                {
+                    results.Add(floor);
+                }
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -93,7 +94,9 @@ public class FirstPersonLook : MonoBehaviour
             Mouse.current.leftButton.wasPressedThisFrame &&
             !ElevatorUI.IsOpen &&
             !AdvisorUI.IsOpen &&
-            !GameMenuManager.IsOpen)
+            !GameMenuManager.IsOpen &&
+            !ClassroomChoiceUI.IsOpen &&
+            !ClassroomLectureUI.IsOpen)
         {
             LockCursor();
         }

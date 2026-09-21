@@ -44,6 +44,21 @@ public class PlayerDayActivity {
     @Column(name = "reputation_delta", nullable = false)
     private int reputationDelta;
 
+    @Column(name = "milestone_seconds", nullable = false)
+    private int milestoneSeconds;
+
+    @Column(name = "session_started_at")
+    private Instant sessionStartedAt;
+
+    @Column(name = "session_paused_at")
+    private Instant sessionPausedAt;
+
+    @Column(name = "accumulated_active_ms", nullable = false)
+    private long accumulatedActiveMs;
+
+    @Column(name = "early_leave_penalty_applied", nullable = false)
+    private boolean earlyLeavePenaltyApplied;
+
     @Column(name = "resolved_at", nullable = false)
     private Instant resolvedAt;
 
@@ -62,6 +77,11 @@ public class PlayerDayActivity {
             String outcome,
             int auraDelta,
             int reputationDelta,
+            int milestoneSeconds,
+            Instant sessionStartedAt,
+            Instant sessionPausedAt,
+            long accumulatedActiveMs,
+            boolean earlyLeavePenaltyApplied,
             Instant resolvedAt,
             Instant createdAt
     ) {
@@ -73,10 +93,18 @@ public class PlayerDayActivity {
         this.outcome = Objects.requireNonNull(outcome, "outcome must not be null");
         this.auraDelta = auraDelta;
         this.reputationDelta = reputationDelta;
+        this.milestoneSeconds = milestoneSeconds;
+        this.sessionStartedAt = sessionStartedAt;
+        this.sessionPausedAt = sessionPausedAt;
+        this.accumulatedActiveMs = accumulatedActiveMs;
+        this.earlyLeavePenaltyApplied = earlyLeavePenaltyApplied;
         this.resolvedAt = resolvedAt;
         this.createdAt = createdAt;
     }
 
+    /**
+     * Terminal resolve factory for breakfast / ID card / ICS skip / proxy style outcomes.
+     */
     public static PlayerDayActivity resolve(
             Player player,
             String activityId,
@@ -96,9 +124,122 @@ public class PlayerDayActivity {
                 outcome,
                 auraDelta,
                 reputationDelta,
+                0,
+                null,
+                null,
+                0L,
+                false,
                 now,
                 now
         );
+    }
+
+    public static PlayerDayActivity startClassroomSession(
+            Player player,
+            String activityId,
+            int dayNumber,
+            Instant now
+    ) {
+        return new PlayerDayActivity(
+                UUID.randomUUID(),
+                player,
+                activityId,
+                dayNumber,
+                AttendIcsOutcome.ATTENDING.status(),
+                AttendIcsOutcome.ATTENDING.name(),
+                0,
+                0,
+                0,
+                now,
+                null,
+                0L,
+                false,
+                now,
+                now
+        );
+    }
+
+    public static PlayerDayActivity startAttendIcsSession(Player player, int dayNumber, Instant now) {
+        return startClassroomSession(player, AttendIcsDefinition.ACTIVITY_ID, dayNumber, now);
+    }
+
+    public boolean isTerminal() {
+        return status != ActivityStatus.IN_PROGRESS;
+    }
+
+    public boolean isSessionActive() {
+        return status == ActivityStatus.IN_PROGRESS && sessionPausedAt == null;
+    }
+
+    /**
+     * Active lecture time: accumulated paused segments plus open segment if not paused.
+     */
+    public long computeActiveElapsedMs(Instant now) {
+        long total = accumulatedActiveMs;
+        if (status == ActivityStatus.IN_PROGRESS && sessionPausedAt == null && sessionStartedAt != null) {
+            Instant segmentStart = sessionStartedAt;
+            // After a resume, sessionStartedAt is updated to the resume instant.
+            total += Math.max(0L, now.toEpochMilli() - segmentStart.toEpochMilli());
+        }
+        return total;
+    }
+
+    public void pauseSession(Instant now) {
+        if (status != ActivityStatus.IN_PROGRESS || sessionPausedAt != null) {
+            return;
+        }
+        if (sessionStartedAt != null) {
+            accumulatedActiveMs += Math.max(0L, now.toEpochMilli() - sessionStartedAt.toEpochMilli());
+        }
+        sessionPausedAt = now;
+        resolvedAt = now;
+    }
+
+    public void resumeSession(Instant now) {
+        if (status != ActivityStatus.IN_PROGRESS || sessionPausedAt == null) {
+            return;
+        }
+        sessionPausedAt = null;
+        sessionStartedAt = now;
+        resolvedAt = now;
+    }
+
+    public void applyMilestone(int milestoneSeconds, int reputationReward, Instant now) {
+        this.milestoneSeconds = milestoneSeconds;
+        this.reputationDelta += reputationReward;
+        this.resolvedAt = now;
+        if (milestoneSeconds >= AttendIcsDefinition.MILESTONE_90_SECONDS) {
+            this.status = AttendIcsOutcome.COMPLETED.status();
+            this.outcome = AttendIcsOutcome.COMPLETED.name();
+            // Freeze timing so reconnects cannot continue accruing.
+            if (sessionPausedAt == null && sessionStartedAt != null) {
+                accumulatedActiveMs += Math.max(0L, now.toEpochMilli() - sessionStartedAt.toEpochMilli());
+            }
+            sessionPausedAt = now;
+        }
+    }
+
+    public void applyEarlyLeave(int reputationPenalty, Instant now) {
+        pauseSession(now);
+        this.status = AttendIcsOutcome.LEFT_EARLY.status();
+        this.outcome = AttendIcsOutcome.LEFT_EARLY.name();
+        this.reputationDelta += reputationPenalty;
+        this.earlyLeavePenaltyApplied = true;
+        this.resolvedAt = now;
+    }
+
+    public void applyProxy(int auraReward, Instant now) {
+        this.status = AttendIcsOutcome.PROXY.status();
+        this.outcome = AttendIcsOutcome.PROXY.name();
+        this.auraDelta += auraReward;
+        this.resolvedAt = now;
+    }
+
+    public void applySkipped(int reputationPenalty, Instant now) {
+        this.status = AttendIcsOutcome.SKIPPED.status();
+        this.outcome = AttendIcsOutcome.SKIPPED.name();
+        this.reputationDelta += reputationPenalty;
+        this.resolvedAt = now;
     }
 
     public UUID getId() {
@@ -131,6 +272,26 @@ public class PlayerDayActivity {
 
     public int getReputationDelta() {
         return reputationDelta;
+    }
+
+    public int getMilestoneSeconds() {
+        return milestoneSeconds;
+    }
+
+    public Instant getSessionStartedAt() {
+        return sessionStartedAt;
+    }
+
+    public Instant getSessionPausedAt() {
+        return sessionPausedAt;
+    }
+
+    public long getAccumulatedActiveMs() {
+        return accumulatedActiveMs;
+    }
+
+    public boolean isEarlyLeavePenaltyApplied() {
+        return earlyLeavePenaltyApplied;
     }
 
     public Instant getResolvedAt() {

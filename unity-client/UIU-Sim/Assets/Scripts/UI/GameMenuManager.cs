@@ -8,6 +8,7 @@ using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -31,7 +32,7 @@ namespace UIU.Simulator.UI
 
         private const string SavePath = "api/players/me/save";
         private const float PanelWidth = 420f;
-        private const float PanelHeight = 640f;
+        private const float PanelHeight = 700f;
         private const float ButtonHeight = 44f;
         private const int CanvasSortOrder = 240;
 
@@ -46,8 +47,12 @@ namespace UIU.Simulator.UI
 
         private GameObject overlayRoot;
         private GameObject confirmRoot;
+        private GameObject endDayConfirmRoot;
         private TextMeshProUGUI statusLabel;
+        private TextMeshProUGUI endDayTitleLabel;
+        private TextMeshProUGUI endDayBodyLabel;
         private Button[] menuButtons;
+        private Button nextDayButton;
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
@@ -62,8 +67,10 @@ namespace UIU.Simulator.UI
         private bool isNavigating;
         private Coroutine saveRoutine;
         private Coroutine newGameRoutine;
+        private Coroutine nextDayRoutine;
 
         public bool IsConfirmOpen { get; private set; }
+        public bool IsEndDayConfirmOpen { get; private set; }
 
         public static GameMenuManager EnsureExists()
         {
@@ -159,6 +166,17 @@ namespace UIU.Simulator.UI
                 return;
             }
 
+            if (IsEndDayConfirmOpen)
+            {
+                HideEndDayConfirm();
+                return;
+            }
+
+            if (DailySummaryUI.IsOpen)
+            {
+                return;
+            }
+
             if (isBusy)
             {
                 return;
@@ -196,6 +214,7 @@ namespace UIU.Simulator.UI
             EnsureEventSystem();
 
             HideConfirm();
+            HideEndDayConfirm();
             SetStatus(string.Empty, UiTheme.Grey);
             SetMenuInteractable(true);
 
@@ -216,6 +235,7 @@ namespace UIU.Simulator.UI
             }
 
             HideConfirm();
+            HideEndDayConfirm();
             StopInFlightMenuWork();
             SetStatus(string.Empty, UiTheme.Grey);
 
@@ -235,6 +255,38 @@ namespace UIU.Simulator.UI
         public void ShowSaveConfirmation()
         {
             SetStatus("Game Saved ✓", UiTheme.BrightOrange);
+        }
+
+        /// <summary>
+        /// Closes any open menu overlays and restores gameplay controls to enabled defaults.
+        /// Used after DailySummaryUI finishes a successful day advance so we do not restore
+        /// a stale snapshot from when the menu first disabled input.
+        /// </summary>
+        public void ForceCloseAndRestoreGameplayControls()
+        {
+            HideConfirm();
+            HideEndDayConfirm();
+            StopInFlightMenuWork();
+            SetStatus(string.Empty, UiTheme.Grey);
+
+            if (overlayRoot != null)
+            {
+                overlayRoot.SetActive(false);
+            }
+
+            IsOpen = false;
+
+            // Re-resolve live references — do not trust the Open() disabled snapshot.
+            cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
+            cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
+            cachedInteraction = FindFirstObjectByType<InteractionController>();
+            cachedCameraFollow = FindFirstObjectByType<CameraFollow>();
+
+            wasMovementEnabled = true;
+            wasLookEnabled = true;
+            wasInteractionEnabled = true;
+            wasCameraFollowEnabled = true;
+            RestorePlayerControls();
         }
 
         private bool CanOpenMenu()
@@ -267,7 +319,10 @@ namespace UIU.Simulator.UI
                 || DialogueUI.IsOpen
                 || CanteenQueueUI.IsOpen
                 || AdmissionUI.IsOpen
-                || IdCardUI.IsOpen;
+                || IdCardUI.IsOpen
+                || DailySummaryUI.IsOpen
+                || ClassroomChoiceUI.IsOpen
+                || ClassroomLectureUI.IsOpen;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -279,7 +334,7 @@ namespace UIU.Simulator.UI
 
             isNavigating = false;
 
-            if (IsOpen || IsConfirmOpen)
+            if (IsOpen || IsConfirmOpen || IsEndDayConfirmOpen)
             {
                 Close(restoreGameplayControls: false);
             }
@@ -395,7 +450,7 @@ namespace UIU.Simulator.UI
 
         private void OnNewGameClicked()
         {
-            if (isBusy || isNavigating)
+            if (isBusy || isNavigating || IsEndDayConfirmOpen)
             {
                 return;
             }
@@ -403,9 +458,42 @@ namespace UIU.Simulator.UI
             ShowConfirm();
         }
 
+        private void OnNextDayClicked()
+        {
+            if (isBusy || isNavigating || IsConfirmOpen || IsEndDayConfirmOpen)
+            {
+                return;
+            }
+
+            PlayerSaveState saveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+
+            if (saveState == null || !saveState.IsHydrated)
+            {
+                SetStatus("Checking save…", UiTheme.Grey);
+                PlayerSaveState.EnsureExists().RefreshFromServer();
+                return;
+            }
+
+            if (!saveState.HasActiveUniversityDay)
+            {
+                SetStatus("Complete admission before ending the day.", UiTheme.Red);
+                return;
+            }
+
+            if (saveState.CurrentDay >= 6)
+            {
+                SetStatus("Semester progression is not available yet.", UiTheme.Grey);
+                return;
+            }
+
+            ShowEndDayConfirm(saveState.CurrentDay);
+        }
+
         private void OnIdCardClicked()
         {
-            if (isBusy || isNavigating || IsConfirmOpen)
+            if (isBusy || isNavigating || IsConfirmOpen || IsEndDayConfirmOpen)
             {
                 return;
             }
@@ -447,6 +535,12 @@ namespace UIU.Simulator.UI
             {
                 StopCoroutine(saveRoutine);
                 saveRoutine = null;
+            }
+
+            if (nextDayRoutine != null)
+            {
+                StopCoroutine(nextDayRoutine);
+                nextDayRoutine = null;
             }
 
             isBusy = false;
@@ -627,6 +721,37 @@ namespace UIU.Simulator.UI
             }
         }
 
+        private void ShowEndDayConfirm(int currentDay)
+        {
+            if (endDayConfirmRoot == null)
+            {
+                return;
+            }
+
+            if (endDayTitleLabel != null)
+            {
+                endDayTitleLabel.text = $"End Day {currentDay}?";
+            }
+
+            if (endDayBodyLabel != null)
+            {
+                endDayBodyLabel.text =
+                    "Any unfinished required activities will be marked as missed and their penalties will be applied.";
+            }
+
+            IsEndDayConfirmOpen = true;
+            endDayConfirmRoot.SetActive(true);
+        }
+
+        private void HideEndDayConfirm()
+        {
+            IsEndDayConfirmOpen = false;
+            if (endDayConfirmRoot != null)
+            {
+                endDayConfirmRoot.SetActive(false);
+            }
+        }
+
         private void OnConfirmNewGameClicked()
         {
             if (isBusy || isNavigating)
@@ -641,6 +766,80 @@ namespace UIU.Simulator.UI
             }
 
             newGameRoutine = StartCoroutine(NewGameRoutine());
+        }
+
+        private void OnConfirmEndDayClicked()
+        {
+            if (isBusy || isNavigating)
+            {
+                return;
+            }
+
+            HideEndDayConfirm();
+            if (nextDayRoutine != null)
+            {
+                StopCoroutine(nextDayRoutine);
+            }
+
+            nextDayRoutine = StartCoroutine(EndDayRoutine());
+        }
+
+        private IEnumerator EndDayRoutine()
+        {
+            isBusy = true;
+            SetMenuInteractable(false);
+            SetStatus("Ending day…", UiTheme.Grey);
+
+            PlayerProgressSync sync = FindFirstObjectByType<PlayerProgressSync>();
+            if (sync == null || !sync.IsHydrated)
+            {
+                SetStatus("Progress is still loading.", UiTheme.Red);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            bool finished = false;
+            bool succeeded = false;
+            DayFinalizeResult summary = default;
+            string failureMessage = null;
+
+            sync.RequestFinalizeDay(
+                onSuccess: result =>
+                {
+                    succeeded = true;
+                    summary = result;
+                    finished = true;
+                },
+                onFailure: error =>
+                {
+                    failureMessage = error;
+                    finished = true;
+                });
+
+            while (!finished)
+            {
+                yield return null;
+            }
+
+            if (!succeeded)
+            {
+                SetStatus(string.IsNullOrWhiteSpace(failureMessage)
+                    ? "Could not end the day."
+                    : failureMessage, UiTheme.Red);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            // Keep controls locked while transferring to the summary modal.
+            Close(restoreGameplayControls: false);
+            DailySummaryUI.EnsureExists().Show(summary);
+
+            isBusy = false;
+            nextDayRoutine = null;
         }
 
         private void SetMenuInteractable(bool interactable)
@@ -678,6 +877,7 @@ namespace UIU.Simulator.UI
             }
 
             HideConfirm();
+            HideEndDayConfirm();
             IsOpen = false;
         }
 
@@ -726,6 +926,7 @@ namespace UIU.Simulator.UI
 
             Button resume = CreateMenuButton(panel.transform, "Button_Resume", "Resume", OnResumeClicked);
             Button save = CreateMenuButton(panel.transform, "Button_SaveGame", "Save Game", OnSaveGameClicked);
+            Button nextDay = CreateMenuButton(panel.transform, "Button_NextDay", "Next Day", OnNextDayClicked);
             Button newGame = CreateMenuButton(panel.transform, "Button_NewGame", "New Game", OnNewGameClicked);
             Button idCard = CreateMenuButton(panel.transform, "Button_IdCard", "ID Card", OnIdCardClicked);
             Button classRoutine = CreateMenuButton(panel.transform, "Button_ClassRoutine", "Class Routine", () => OnPlaceholderClicked("Class Routine"));
@@ -733,7 +934,8 @@ namespace UIU.Simulator.UI
             Button logout = CreateMenuButton(panel.transform, "Button_Logout", "Logout", OnLogoutClicked);
             Button quit = CreateMenuButton(panel.transform, "Button_QuitGame", "Quit Game", OnQuitClicked);
 
-            menuButtons = new[] { resume, save, newGame, idCard, classRoutine, settings, logout, quit };
+            nextDayButton = nextDay;
+            menuButtons = new[] { resume, save, nextDay, newGame, idCard, classRoutine, settings, logout, quit };
 
             GameObject statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(panel.transform, false);
@@ -749,6 +951,7 @@ namespace UIU.Simulator.UI
             statusLabel.text = string.Empty;
 
             BuildConfirmPopup(canvasGo.transform);
+            BuildEndDayConfirmPopup(canvasGo.transform);
         }
 
         private void BuildConfirmPopup(Transform canvasTransform)
@@ -803,6 +1006,78 @@ namespace UIU.Simulator.UI
 
             confirmRoot.SetActive(false);
             IsConfirmOpen = false;
+        }
+
+        private void BuildEndDayConfirmPopup(Transform canvasTransform)
+        {
+            endDayConfirmRoot = new GameObject("EndDayConfirmOverlay");
+            endDayConfirmRoot.transform.SetParent(canvasTransform, false);
+            RectTransform dimRect = endDayConfirmRoot.AddComponent<RectTransform>();
+            StretchFull(dimRect);
+            endDayConfirmRoot.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.78f);
+
+            GameObject box = new GameObject("EndDayConfirmBox");
+            box.transform.SetParent(endDayConfirmRoot.transform, false);
+            RectTransform boxRect = box.AddComponent<RectTransform>();
+            boxRect.anchorMin = new Vector2(0.5f, 0.5f);
+            boxRect.anchorMax = new Vector2(0.5f, 0.5f);
+            boxRect.sizeDelta = new Vector2(460f, 260f);
+            box.AddComponent<Image>().color = new Color(0.06f, 0.06f, 0.06f, 0.98f);
+
+            GameObject titleGo = new GameObject("EndDayTitle");
+            titleGo.transform.SetParent(box.transform, false);
+            RectTransform titleRect = titleGo.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.anchoredPosition = new Vector2(0f, -20f);
+            titleRect.sizeDelta = new Vector2(-32f, 36f);
+            endDayTitleLabel = titleGo.AddComponent<TextMeshProUGUI>();
+            endDayTitleLabel.text = "End Day 1?";
+            endDayTitleLabel.fontSize = 22f;
+            endDayTitleLabel.fontStyle = FontStyles.Bold;
+            endDayTitleLabel.color = UiTheme.BrightOrange;
+            endDayTitleLabel.alignment = TextAlignmentOptions.Center;
+            endDayTitleLabel.richText = false;
+
+            GameObject messageGo = new GameObject("EndDayMessage");
+            messageGo.transform.SetParent(box.transform, false);
+            RectTransform messageRect = messageGo.AddComponent<RectTransform>();
+            messageRect.anchorMin = new Vector2(0f, 1f);
+            messageRect.anchorMax = new Vector2(1f, 1f);
+            messageRect.pivot = new Vector2(0.5f, 1f);
+            messageRect.anchoredPosition = new Vector2(0f, -64f);
+            messageRect.sizeDelta = new Vector2(-36f, 90f);
+            endDayBodyLabel = messageGo.AddComponent<TextMeshProUGUI>();
+            endDayBodyLabel.text =
+                "Any unfinished required activities will be marked as missed and their penalties will be applied.";
+            endDayBodyLabel.fontSize = 16f;
+            endDayBodyLabel.fontStyle = FontStyles.Normal;
+            endDayBodyLabel.color = UiTheme.White;
+            endDayBodyLabel.alignment = TextAlignmentOptions.Center;
+            endDayBodyLabel.textWrappingMode = TextWrappingModes.Normal;
+            endDayBodyLabel.richText = false;
+
+            CreateAbsoluteButton(
+                box.transform,
+                "Button_CancelEndDay",
+                "CANCEL",
+                new Vector2(-100f, -78f),
+                new Vector2(160f, 44f),
+                secondaryButtonColor,
+                HideEndDayConfirm);
+
+            CreateAbsoluteButton(
+                box.transform,
+                "Button_ConfirmEndDay",
+                "END DAY",
+                new Vector2(100f, -78f),
+                new Vector2(160f, 44f),
+                buttonNormalColor,
+                OnConfirmEndDayClicked);
+
+            endDayConfirmRoot.SetActive(false);
+            IsEndDayConfirmOpen = false;
         }
 
         private Button CreateMenuButton(Transform parent, string name, string label, UnityEngine.Events.UnityAction onClick)

@@ -130,6 +130,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             Assert.That(FindButton("Button_Resume"), Is.Not.Null);
             Assert.That(FindButton("Button_SaveGame"), Is.Not.Null);
+            Assert.That(FindButton("Button_NextDay"), Is.Not.Null);
             Assert.That(FindButton("Button_NewGame"), Is.Not.Null);
             Assert.That(FindButton("Button_IdCard"), Is.Not.Null);
             Assert.That(FindButton("Button_ClassRoutine"), Is.Not.Null);
@@ -139,6 +140,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             Assert.That(FindButtonLabel("Button_Resume"), Is.EqualTo("Resume"));
             Assert.That(FindButtonLabel("Button_SaveGame"), Is.EqualTo("Save Game"));
+            Assert.That(FindButtonLabel("Button_NextDay"), Is.EqualTo("Next Day"));
             Assert.That(FindButtonLabel("Button_NewGame"), Is.EqualTo("New Game"));
             Assert.That(FindButtonLabel("Button_IdCard"), Is.EqualTo("ID Card"));
             Assert.That(FindButtonLabel("Button_ClassRoutine"), Is.EqualTo("Class Routine"));

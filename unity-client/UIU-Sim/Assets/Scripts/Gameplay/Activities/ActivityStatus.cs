@@ -5,6 +5,8 @@ namespace UIU.Simulator.Gameplay.Activities
     {
         Pending,
         Completed,
-        Missed
+        Missed,
+        /// <summary>Mid-lecture ICS session (server IN_PROGRESS).</summary>
+        InProgress
     }
 }
