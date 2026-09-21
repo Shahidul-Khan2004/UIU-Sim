@@ -127,11 +127,13 @@ namespace UIU.Simulator.Networking
         public class PlayerSaveDto
         {
             public string role;
+            public string playerName;
             public string department;
             public string universityId;
             public int semester;
             public int currentDay;
             public bool admissionCompleted;
+            public bool idCardIssued;
         }
 
         [Serializable]
@@ -145,12 +147,14 @@ namespace UIU.Simulator.Networking
         public class PlayerSaveCreateRequestDto
         {
             public string role;
+            public string playerName;
             public string departmentId;
             public string universityId;
 
-            public PlayerSaveCreateRequestDto(string role, string departmentId, string universityId)
+            public PlayerSaveCreateRequestDto(string role, string playerName, string departmentId, string universityId)
             {
                 this.role = role;
+                this.playerName = playerName;
                 this.departmentId = departmentId;
                 this.universityId = universityId;
             }

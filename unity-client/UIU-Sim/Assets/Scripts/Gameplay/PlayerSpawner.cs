@@ -1,5 +1,6 @@
 using System.Collections;
 using UIU.Simulator.Building.Generation;
+using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -23,6 +24,9 @@ public sealed class PlayerSpawner : MonoBehaviour
 
     private IEnumerator Start()
     {
+        // Ensure admission / ID-card save cache is fresh for this gameplay session.
+        PlayerSaveState.EnsureExists().RefreshFromServer();
+
         string floorSceneName = ResolveFloorSceneName();
         Scene floorScene = SceneManager.GetSceneByName(floorSceneName);
         float elapsed = 0f;

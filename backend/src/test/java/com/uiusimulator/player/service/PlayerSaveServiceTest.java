@@ -74,6 +74,7 @@ class PlayerSaveServiceTest {
         Jwt jwt = jwtWith("user_save_create");
         PlayerSaveCreateRequest request = new PlayerSaveCreateRequest(
                 PlayerRole.STUDENT,
+                "Alex Student",
                 cse.getId(),
                 "22112345"
         );
@@ -82,11 +83,13 @@ class PlayerSaveServiceTest {
 
         assertThat(status.hasSave()).isTrue();
         assertThat(status.save().role()).isEqualTo("STUDENT");
+        assertThat(status.save().playerName()).isEqualTo("Alex Student");
         assertThat(status.save().department()).isEqualTo("CSE");
         assertThat(status.save().universityId()).isEqualTo("22112345");
         assertThat(status.save().semester()).isEqualTo(1);
         assertThat(status.save().currentDay()).isEqualTo(1);
         assertThat(status.save().admissionCompleted()).isTrue();
+        assertThat(status.save().idCardIssued()).isTrue();
 
         Player player = playerRepository.findByClerkUserId("user_save_create").orElseThrow();
         assertThat(playerSaveRepository.findByPlayerId(player.getId())).isPresent();
@@ -97,15 +100,17 @@ class PlayerSaveServiceTest {
         Jwt jwt = jwtWith("user_save_get");
         playerSaveService.createSave(
                 jwt,
-                new PlayerSaveCreateRequest(PlayerRole.FACULTY, cse.getId(), null)
+                new PlayerSaveCreateRequest(PlayerRole.FACULTY, "Dr Faculty", cse.getId(), "F-1001")
         );
 
         PlayerSaveStatusResponse status = playerSaveService.getSaveStatus(jwt);
 
         assertThat(status.hasSave()).isTrue();
         assertThat(status.save().role()).isEqualTo("FACULTY");
+        assertThat(status.save().playerName()).isEqualTo("Dr Faculty");
         assertThat(status.save().department()).isEqualTo("CSE");
-        assertThat(status.save().universityId()).isNull();
+        assertThat(status.save().universityId()).isEqualTo("F-1001");
+        assertThat(status.save().idCardIssued()).isTrue();
     }
 
     @Test
@@ -113,6 +118,7 @@ class PlayerSaveServiceTest {
         Jwt jwt = jwtWith("user_save_dup");
         PlayerSaveCreateRequest request = new PlayerSaveCreateRequest(
                 PlayerRole.STUDENT,
+                "Dup Student",
                 cse.getId(),
                 "111"
         );
@@ -128,7 +134,7 @@ class PlayerSaveServiceTest {
 
         assertThatThrownBy(() -> playerSaveService.createSave(
                 jwt,
-                new PlayerSaveCreateRequest(PlayerRole.STUDENT, UUID.randomUUID(), "1")
+                new PlayerSaveCreateRequest(PlayerRole.STUDENT, "Bad Dept", UUID.randomUUID(), "1")
         )).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unknown departmentId");
     }
@@ -146,7 +152,7 @@ class PlayerSaveServiceTest {
 
         playerSaveService.createSave(
                 jwt,
-                new PlayerSaveCreateRequest(PlayerRole.STUDENT, cse.getId(), "999")
+                new PlayerSaveCreateRequest(PlayerRole.STUDENT, "Delete Student", cse.getId(), "999")
         );
 
         PlayerSaveStatusResponse deleted = playerSaveService.deleteSave(jwt);

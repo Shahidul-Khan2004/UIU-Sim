@@ -67,7 +67,7 @@ class PlayerSaveControllerTest {
     void getSave_withSave_returnsJourney() throws Exception {
         when(playerSaveService.getSaveStatus(any(Jwt.class)))
                 .thenReturn(PlayerSaveStatusResponse.of(new PlayerSaveResponse(
-                        "STUDENT", "CSE", "22112345", 1, 1, true
+                        "STUDENT", "Alex Student", "CSE", "22112345", 1, 1, true, true
                 )));
 
         mockMvc.perform(get("/api/players/me/save")
@@ -75,11 +75,13 @@ class PlayerSaveControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasSave").value(true))
                 .andExpect(jsonPath("$.save.role").value("STUDENT"))
+                .andExpect(jsonPath("$.save.playerName").value("Alex Student"))
                 .andExpect(jsonPath("$.save.department").value("CSE"))
                 .andExpect(jsonPath("$.save.universityId").value("22112345"))
                 .andExpect(jsonPath("$.save.semester").value(1))
                 .andExpect(jsonPath("$.save.currentDay").value(1))
-                .andExpect(jsonPath("$.save.admissionCompleted").value(true));
+                .andExpect(jsonPath("$.save.admissionCompleted").value(true))
+                .andExpect(jsonPath("$.save.idCardIssued").value(true));
     }
 
     @Test
@@ -87,11 +89,12 @@ class PlayerSaveControllerTest {
         UUID departmentId = UUID.randomUUID();
         when(playerSaveService.createSave(any(Jwt.class), any(PlayerSaveCreateRequest.class)))
                 .thenReturn(PlayerSaveStatusResponse.of(new PlayerSaveResponse(
-                        "STUDENT", "CSE", "22112345", 1, 1, true
+                        "STUDENT", "Alex Student", "CSE", "22112345", 1, 1, true, true
                 )));
 
         PlayerSaveCreateRequest request = new PlayerSaveCreateRequest(
                 PlayerRole.STUDENT,
+                "Alex Student",
                 departmentId,
                 "22112345"
         );
@@ -112,6 +115,7 @@ class PlayerSaveControllerTest {
 
         PlayerSaveCreateRequest request = new PlayerSaveCreateRequest(
                 PlayerRole.STUDENT,
+                "Dup Student",
                 UUID.randomUUID(),
                 "1"
         );

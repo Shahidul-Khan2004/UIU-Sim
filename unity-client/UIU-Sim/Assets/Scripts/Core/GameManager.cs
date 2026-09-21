@@ -1,5 +1,5 @@
+using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace UIU.Simulator.Core
 {
@@ -9,22 +9,13 @@ namespace UIU.Simulator.Core
     ///
     /// This is the only place that should request the application to quit. Other scripts
     /// should call <see cref="Quit"/> instead of using Application.Quit directly.
+    /// Escape is owned by the in-game <c>GameMenuManager</c>; it does not quit.
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public sealed class GameManager : MonoBehaviour
     {
-        private const string SystemMapName = "System";
-        private const string ExitActionName = "Exit";
-
         public static GameManager Instance { get; private set; }
 
-        [Header("Input")]
-        [Tooltip("Project Input Action asset. Leave empty to use the Input System project-wide asset.")]
-        [SerializeField] private InputActionAsset inputActions;
-
-        private InputActionMap systemMap;
-        private InputAction exitAction;
-        private InputAction fallbackExitAction;
         private bool isQuitting;
 
         /// <summary>
@@ -64,16 +55,9 @@ namespace UIU.Simulator.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-        }
 
-        private void OnEnable()
-        {
-            BindExitAction();
-        }
-
-        private void OnDisable()
-        {
-            UnbindExitAction();
+            // Cache admission / ID-card save state for scanner + receptionist gating.
+            PlayerSaveState.EnsureExists();
         }
 
         private void OnDestroy()
@@ -102,63 +86,6 @@ namespace UIU.Simulator.Core
 #else
             Application.Quit();
 #endif
-        }
-
-        private void BindExitAction()
-        {
-            InputActionAsset asset = inputActions != null ? inputActions : InputSystem.actions;
-            if (asset != null)
-            {
-                systemMap = asset.FindActionMap(SystemMapName);
-                exitAction = systemMap != null
-                    ? systemMap.FindAction(ExitActionName)
-                    : asset.FindAction($"{SystemMapName}/{ExitActionName}");
-            }
-
-            if (exitAction != null)
-            {
-                exitAction.performed += OnExitPerformed;
-                systemMap?.Enable();
-                if (!exitAction.enabled)
-                {
-                    exitAction.Enable();
-                }
-
-                return;
-            }
-
-            // Asset missing or System/Exit not imported yet — still honor Escape.
-            fallbackExitAction = new InputAction(
-                ExitActionName,
-                InputActionType.Button,
-                "<Keyboard>/escape");
-            fallbackExitAction.performed += OnExitPerformed;
-            fallbackExitAction.Enable();
-            Debug.LogWarning("[GameManager] System/Exit action not found. Using a runtime Escape binding.");
-        }
-
-        private void UnbindExitAction()
-        {
-            if (exitAction != null)
-            {
-                exitAction.performed -= OnExitPerformed;
-                exitAction = null;
-            }
-
-            systemMap = null;
-
-            if (fallbackExitAction != null)
-            {
-                fallbackExitAction.performed -= OnExitPerformed;
-                fallbackExitAction.Disable();
-                fallbackExitAction.Dispose();
-                fallbackExitAction = null;
-            }
-        }
-
-        private void OnExitPerformed(InputAction.CallbackContext context)
-        {
-            Quit();
         }
     }
 }
