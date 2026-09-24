@@ -27,7 +27,7 @@ Custom schemes (`uiusim://`, `uiu-simulator://`) are **not** used for day-to-day
 
 ## Testing
 
-1. Start backend (`mvn spring-boot:run` with `.env`).
+1. Start backend (`cd backend && mvn spring-boot:run`).
 2. Play from Bootstrap → Login → **Sign In**.
 3. Complete Clerk in the browser; leave Unity running.
 4. Unity should authenticate without any deep-link dialog.

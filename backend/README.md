@@ -15,12 +15,10 @@ Unity talks **only** to this API. Supabase/PostgreSQL credentials never leave th
 ## Quick start
 
 1. Copy `.env.example` to `.env` and fill in values (see below).
-2. Export the variables into your shell (or use your IDE env config):
+2. Start the API. `.env` in this directory is loaded automatically:
 
 ```bash
-set -a && source .env && set +a
-./mvnw spring-boot:run
-# or: mvn spring-boot:run
+mvn spring-boot:run
 ```
 
 3. Open the auth page: [http://localhost:8080/auth/login](http://localhost:8080/auth/login)
