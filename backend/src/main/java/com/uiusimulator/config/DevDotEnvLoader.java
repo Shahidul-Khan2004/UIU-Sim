@@ -8,8 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Development helper: loads {@code backend/.env} into JVM system properties when the
- * Spring Boot process was started without {@code set -a && source .env}.
+ * Loads {@code .env} (or {@code backend/.env}) into JVM system properties before Spring starts.
  * Existing environment variables and system properties are never overridden.
  * Values are not logged.
  */

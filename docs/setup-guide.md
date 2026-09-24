@@ -18,10 +18,9 @@
    - `CLERK_JWKS_URL` (`<issuer>/.well-known/jwks.json`)
    - `CLERK_AUTHORIZED_PARTIES=http://localhost:8080`
 
-3. Export env vars and run:
+3. Start the API. `backend/.env` is loaded automatically:
 
 ```bash
-set -a && source .env && set +a
 mvn spring-boot:run
 ```
 
