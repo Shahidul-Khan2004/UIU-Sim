@@ -239,6 +239,34 @@ namespace UIU.Simulator.Networking
         }
 
         [Serializable]
+        public class LibraryStudyCompleteRequestDto
+        {
+            public int score;
+
+            public LibraryStudyCompleteRequestDto(int score)
+            {
+                this.score = score;
+            }
+        }
+
+        [Serializable]
+        public class LibraryStudyResponseDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int score;
+            public int auraDelta;
+            public int reputationDelta;
+            public int appliedReputationDelta;
+            public bool alreadyStarted;
+            public bool alreadyCompleted;
+            public int dayNumber;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
         public class DaySummaryActivityDto
         {
             public string activityId;

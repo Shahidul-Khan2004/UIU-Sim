@@ -4,7 +4,9 @@ import com.uiusimulator.player.dto.DayAdvanceRequest;
 import com.uiusimulator.player.dto.DayAdvanceResponse;
 import com.uiusimulator.player.dto.DayFinalizeResponse;
 import com.uiusimulator.player.dto.DaySummaryActivityResponse;
+import com.uiusimulator.player.entity.ActivityStatus;
 import com.uiusimulator.player.entity.BreakfastOutcome;
+import com.uiusimulator.player.entity.LibraryStudyDefinition;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
 import com.uiusimulator.player.entity.PlayerSave;
@@ -73,6 +75,7 @@ public class PlayerDayService {
         List<DaySummaryActivityResponse> activities = playerDayActivityRepository
                 .findByPlayer_IdOrderByResolvedAtAsc(player.getId())
                 .stream()
+                .filter(PlayerDayService::includeInDailySummary)
                 .map(DaySummaryActivityResponse::from)
                 .toList();
 
@@ -163,6 +166,18 @@ public class PlayerDayService {
         );
 
         return DayAdvanceResponse.of(lockedSave, lockedStats, false);
+    }
+
+    /**
+     * Library Study is optional. An unused or unfinished attempt is omitted from the
+     * summary and is never auto-marked MISSED. A completed attempt stays as a bonus row.
+     */
+    private static boolean includeInDailySummary(PlayerDayActivity activity) {
+        if (LibraryStudyDefinition.ACTIVITY_ID.equals(activity.getActivityId())
+                && activity.getStatus() != ActivityStatus.COMPLETED) {
+            return false;
+        }
+        return true;
     }
 
     /**

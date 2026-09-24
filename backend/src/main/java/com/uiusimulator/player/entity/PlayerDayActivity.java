@@ -59,6 +59,9 @@ public class PlayerDayActivity {
     @Column(name = "early_leave_penalty_applied", nullable = false)
     private boolean earlyLeavePenaltyApplied;
 
+    @Column(name = "normalized_score")
+    private Integer normalizedScore;
+
     @Column(name = "resolved_at", nullable = false)
     private Instant resolvedAt;
 
@@ -161,6 +164,39 @@ public class PlayerDayActivity {
 
     public static PlayerDayActivity startAttendIcsSession(Player player, int dayNumber, Instant now) {
         return startClassroomSession(player, AttendIcsDefinition.ACTIVITY_ID, dayNumber, now);
+    }
+
+    public static PlayerDayActivity startLibraryStudy(Player player, int dayNumber, Instant now) {
+        return new PlayerDayActivity(
+                UUID.randomUUID(),
+                player,
+                LibraryStudyDefinition.ACTIVITY_ID,
+                dayNumber,
+                ActivityStatus.IN_PROGRESS,
+                "STARTED",
+                0,
+                0,
+                0,
+                now,
+                null,
+                0L,
+                false,
+                now,
+                now
+        );
+    }
+
+    /**
+     * Completes today's Library Study exactly once. Aura stays 0.
+     * Reputation is the server-calculated reward, not a client delta.
+     */
+    public void completeLibraryStudy(int score, int reputationReward, Instant now) {
+        this.status = ActivityStatus.COMPLETED;
+        this.outcome = "COMPLETED";
+        this.normalizedScore = score;
+        this.auraDelta = 0;
+        this.reputationDelta = reputationReward;
+        this.resolvedAt = now;
     }
 
     public boolean isTerminal() {
@@ -292,6 +328,10 @@ public class PlayerDayActivity {
 
     public boolean isEarlyLeavePenaltyApplied() {
         return earlyLeavePenaltyApplied;
+    }
+
+    public Integer getNormalizedScore() {
+        return normalizedScore;
     }
 
     public Instant getResolvedAt() {

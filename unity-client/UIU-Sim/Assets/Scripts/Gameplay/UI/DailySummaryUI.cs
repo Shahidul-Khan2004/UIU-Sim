@@ -340,9 +340,16 @@ namespace UIU.Simulator.Gameplay.UI
 
             DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
             DaySummaryActivity[] activities = summary.Activities;
+            int rowIndex = 0;
             for (int i = 0; i < activities.Length; i++)
             {
-                CreateActivityRow(activities[i], activityState, i);
+                if (!IncludeInSummary(activities[i]))
+                {
+                    continue;
+                }
+
+                CreateActivityRow(activities[i], activityState, rowIndex);
+                rowIndex++;
             }
 
             totalsLabel.text =
@@ -483,6 +490,11 @@ namespace UIU.Simulator.Gameplay.UI
                 return state != null ? state.BreakfastTitle : "Have Breakfast";
             }
 
+            if (activityId == ActivityIds.LibraryStudy)
+            {
+                return "Library Study";
+            }
+
             if (ActivityIds.IsClassroomActivity(activityId))
             {
                 string courseName = state != null ? state.CourseNameForActivity(activityId) : null;
@@ -545,6 +557,16 @@ namespace UIU.Simulator.Gameplay.UI
             }
 
             return StatusColor(item.Status);
+        }
+
+        private static bool IncludeInSummary(DaySummaryActivity item)
+        {
+            if (item.ActivityId == ActivityIds.LibraryStudy && item.Status != ActivityStatus.Completed)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static string FormatSigned(int value)
