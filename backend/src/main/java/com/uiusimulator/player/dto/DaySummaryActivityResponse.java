@@ -7,8 +7,12 @@ public record DaySummaryActivityResponse(
         String status,
         String outcome,
         int auraDelta,
-        int academicReputationDelta
+        int academicReputationDelta,
+        Integer marksObtained, Integer maxMarks, String assessmentName, boolean courseDropped
 ) {
+    public DaySummaryActivityResponse(String activityId, String status, String outcome, int auraDelta, int academicReputationDelta) {
+        this(activityId, status, outcome, auraDelta, academicReputationDelta, null, null, null, false);
+    }
     public static DaySummaryActivityResponse from(PlayerDayActivity activity) {
         return new DaySummaryActivityResponse(
                 activity.getActivityId(),

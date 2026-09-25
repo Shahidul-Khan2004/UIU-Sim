@@ -39,19 +39,22 @@ public class PlayerDayService {
     private final PlayerDayActivityRepository playerDayActivityRepository;
     private final PlayerStatsRepository playerStatsRepository;
     private final AttendIcsService attendIcsService;
+    private final com.uiusimulator.assessment.service.AssessmentService assessments;
 
     public PlayerDayService(
             PlayerService playerService,
             PlayerSaveRepository playerSaveRepository,
             PlayerDayActivityRepository playerDayActivityRepository,
             PlayerStatsRepository playerStatsRepository,
-            AttendIcsService attendIcsService
+            AttendIcsService attendIcsService,
+            com.uiusimulator.assessment.service.AssessmentService assessments
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
         this.playerDayActivityRepository = playerDayActivityRepository;
         this.playerStatsRepository = playerStatsRepository;
         this.attendIcsService = attendIcsService;
+        this.assessments = assessments;
     }
 
     /**
@@ -71,13 +74,15 @@ public class PlayerDayService {
 
         ensureBreakfastResolved(player, lockedSave, lockedStats);
         attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
+        assessments.finalizeDay(player, lockedSave);
 
-        List<DaySummaryActivityResponse> activities = playerDayActivityRepository
+        List<DaySummaryActivityResponse> activities = new java.util.ArrayList<>(playerDayActivityRepository
                 .findByPlayer_IdOrderByResolvedAtAsc(player.getId())
                 .stream()
                 .filter(PlayerDayService::includeInDailySummary)
                 .map(DaySummaryActivityResponse::from)
-                .toList();
+                .toList());
+        activities.addAll(assessments.summary(player, lockedSave));
 
         lockedSave.touchTimestamps();
         playerSaveRepository.saveAndFlush(lockedSave);
@@ -150,6 +155,7 @@ public class PlayerDayService {
         // Safety: close unresolved required activities before clearing rows.
         ensureBreakfastResolved(player, lockedSave, lockedStats);
         attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
+        assessments.finalizeDay(player, lockedSave);
 
         playerDayActivityRepository.deleteByPlayer_Id(player.getId());
         playerDayActivityRepository.flush();
