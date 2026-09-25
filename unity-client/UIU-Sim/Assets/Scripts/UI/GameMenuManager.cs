@@ -485,12 +485,6 @@ namespace UIU.Simulator.UI
                 return;
             }
 
-            if (saveState.CurrentDay >= 6)
-            {
-                SetStatus("Semester progression is not available yet.", UiTheme.Grey);
-                return;
-            }
-
             ShowEndDayConfirm(saveState.CurrentDay);
         }
 

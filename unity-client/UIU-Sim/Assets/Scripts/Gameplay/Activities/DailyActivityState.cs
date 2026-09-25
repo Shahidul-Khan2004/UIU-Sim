@@ -101,7 +101,6 @@ namespace UIU.Simulator.Gameplay.Activities
         // Cached from the floor scene classroom so the HUD stays correct when that
         // additive floor unloads (Unity destroyed references become fake-null).
         private bool hasCachedClassroomConfig;
-        private int cachedScheduledDay = 1;
         private string cachedDepartmentCode = "CSE";
         private string cachedObjectiveDescription = string.Empty;
 
@@ -244,7 +243,7 @@ namespace UIU.Simulator.Gameplay.Activities
 
         /// <summary>
         /// Whether the HUD should show ICS today for this player save.
-        /// Uses a cached classroom schedule so the objective survives floor unload.
+        /// Uses the shared semester schedule and persistent location across floor unload.
         /// </summary>
         public bool ShouldShowAttendIcsObjective(PlayerSaveState saveState)
         {
@@ -261,14 +260,13 @@ namespace UIU.Simulator.Gameplay.Activities
             ResolveClassroomReference();
 
             string departmentCode = ResolveIcsDepartmentCode();
-            int scheduledDay = ResolveIcsScheduledDay();
 
             if (!string.Equals(saveState.Department, departmentCode, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return !IsCourseDropped("ICS") && (IsAssessmentDay(saveState) || saveState.CurrentDay == scheduledDay);
+            return !IsCourseDropped("ICS") && (IsAssessmentDay(saveState) || SemesterSchedule.IsNormalClassDay(saveState.Semester, saveState.CurrentDay));
         }
 
         /// <summary>
@@ -459,7 +457,6 @@ namespace UIU.Simulator.Gameplay.Activities
                 return;
             }
 
-            cachedScheduledDay = Mathf.Max(1, classroom.ScheduledGameplayDay);
             cachedDepartmentCode = string.IsNullOrWhiteSpace(classroom.DepartmentCode)
                 ? "CSE"
                 : classroom.DepartmentCode.Trim();
@@ -493,27 +490,6 @@ namespace UIU.Simulator.Gameplay.Activities
             // Match AttendIcsDefinition.REQUIRED_DEPARTMENT_CODE so Day 1 CSE students
             // still see the objective before Floor04 has loaded.
             return "CSE";
-        }
-
-        private int ResolveIcsScheduledDay()
-        {
-            if (icsClassroom != null)
-            {
-                return Mathf.Max(1, icsClassroom.ScheduledGameplayDay);
-            }
-
-            if (icsLocationConfig != null)
-            {
-                return icsLocationConfig.ScheduledGameplayDay;
-            }
-
-            if (hasCachedClassroomConfig)
-            {
-                return Mathf.Max(1, cachedScheduledDay);
-            }
-
-            // Match AttendIcsDefinition.SCHEDULED_DAY.
-            return 1;
         }
 
         private void WarnIfLiveClassroomDiffersFromPersistentConfig(IcsClassroomInteractable classroom)
@@ -755,7 +731,7 @@ namespace UIU.Simulator.Gameplay.Activities
                 return false;
             }
 
-            return !IsCourseDropped(config.CourseId) && (IsAssessmentDay(saveState) || saveState.CurrentDay == config.ScheduledGameplayDay);
+            return !IsCourseDropped(config.CourseId) && (IsAssessmentDay(saveState) || SemesterSchedule.IsNormalClassDay(saveState.Semester, saveState.CurrentDay));
         }
 
         private IcsClassroomLocationConfig FindLocationConfig(string activityId)

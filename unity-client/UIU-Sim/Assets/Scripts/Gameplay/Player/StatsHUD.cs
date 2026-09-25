@@ -261,7 +261,7 @@ public sealed class StatsHUD : MonoBehaviour
             dayHeaderText.gameObject.SetActive(true);
             dayHeaderText.text = $"SEMESTER {semester} · DAY {dayNumber}";
             if (todayHeaderText != null) todayHeaderText.text = dailyActivityState != null && dailyActivityState.IsAssessmentDay(playerSaveState)
-                ? (dailyActivityState.ReportCard.scheduledAssessment.StartsWith("QUIZ") ? "QUIZ DAY · TODAY" : "ASSESSMENT DAY · TODAY") : "TODAY";
+                ? SemesterSchedule.DayHeader(dailyActivityState.ReportCard.scheduledAssessment) : "TODAY";
             todayHeaderText.gameObject.SetActive(true);
         }
         else

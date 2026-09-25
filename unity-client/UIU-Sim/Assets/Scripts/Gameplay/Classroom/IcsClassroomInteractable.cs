@@ -42,7 +42,7 @@ namespace UIU.Simulator.Gameplay.Classroom
         [SerializeField] private GameObject classroomInteractionTarget;
 
         [Header("Schedule")]
-        [Tooltip("Must match backend AttendIcsDefinition.SCHEDULED_DAY (default 1).")]
+        [Tooltip("Legacy first-day value. Normal lecture days are defined by SemesterSchedule.")]
         [SerializeField] private int scheduledGameplayDay = 1;
 
         [SerializeField] private string displayedClassTime = "09:00–10:30";
@@ -133,7 +133,7 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return null;
             }
 
-            // Quiz Day uses the hydrated server schedule. Other non-lecture days keep the
+            // Assessment days use the hydrated server schedule. Other non-lecture days keep the
             // existing eligibility message and must not open the assessment UI.
             if (string.Equals(save.Role, StudentRole, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(save.Department, DepartmentCode, StringComparison.OrdinalIgnoreCase)
@@ -197,7 +197,7 @@ namespace UIU.Simulator.Gameplay.Classroom
                 return false;
             }
 
-            return save.CurrentDay == ScheduledGameplayDay;
+            return SemesterSchedule.IsNormalClassDay(save.Semester, save.CurrentDay);
         }
 
         private void BeginAttend(DailyActivityState activities)

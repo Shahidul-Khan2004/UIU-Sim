@@ -35,6 +35,9 @@ namespace UIU.Simulator.Gameplay.Assessment
     {
         public int semester, day;
         public string scheduledAssessment;
+        // JsonUtility maps nullable numbers to zero. Only FINAL permits displaying cgpa.
+        public float cgpa;
+        public string cgpaStatus;
         public CourseResult[] courses;
         public CourseResult Course(string id) => Array.Find(courses ?? Array.Empty<CourseResult>(), c => c.courseId == id);
     }

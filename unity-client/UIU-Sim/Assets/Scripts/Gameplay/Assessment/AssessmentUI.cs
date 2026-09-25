@@ -47,7 +47,7 @@ namespace UIU.Simulator.Gameplay.Assessment
                 { Label("No assessment is scheduled today."); Button("BACK", CloseModal); return; }
                 var component = course.Component(assessmentType);
                 if (component == null) { Fail("Assessment definition is unavailable."); return; }
-                Label(assessmentType == "QUIZ_1" || assessmentType == "QUIZ_2" ? "QUIZ TODAY" : "ASSESSMENT TODAY", 24);
+                Label(assessmentType.StartsWith("QUIZ") ? "QUIZ TODAY" : assessmentType == "MIDTERM" ? "MIDTERM EXAM" : "FINAL EXAM", 24);
                 Label($"{component.displayName}\n{component.maxMarks} Marks · {component.questionCount} Questions", 24, null, 90);
                 if (component.IsTerminal)
                 { Label($"{component.marksObtained} / {component.maxMarks} — {OutcomeLabel(component.state)}", 22, null, 80); }
