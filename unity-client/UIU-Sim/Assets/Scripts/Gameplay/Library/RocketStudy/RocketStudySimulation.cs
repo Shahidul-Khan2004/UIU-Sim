@@ -24,6 +24,8 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
         public enum RunState { Ready, Running, Finished, Cancelled }
         public const float Width = 1000f;
         public const float Height = 560f;
+        public const float PlayAreaBottom = -Height / 2f;
+        public const float PlayAreaTop = Height / 2f;
         public const float RocketX = -Width * 0.25f;
         public const float ObstacleWidth = 72f;
         private const double Step = 1d / 120d;
@@ -33,15 +35,15 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
             public int Id { get; internal set; }
             public float X { get; internal set; }
             public float GapCenter { get; internal set; }
-            public Rect Bottom(float gap) => new Rect(X - ObstacleWidth / 2f, -Height / 2f,
-                ObstacleWidth, GapCenter - gap / 2f + Height / 2f);
-            public Rect Top(float gap) => new Rect(X - ObstacleWidth / 2f, GapCenter + gap / 2f,
-                ObstacleWidth, Height / 2f - GapCenter - gap / 2f);
+            public Rect Bottom(float gap) => Rect.MinMaxRect(X - ObstacleWidth / 2f, PlayAreaBottom,
+                X + ObstacleWidth / 2f, GapCenter - gap / 2f);
+            public Rect Top(float gap) => Rect.MinMaxRect(X - ObstacleWidth / 2f, GapCenter + gap / 2f,
+                X + ObstacleWidth / 2f, PlayAreaTop);
         }
 
         private readonly List<Obstacle> obstacles = new List<Obstacle>();
         private readonly System.Random random;
-        private readonly float gravity, thrust, maxSpeed, obstacleSpeed, interval, padding;
+        private readonly float gravity, thrust, maxSpeed, obstacleSpeed, interval;
         private double elapsed;
         private double untilSpawn = 1d;
         private float previousGap;
@@ -54,6 +56,9 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
         public float VerticalVelocity { get; private set; }
         public Vector2 RocketSize { get; }
         public float GapSize { get; }
+        public float MinimumTowerHeight { get; }
+        public float MinGapCenter => PlayAreaBottom + MinimumTowerHeight + GapSize / 2f;
+        public float MaxGapCenter => PlayAreaTop - MinimumTowerHeight - GapSize / 2f;
         public int Score => CalculateScore(Elapsed, Duration);
         public IReadOnlyList<Obstacle> Obstacles => obstacles;
         public Rect RocketBounds => new Rect(RocketX - RocketSize.x / 2f, RocketY - RocketSize.y / 2f,
@@ -70,8 +75,9 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
             interval = Mathf.Max(0.5f, settings.spawnInterval);
             RocketSize = new Vector2(Mathf.Clamp(settings.rocketSize.x, 8f, 80f),
                 Mathf.Clamp(settings.rocketSize.y, 8f, 60f));
-            GapSize = Mathf.Clamp(settings.gapSize, RocketSize.y + 80f, Height - 40f);
-            padding = Mathf.Clamp(settings.verticalPadding, 0f, (Height - GapSize) / 2f);
+            float playableHeight = PlayAreaTop - PlayAreaBottom;
+            GapSize = Mathf.Clamp(settings.gapSize, RocketSize.y + 80f, playableHeight - 40f);
+            MinimumTowerHeight = Mathf.Clamp(settings.verticalPadding, 0f, (playableHeight - GapSize) / 2f);
             random = new System.Random(seed);
         }
 
@@ -114,10 +120,11 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
                     if (obstacles[i].X + ObstacleWidth / 2f < -Width / 2f) obstacles.RemoveAt(i);
                 }
 
-                float limit = (Height - RocketSize.y) / 2f;
-                if (RocketY <= -limit || RocketY >= limit)
+                float bottomLimit = PlayAreaBottom + RocketSize.y / 2f;
+                float topLimit = PlayAreaTop - RocketSize.y / 2f;
+                if (RocketY <= bottomLimit || RocketY >= topLimit)
                 {
-                    RocketY = Mathf.Clamp(RocketY, -limit, limit);
+                    RocketY = Mathf.Clamp(RocketY, bottomLimit, topLimit);
                     Finish();
                     break;
                 }
@@ -151,11 +158,10 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
 
         private void Spawn()
         {
-            float limit = (Height - GapSize) / 2f - padding;
             // Adjacent gaps overlap generously; the first one is centred for a forgiving introduction.
             float shift = Mathf.Min(80f, (GapSize - RocketSize.y) * 0.35f);
             float center = nextId == 0 ? 0f : Mathf.Clamp(previousGap + ((float)random.NextDouble() * 2f - 1f) * shift,
-                -limit, limit);
+                MinGapCenter, MaxGapCenter);
             obstacles.Add(new Obstacle { Id = nextId++, X = Width / 2f + ObstacleWidth / 2f, GapCenter = center });
             previousGap = center;
         }

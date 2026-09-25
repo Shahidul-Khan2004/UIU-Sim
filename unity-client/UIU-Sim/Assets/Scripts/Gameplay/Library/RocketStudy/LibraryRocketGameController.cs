@@ -21,6 +21,13 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
         private Action<LibraryStudyMinigameResult> onFinished;
         private int openedFrame;
         private bool inputReleased;
+        private static readonly Color[] BookColors =
+        {
+            new Color(0.76f, 0.35f, 0.16f),
+            new Color(0.22f, 0.48f, 0.47f),
+            new Color(0.48f, 0.34f, 0.46f),
+            new Color(0.33f, 0.43f, 0.59f)
+        };
 
         public RocketStudySimulation Simulation => simulation;
 
@@ -103,8 +110,8 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
                 if (!obstacleViews.TryGetValue(obstacle.Id, out RectTransform pair))
                 {
                     pair = CreateRect(obstacleLayer, "Study Distractions", Vector2.zero, Vector2.zero);
-                    CreateBlock(pair, "Bottom book stack", obstacle.Bottom(simulation.GapSize));
-                    CreateBlock(pair, "Top book stack", obstacle.Top(simulation.GapSize));
+                    CreateBookStack(pair, "Bottom book stack", obstacle.Bottom(simulation.GapSize), false, obstacle.Id);
+                    CreateBookStack(pair, "Top book stack", obstacle.Top(simulation.GapSize), true, obstacle.Id);
                     obstacleViews.Add(obstacle.Id, pair);
                 }
                 expiredViews.Remove(obstacle.Id);
@@ -143,7 +150,8 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
             Label(canvasRect, "Subtitle", $"Stay focused for {simulation.Duration:0.#} seconds.",
                 new Vector2(0f, 299f), new Vector2(1000f, 32f), 21f, UiTheme.Grey);
             playArea = CreateRect(canvasRect, "PlayArea", new Vector2(0f, -12f),
-                new Vector2(RocketStudySimulation.Width, RocketStudySimulation.Height));
+                new Vector2(RocketStudySimulation.Width,
+                    RocketStudySimulation.PlayAreaTop - RocketStudySimulation.PlayAreaBottom));
             playArea.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.08f, 0.10f, 1f);
             playArea.gameObject.AddComponent<RectMask2D>();
             obstacleLayer = CreateRect(playArea, "Obstacles", Vector2.zero, playArea.sizeDelta);
@@ -153,26 +161,58 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
                 simulation.RocketSize * new Vector2(0.2f, 0.45f));
             window.gameObject.AddComponent<Image>().color = UiTheme.White;
 
-            RectTransform hud = CreateRect(playArea, "Readout", new Vector2(0f, 251f), new Vector2(1000f, 58f));
+            // Keep the readout outside the simulation area: the old overlay obscured its top 58 units.
+            float readoutY = playArea.anchoredPosition.y + RocketStudySimulation.PlayAreaBottom - 8f - 21f;
+            RectTransform hud = CreateRect(canvasRect, "Readout", new Vector2(0f, readoutY),
+                new Vector2(RocketStudySimulation.Width, 42f));
             hud.gameObject.AddComponent<Image>().color = new Color(0.025f, 0.03f, 0.04f, 0.90f);
             timerLabel = Label(hud, "Timer", "", new Vector2(-240f, 0f), new Vector2(440f, 44f), 22f, UiTheme.White);
             scoreLabel = Label(hud, "Score", "", new Vector2(240f, 0f), new Vector2(440f, 44f), 22f, UiTheme.BrightOrange);
             readyLabel = Label(playArea, "Status", "Press SPACE or CLICK to begin.\nHold to rise • Release to fall\nAvoid the study distractions.",
                 new Vector2(50f, 20f), new Vector2(700f, 150f), 26f, UiTheme.White);
             Label(canvasRect, "Controls", "SPACE / CLICK / TOUCH — THRUST     •     ESC — CANCEL",
-                new Vector2(0f, -334f), new Vector2(1100f, 46f), 21f, UiTheme.Grey);
+                new Vector2(0f, readoutY - 21f - 8f - 16f), new Vector2(1100f, 32f), 21f, UiTheme.Grey);
         }
 
-        private static void CreateBlock(Transform parent, string name, Rect bounds)
+        private static void CreateBookStack(Transform parent, string name, Rect bounds, bool top, int id)
         {
-            RectTransform block = CreateRect(parent, name, new Vector2(0f, bounds.center.y), bounds.size);
-            block.gameObject.AddComponent<Image>().color = new Color(0.28f, 0.30f, 0.34f, 1f);
-            // A few built-in rectangles suggest stacked books without art or materials.
-            for (float y = 32f; y < bounds.height; y += 32f)
+            // X belongs to the moving pair; Y is already in playfield coordinates. No visual offset.
+            RectTransform stack = CreateRect(parent, name, new Vector2(0f, bounds.center.y), bounds.size);
+            int count = Mathf.CeilToInt(bounds.height / 24f);
+            if (count == 0) return;
+            // A separate seed keeps decorative variation out of the gameplay random sequence.
+            var random = new System.Random(unchecked(id * 397) ^ (top ? 7919 : 104729));
+            var thicknesses = new int[count];
+            int total = 0;
+            for (int i = 0; i < count; i++) total += thicknesses[i] = random.Next(18, 31);
+            int consumed = 0;
+            for (int i = 0; i < count; i++)
             {
-                RectTransform line = CreateRect(block, "Book edge", new Vector2(0f, -bounds.height / 2f + y),
-                    new Vector2(bounds.width - 8f, 2f));
-                line.gameObject.AddComponent<Image>().color = new Color(0.40f, 0.42f, 0.46f, 1f);
+                float start = (float)consumed / total;
+                consumed += thicknesses[i];
+                float end = (float)consumed / total;
+                // Fill the full height, including the last book, with no thin leftover strip or overhang.
+                RectTransform book = CreateRect(stack, "Book", Vector2.zero, Vector2.zero);
+                book.anchorMin = new Vector2(0f, top ? 1f - end : start);
+                book.anchorMax = new Vector2(1f, top ? 1f - start : end);
+                // At most two units of empty space per side; gap-facing and boundary books span the envelope.
+                bool fullWidth = i == 0 || i == count - 1;
+                book.offsetMin = new Vector2(fullWidth ? 0f : random.Next(0, 3), 0f);
+                book.offsetMax = new Vector2(fullWidth ? 0f : -random.Next(0, 3), 0f);
+                book.gameObject.AddComponent<Image>().color = BookColors[random.Next(BookColors.Length)];
+
+                RectTransform pages = CreateRect(book, "Pages", Vector2.zero, Vector2.zero);
+                pages.anchorMin = new Vector2(0f, 0.22f);
+                pages.anchorMax = new Vector2(1f, 0.78f);
+                pages.offsetMin = new Vector2(5f, 0f);
+                pages.offsetMax = new Vector2(-5f, 0f);
+                pages.gameObject.AddComponent<Image>().color = new Color(0.82f, 0.79f, 0.68f);
+                RectTransform spine = CreateRect(book, "Spine", Vector2.zero, Vector2.zero);
+                float side = i % 2 == 0 ? 0.08f : 0.86f;
+                spine.anchorMin = new Vector2(side, 0.12f);
+                spine.anchorMax = new Vector2(side + 0.06f, 0.88f);
+                spine.offsetMin = spine.offsetMax = Vector2.zero;
+                spine.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.15f, 0.19f, 0.8f);
             }
         }
 
