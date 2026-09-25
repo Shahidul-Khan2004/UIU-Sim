@@ -52,9 +52,9 @@ class PlayerDayControllerTest {
                         1,
                         List.of(
                                 new DaySummaryActivityResponse("GET_ID_CARD", "COMPLETED", "COMPLETED", 0, 0),
-                                new DaySummaryActivityResponse("BREAKFAST", "MISSED", "SKIP_BREAKFAST", -5, 0)
+                                new DaySummaryActivityResponse("BREAKFAST", "MISSED", "SKIP_BREAKFAST", -3, 0)
                         ),
-                        45,
+                        47,
                         50
                 )
         );
@@ -63,9 +63,9 @@ class PlayerDayControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.semester").value(1))
                 .andExpect(jsonPath("$.day").value(1))
-                .andExpect(jsonPath("$.totalAuraDelta").value(-5))
+                .andExpect(jsonPath("$.totalAuraDelta").value(-3))
                 .andExpect(jsonPath("$.activities[1].activityId").value("BREAKFAST"))
-                .andExpect(jsonPath("$.aura").value(45));
+                .andExpect(jsonPath("$.aura").value(47));
     }
 
     @Test

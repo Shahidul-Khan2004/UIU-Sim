@@ -158,6 +158,7 @@ class LibraryStudyServiceTest {
 
         assertThat(LibraryStudyDefinition.reputationForScore(score)).isEqualTo(expectedReward);
         assertThat(response.score()).isEqualTo(score);
+        assertThat(response.requestedReputationDelta()).isEqualTo(expectedReward);
         assertThat(response.reputationDelta()).isEqualTo(expectedReward);
         assertThat(response.appliedReputationDelta()).isEqualTo(expectedReward);
         assertThat(response.auraDelta()).isZero();
@@ -194,16 +195,27 @@ class LibraryStudyServiceTest {
     void complete_reputationStaysWithinBounds() {
         Jwt jwt = jwtWith("user_lib_cap");
         createSave(jwt);
-        stats(jwt).modifyStats(0, 48);
+        stats(jwt).modifyStats(0, 49);
         playerStatsRepository.saveAndFlush(stats(jwt));
         libraryStudyService.start(jwt);
 
         LibraryStudyResponse response = libraryStudyService.complete(jwt, new LibraryStudyCompleteRequest(100));
 
-        assertThat(response.reputationDelta()).isEqualTo(5);
+        assertThat(response.requestedReputationDelta()).isEqualTo(5);
+        assertThat(response.appliedReputationDelta()).isEqualTo(1);
+        assertThat(response.reputationDelta()).isEqualTo(1);
         assertThat(response.academicReputation()).isEqualTo(100);
         assertThat(stats(jwt).getAcademicReputation()).isEqualTo(100);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player(jwt).getId(), "LIBRARY_STUDY")
+                .orElseThrow().getReputationDelta()).isEqualTo(1);
         assertThat(stats(jwt).getAura()).isEqualTo(50);
+
+        playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("BREAKFAST", "POROTTA_WAIT"));
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.activities())
+                .filteredOn(a -> "LIBRARY_STUDY".equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(1));
     }
 
     @Test
@@ -215,9 +227,9 @@ class LibraryStudyServiceTest {
         DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
 
         assertThat(summary.activities()).noneMatch(a -> "LIBRARY_STUDY".equals(a.activityId()));
-        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-15);
-        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(35);
-        assertThat(stats(jwt).getAura()).isEqualTo(55);
+        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-12);
+        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(38);
+        assertThat(stats(jwt).getAura()).isEqualTo(53);
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player(jwt).getId(), "LIBRARY_STUDY")).isEmpty();
     }
 
@@ -231,9 +243,9 @@ class LibraryStudyServiceTest {
         DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
 
         assertThat(summary.activities()).noneMatch(a -> "LIBRARY_STUDY".equals(a.activityId()));
-        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-15);
-        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(35);
-        assertThat(stats(jwt).getAura()).isEqualTo(55);
+        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-12);
+        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(38);
+        assertThat(stats(jwt).getAura()).isEqualTo(53);
 
         var row = playerDayActivityRepository.findByPlayer_IdAndActivityId(player(jwt).getId(), "LIBRARY_STUDY").orElseThrow();
         assertThat(row.getStatus().name()).isEqualTo("IN_PROGRESS");
@@ -259,10 +271,10 @@ class LibraryStudyServiceTest {
         assertThat(summary.activities()).anySatisfy(activity -> {
             assertThat(activity.activityId()).isEqualTo("BREAKFAST");
             assertThat(activity.outcome()).isEqualTo("RICE");
-            assertThat(activity.auraDelta()).isEqualTo(5);
+            assertThat(activity.auraDelta()).isEqualTo(3);
         });
-        assertThat(stats(jwt).getAura()).isEqualTo(55);
-        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(39);
+        assertThat(stats(jwt).getAura()).isEqualTo(53);
+        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(42);
     }
 
     @Test
@@ -283,7 +295,7 @@ class LibraryStudyServiceTest {
         assertThat(restarted.alreadyStarted()).isFalse();
         assertThat(restarted.alreadyCompleted()).isFalse();
         assertThat(restarted.dayNumber()).isEqualTo(2);
-        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(37);
+        assertThat(stats(jwt).getAcademicReputation()).isEqualTo(40);
     }
 
     @Test

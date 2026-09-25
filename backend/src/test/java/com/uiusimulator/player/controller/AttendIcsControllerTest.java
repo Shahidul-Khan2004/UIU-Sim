@@ -50,17 +50,17 @@ class AttendIcsControllerTest {
                         "ATTENDING",
                         30,
                         0,
-                        4,
+                        2,
                         0,
-                        4,
+                        2,
                         0,
-                        4,
+                        2,
                         false,
                         true,
                         30000L,
                         1,
                         50,
-                        54
+                        52
                 ));
 
         mockMvc.perform(post("/api/players/me/activities/attend-ics/milestone")
@@ -70,8 +70,8 @@ class AttendIcsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activityId").value("ATTEND_ICS"))
                 .andExpect(jsonPath("$.milestoneSeconds").value(30))
-                .andExpect(jsonPath("$.reputationDelta").value(4))
-                .andExpect(jsonPath("$.academicReputation").value(54));
+                .andExpect(jsonPath("$.reputationDelta").value(2))
+                .andExpect(jsonPath("$.academicReputation").value(52));
     }
 
     @Test
@@ -81,24 +81,24 @@ class AttendIcsControllerTest {
                 "COMPLETED",
                 "PROXY",
                 0,
-                5,
+                3,
                 0,
-                5,
+                3,
                 0,
-                5,
+                3,
                 0,
                 false,
                 false,
                 0L,
                 1,
-                55,
+                53,
                 50
         ));
 
         mockMvc.perform(post("/api/players/me/activities/attend-ics/proxy").with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.outcome").value("PROXY"))
-                .andExpect(jsonPath("$.auraDelta").value(5))
+                .andExpect(jsonPath("$.auraDelta").value(3))
                 .andExpect(jsonPath("$.reputationDelta").value(0));
     }
 }

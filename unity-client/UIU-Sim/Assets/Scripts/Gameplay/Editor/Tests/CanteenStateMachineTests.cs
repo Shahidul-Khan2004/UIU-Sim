@@ -79,21 +79,22 @@ namespace UIU.Simulator.Gameplay.Tests
                     return;
                 }
 
+                // Mirror backend BreakfastOutcome configured values. This fake does not clamp.
                 int auraDelta = 0;
                 ActivityStatus status = ActivityStatus.Completed;
                 switch ((outcome ?? string.Empty).ToUpperInvariant())
                 {
                     case "RICE":
-                        auraDelta = 5;
+                        auraDelta = 3;
                         break;
                     case "POROTTA_WAIT":
                         auraDelta = 0;
                         break;
                     case "SKIP_LINE":
-                        auraDelta = -10;
+                        auraDelta = -6;
                         break;
                     case "SKIP_BREAKFAST":
-                        auraDelta = -5;
+                        auraDelta = -3;
                         status = ActivityStatus.Missed;
                         break;
                 }
@@ -194,7 +195,7 @@ namespace UIU.Simulator.Gameplay.Tests
         }
 
         [Test]
-        public void RiceRoute_CompletesBreakfastImmediately_Awards5Aura()
+        public void RiceRoute_CompletesBreakfastImmediately_Awards3Aura()
         {
             float initialAura = playerStats.Aura;
 
@@ -203,7 +204,7 @@ namespace UIU.Simulator.Gameplay.Tests
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
             Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 3f).Within(0.001f));
             Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("RICE"));
             Assert.That(breakfastCounter.IsQueueActive, Is.False);
         }
@@ -250,7 +251,7 @@ namespace UIU.Simulator.Gameplay.Tests
         }
 
         [Test]
-        public void PorottaRoute_SkipBreakfast_MissesActivity_Deducts5Aura()
+        public void PorottaRoute_SkipBreakfast_MissesActivity_Deducts3Aura()
         {
             float initialAura = playerStats.Aura;
 
@@ -261,14 +262,14 @@ namespace UIU.Simulator.Gameplay.Tests
             Assert.That(breakfastCounter.CurrentState, Is.EqualTo(CanteenBreakfastState.Completed));
             Assert.That(campusDayState.HasCompletedBreakfastEvent, Is.True);
             Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Missed));
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 5f).Within(0.001f));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 3f).Within(0.001f));
             Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("SKIP_BREAKFAST"));
             Assert.That(playerMovement.enabled, Is.True);
             Assert.That(firstPersonLook.enabled, Is.True);
         }
 
         [Test]
-        public void PorottaRoute_SkipLine_Completes_Deducts10Aura()
+        public void PorottaRoute_SkipLine_Completes_Deducts6Aura()
         {
             float initialAura = playerStats.Aura;
 
@@ -276,7 +277,7 @@ namespace UIU.Simulator.Gameplay.Tests
             InvokeMethod(breakfastCounter, "OnSkipLine");
 
             Assert.That(dailyActivityState.BreakfastStatus, Is.EqualTo(ActivityStatus.Completed));
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 10f).Within(0.001f));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 6f).Within(0.001f));
             Assert.That(fakeProgressSync.LastOutcome, Is.EqualTo("SKIP_LINE"));
             Assert.That(playerMovement.enabled, Is.True);
         }
@@ -327,7 +328,7 @@ namespace UIU.Simulator.Gameplay.Tests
                 0,
                 0,
                 1));
-            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 5);
+            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 3);
 
             dailyActivityState.ResetForNewDay(2);
 
@@ -401,11 +402,11 @@ namespace UIU.Simulator.Gameplay.Tests
         {
             float initialAura = playerStats.Aura;
             InvokeMethod(breakfastCounter, "OnSelectRice");
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 3f).Within(0.001f));
 
             InvokeMethod(breakfastCounter, "OnSelectRice");
             Assert.That(fakeProgressSync.ResolveCount, Is.EqualTo(1), "Second rice choice must be gated by resolved breakfast.");
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 5f).Within(0.001f));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura + 3f).Within(0.001f));
         }
 
         [Test]
@@ -534,11 +535,11 @@ namespace UIU.Simulator.Gameplay.Tests
                 }
 
                 Run(tests.InitialState_BreakfastNotCompleted_CounterInNotStartedState);
-                Run(tests.RiceRoute_CompletesBreakfastImmediately_Awards5Aura);
+                Run(tests.RiceRoute_CompletesBreakfastImmediately_Awards3Aura);
                 Run(tests.RiceRoute_SubsequentInteractionBlocked_ReturnsAlreadySortedMessage);
                 Run(tests.PorottaRoute_WaitUntilCompletion_CompletesBreakfast_0AuraDelta);
-                Run(tests.PorottaRoute_SkipBreakfast_MissesActivity_Deducts5Aura);
-                Run(tests.PorottaRoute_SkipLine_Completes_Deducts10Aura);
+                Run(tests.PorottaRoute_SkipBreakfast_MissesActivity_Deducts3Aura);
+                Run(tests.PorottaRoute_SkipLine_Completes_Deducts6Aura);
                 Run(tests.DefensiveTeardown_RestoresControls_DoesNotCompleteEvent_NoAuraDelta);
                 Run(tests.DailyActivityState_GetIdCard_StartsPendingAndCompletesOnce);
                 Run(tests.DailyActivityState_ResetForNewDay_PreservesGetIdCard);

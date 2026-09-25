@@ -147,7 +147,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         public void ResetForNewDay_PreservesIdOwnership_AndClearsBreakfast()
         {
             dailyActivityState.SetGetIdCardStatusForTesting(ActivityStatus.Completed, "COMPLETED");
-            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 5);
+            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Completed, "RICE", 3);
             saveState.SetStateForTesting(true, true);
             saveState.SetDayProgressForTesting(1, 1);
 
@@ -166,7 +166,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         public void Hud_ActivityColors_CompletedGreen_MissedRed_PendingNeutral()
         {
             dailyActivityState.SetGetIdCardStatusForTesting(ActivityStatus.Completed, "COMPLETED");
-            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Missed, "SKIP_BREAKFAST", -5);
+            dailyActivityState.SetBreakfastStatusForTesting(ActivityStatus.Missed, "SKIP_BREAKFAST", -3);
             saveState.SetDayProgressForTesting(1, 1);
 
             statsHud.enabled = false;
@@ -193,9 +193,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             DaySummaryActivity[] activities =
             {
                 new DaySummaryActivity(ActivityIds.GetIdCard, ActivityStatus.Completed, "COMPLETED", 0, 0),
-                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Missed, "SKIP_BREAKFAST", -5, 0)
+                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Missed, "SKIP_BREAKFAST", -3, 0)
             };
-            DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, -5, 0, 45, 50);
+            DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, -3, 0, 47, 50);
 
             summaryUi.ShowForTesting(summary);
 
@@ -214,9 +214,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             DaySummaryActivity[] activities =
             {
                 new DaySummaryActivity(ActivityIds.GetIdCard, ActivityStatus.Completed, "COMPLETED", 0, 0),
-                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Missed, "SKIP_BREAKFAST", -5, 0)
+                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Missed, "SKIP_BREAKFAST", -3, 0)
             };
-            DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, -5, 0, 45, 50);
+            DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, -3, 0, 47, 50);
 
             summaryUi.ShowForTesting(summary);
 
@@ -234,9 +234,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(header.text, Does.Contain("DAY 1 COMPLETE"));
             Assert.That(body, Does.Contain("[x] Get Your ID Card"));
             Assert.That(body, Does.Contain("[X] Have Breakfast"));
-            Assert.That(body, Does.Contain("Aura: -5"));
+            Assert.That(body, Does.Contain("Aura: -3"));
             Assert.That(totals.text, Does.Contain("TODAY'S TOTAL"));
-            Assert.That(totals.text, Does.Contain("Aura: -5"));
+            Assert.That(totals.text, Does.Contain("Aura: -3"));
             Assert.That(FindChild(summaryUi.transform, "ActivityScroll"), Is.Not.Null);
             Assert.That(FindChild(summaryUi.transform, "FooterRegion"), Is.Not.Null);
         }
@@ -251,17 +251,17 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                     ActivityIds.Breakfast,
                     i % 2 == 0 ? ActivityStatus.Completed : ActivityStatus.Missed,
                     i % 2 == 0 ? "RICE" : "SKIP_BREAKFAST",
-                    i % 2 == 0 ? 5 : -5,
+                    i % 2 == 0 ? 3 : -3,
                     0);
             }
 
             // Mix in classroom outcomes with long titles.
             activities[7] = new DaySummaryActivity(
-                ActivityIds.AttendIcs, ActivityStatus.Missed, "LEFT_EARLY", 0, -1);
+                ActivityIds.AttendIcs, ActivityStatus.Missed, "LEFT_EARLY", 0, -2);
             activities[8] = new DaySummaryActivity(
-                ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -5);
+                ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -4);
             activities[9] = new DaySummaryActivity(
-                ActivityIds.AttendDm, ActivityStatus.Completed, "PROXY", 5, 0);
+                ActivityIds.AttendDm, ActivityStatus.Completed, "PROXY", 3, 0);
 
             DayFinalizeResult summary = new DayFinalizeResult(1, 1, activities, 0, -6, 50, 44);
             summaryUi.ShowForTesting(summary);
@@ -284,7 +284,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             string body = summaryUi.GetActivityBodyTextForTesting();
             Assert.That(body, Does.Contain("Introduction to Computer Science"));
             Assert.That(body, Does.Contain("Proxy — Punched ID and Left"));
-            Assert.That(body, Does.Contain("Aura: +5 | Academic: 0"));
+            Assert.That(body, Does.Contain("Aura: +3 | Academic: 0"));
         }
 
         [Test]
@@ -344,11 +344,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 1,
                 new[]
                 {
-                    new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 5, 0)
+                    new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 3, 0)
                 },
-                5,
+                3,
                 0,
-                55,
+                53,
                 50));
 
             Button continueButton = FindButton(summaryUi.transform, "Button_Continue");
@@ -479,11 +479,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 1,
                 new[]
                 {
-                    new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 5, 0)
+                    new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 3, 0)
                 },
-                5,
+                3,
                 0,
-                55,
+                53,
                 50);
 
             summaryUi.ShowForTesting(summary);

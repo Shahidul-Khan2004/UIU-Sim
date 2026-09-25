@@ -116,7 +116,7 @@ namespace UIU.Simulator.Gameplay.Tests
         }
 
         [Test]
-        public void ForgotID_RequestsMinus5Aura_AndIssuesTemporaryID()
+        public void ForgotID_RequestsMinus3Aura_AndIssuesTemporaryID()
         {
             float initialAura = playerStats.Aura;
 
@@ -124,13 +124,13 @@ namespace UIU.Simulator.Gameplay.Tests
             InvokeMethod(receptionist, "OnForgotID");
 
             Assert.That(fakeProgressSync.RequestCount, Is.EqualTo(1));
-            Assert.That(fakeProgressSync.RequestedAuraDelta, Is.EqualTo(-5));
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 5f).Within(0.001f));
+            Assert.That(fakeProgressSync.RequestedAuraDelta, Is.EqualTo(-3));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 3f).Within(0.001f));
             Assert.That(playerInventory.TemporaryIDCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void LostID_RequestsMinus10Aura_AndIssuesTemporaryID()
+        public void LostID_RequestsMinus6Aura_AndIssuesTemporaryID()
         {
             float initialAura = playerStats.Aura;
 
@@ -138,8 +138,8 @@ namespace UIU.Simulator.Gameplay.Tests
             InvokeMethod(receptionist, "OnLostID");
 
             Assert.That(fakeProgressSync.RequestCount, Is.EqualTo(1));
-            Assert.That(fakeProgressSync.RequestedAuraDelta, Is.EqualTo(-10));
-            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 10f).Within(0.001f));
+            Assert.That(fakeProgressSync.RequestedAuraDelta, Is.EqualTo(-6));
+            Assert.That(playerStats.Aura, Is.EqualTo(initialAura - 6f).Within(0.001f));
             Assert.That(playerInventory.TemporaryIDCount, Is.EqualTo(1));
         }
 

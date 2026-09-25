@@ -137,7 +137,7 @@ class PlayerActivityServiceTest {
     }
 
     @Test
-    void resolve_rice_completesWithPlus5Aura() {
+    void resolve_rice_completesWithPlus3Aura() {
         Jwt jwt = jwtWith("user_act_rice");
         createSave(jwt);
 
@@ -148,13 +148,13 @@ class PlayerActivityServiceTest {
 
         assertThat(response.status()).isEqualTo("COMPLETED");
         assertThat(response.outcome()).isEqualTo("RICE");
-        assertThat(response.auraDelta()).isEqualTo(5);
+        assertThat(response.auraDelta()).isEqualTo(3);
         assertThat(response.alreadyResolved()).isFalse();
-        assertThat(response.aura()).isEqualTo(55);
+        assertThat(response.aura()).isEqualTo(53);
 
         Player player = playerRepository.findByClerkUserId("user_act_rice").orElseThrow();
         PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
-        assertThat(stats.getAura()).isEqualTo(55);
+        assertThat(stats.getAura()).isEqualTo(53);
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")).isPresent();
     }
 
@@ -174,7 +174,7 @@ class PlayerActivityServiceTest {
     }
 
     @Test
-    void resolve_skipLine_completesWithMinus10Aura() {
+    void resolve_skipLine_completesWithMinus6Aura() {
         Jwt jwt = jwtWith("user_act_skip_line");
         createSave(jwt);
 
@@ -184,12 +184,12 @@ class PlayerActivityServiceTest {
         );
 
         assertThat(response.status()).isEqualTo("COMPLETED");
-        assertThat(response.auraDelta()).isEqualTo(-10);
-        assertThat(response.aura()).isEqualTo(40);
+        assertThat(response.auraDelta()).isEqualTo(-6);
+        assertThat(response.aura()).isEqualTo(44);
     }
 
     @Test
-    void resolve_skipBreakfast_missedWithMinus5Aura() {
+    void resolve_skipBreakfast_missedWithMinus3Aura() {
         Jwt jwt = jwtWith("user_act_skip_bf");
         createSave(jwt);
 
@@ -200,8 +200,8 @@ class PlayerActivityServiceTest {
 
         assertThat(response.status()).isEqualTo("MISSED");
         assertThat(response.outcome()).isEqualTo("SKIP_BREAKFAST");
-        assertThat(response.auraDelta()).isEqualTo(-5);
-        assertThat(response.aura()).isEqualTo(45);
+        assertThat(response.auraDelta()).isEqualTo(-3);
+        assertThat(response.aura()).isEqualTo(47);
     }
 
     @Test
@@ -217,7 +217,7 @@ class PlayerActivityServiceTest {
 
         assertThat(second.alreadyResolved()).isTrue();
         assertThat(second.outcome()).isEqualTo("RICE");
-        assertThat(second.aura()).isEqualTo(55);
+        assertThat(second.aura()).isEqualTo(53);
 
         Player player = playerRepository.findByClerkUserId("user_act_dup").orElseThrow();
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")).isPresent();
@@ -225,7 +225,7 @@ class PlayerActivityServiceTest {
                 .stream()
                 .filter(a -> "BREAKFAST".equals(a.getActivityId()))
                 .count()).isEqualTo(1);
-        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(55);
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(53);
     }
 
     @Test
@@ -277,6 +277,47 @@ class PlayerActivityServiceTest {
 
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")).isEmpty();
         assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(50);
+    }
+
+    @Test
+    void resolve_rice_storesActualAppliedDeltaWhenClamped() {
+        Jwt jwt = jwtWith("user_act_rice_clamp");
+        createSave(jwt);
+        Player player = playerRepository.findByClerkUserId("user_act_rice_clamp").orElseThrow();
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(49, 0);
+        playerStatsRepository.saveAndFlush(stats);
+
+        ActivityResolveResponse response = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("BREAKFAST", "RICE")
+        );
+
+        assertThat(response.auraDelta()).isEqualTo(1);
+        assertThat(response.aura()).isEqualTo(100);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")
+                .orElseThrow().getAuraDelta()).isEqualTo(1);
+        assertThat(response.aura()).isEqualTo(100);
+    }
+
+    @Test
+    void resolve_skipBreakfast_storesActualAppliedDeltaWhenClamped() {
+        Jwt jwt = jwtWith("user_act_skip_clamp");
+        createSave(jwt);
+        Player player = playerRepository.findByClerkUserId("user_act_skip_clamp").orElseThrow();
+        PlayerStats stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(-49, 0);
+        playerStatsRepository.saveAndFlush(stats);
+
+        ActivityResolveResponse response = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("BREAKFAST", "SKIP_BREAKFAST")
+        );
+
+        assertThat(response.auraDelta()).isEqualTo(-1);
+        assertThat(response.aura()).isEqualTo(0);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")
+                .orElseThrow().getAuraDelta()).isEqualTo(-1);
     }
 
     private void createSave(Jwt jwt) {

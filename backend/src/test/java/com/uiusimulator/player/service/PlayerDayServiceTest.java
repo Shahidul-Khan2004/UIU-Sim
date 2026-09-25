@@ -83,14 +83,14 @@ class PlayerDayServiceTest {
 
         assertThat(summary.semester()).isEqualTo(1);
         assertThat(summary.day()).isEqualTo(1);
-        assertThat(summary.totalAuraDelta()).isEqualTo(5);
-        assertThat(summary.aura()).isEqualTo(55);
+        assertThat(summary.totalAuraDelta()).isEqualTo(3);
+        assertThat(summary.aura()).isEqualTo(53);
         assertThat(summary.activities())
                 .filteredOn(a -> "BREAKFAST".equals(a.activityId()))
                 .first()
                 .satisfies(a -> {
                     assertThat(a.status()).isEqualTo("COMPLETED");
-                    assertThat(a.auraDelta()).isEqualTo(5);
+                    assertThat(a.auraDelta()).isEqualTo(3);
                 });
         assertThat(summary.activities())
                 .filteredOn(a -> "GET_ID_CARD".equals(a.activityId()))
@@ -108,12 +108,12 @@ class PlayerDayServiceTest {
         DayFinalizeResponse first = playerDayService.finalizeCurrentDay(jwt);
         DayFinalizeResponse second = playerDayService.finalizeCurrentDay(jwt);
 
-        assertThat(first.aura()).isEqualTo(45);
-        assertThat(second.aura()).isEqualTo(45);
-        assertThat(second.totalAuraDelta()).isEqualTo(-5);
+        assertThat(first.aura()).isEqualTo(47);
+        assertThat(second.aura()).isEqualTo(47);
+        assertThat(second.totalAuraDelta()).isEqualTo(-3);
         assertThat(playerStatsRepository.findByPlayerId(
                 playerRepository.findByClerkUserId("user_day_missed").orElseThrow().getId()
-        ).orElseThrow().getAura()).isEqualTo(45);
+        ).orElseThrow().getAura()).isEqualTo(47);
     }
 
     @Test
@@ -129,10 +129,50 @@ class PlayerDayServiceTest {
                 .satisfies(a -> {
                     assertThat(a.status()).isEqualTo("MISSED");
                     assertThat(a.outcome()).isEqualTo("SKIP_BREAKFAST");
-                    assertThat(a.auraDelta()).isEqualTo(-5);
+                    assertThat(a.auraDelta()).isEqualTo(-3);
                 });
-        assertThat(summary.totalAuraDelta()).isEqualTo(-5);
-        assertThat(summary.aura()).isEqualTo(45);
+        assertThat(summary.totalAuraDelta()).isEqualTo(-3);
+        assertThat(summary.aura()).isEqualTo(47);
+    }
+
+    @Test
+    void finalize_riceClamp_summaryUsesActualAppliedAura() {
+        Jwt jwt = jwtWith("user_day_rice_clamp");
+        createSave(jwt);
+        Player player = playerRepository.findByClerkUserId("user_day_rice_clamp").orElseThrow();
+        var stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(49, 0);
+        playerStatsRepository.saveAndFlush(stats);
+
+        playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("BREAKFAST", "RICE"));
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+
+        assertThat(summary.activities())
+                .filteredOn(a -> "BREAKFAST".equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.auraDelta()).isEqualTo(1));
+        assertThat(summary.totalAuraDelta()).isEqualTo(1);
+        assertThat(summary.aura()).isEqualTo(100);
+    }
+
+    @Test
+    void finalize_skipBreakfastClamp_summaryUsesActualAppliedAura() {
+        Jwt jwt = jwtWith("user_day_skip_clamp");
+        createSave(jwt);
+        Player player = playerRepository.findByClerkUserId("user_day_skip_clamp").orElseThrow();
+        var stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(-49, 0);
+        playerStatsRepository.saveAndFlush(stats);
+
+        playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("BREAKFAST", "SKIP_BREAKFAST"));
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+
+        assertThat(summary.activities())
+                .filteredOn(a -> "BREAKFAST".equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.auraDelta()).isEqualTo(-1));
+        assertThat(summary.totalAuraDelta()).isEqualTo(-1);
+        assertThat(summary.aura()).isEqualTo(0);
     }
 
     @Test
@@ -143,15 +183,15 @@ class PlayerDayServiceTest {
         DayFinalizeResponse first = playerDayService.finalizeCurrentDay(jwt);
         DayFinalizeResponse second = playerDayService.finalizeCurrentDay(jwt);
 
-        assertThat(first.aura()).isEqualTo(45);
-        assertThat(second.aura()).isEqualTo(45);
+        assertThat(first.aura()).isEqualTo(47);
+        assertThat(second.aura()).isEqualTo(47);
         assertThat(second.activities())
                 .filteredOn(a -> "BREAKFAST".equals(a.activityId()))
                 .hasSize(1);
 
         Player player = playerRepository.findByClerkUserId("user_day_dup_final").orElseThrow();
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST")).isPresent();
-        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(45);
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(47);
     }
 
     @Test
@@ -167,7 +207,7 @@ class PlayerDayServiceTest {
         assertThat(advanced.semester()).isEqualTo(1);
         assertThat(advanced.currentDay()).isEqualTo(2);
         assertThat(advanced.idCardIssued()).isTrue();
-        assertThat(advanced.aura()).isEqualTo(55);
+        assertThat(advanced.aura()).isEqualTo(53);
 
         Player player = playerRepository.findByClerkUserId("user_day_adv").orElseThrow();
         PlayerSave save = playerSaveRepository.findByPlayerId(player.getId()).orElseThrow();
