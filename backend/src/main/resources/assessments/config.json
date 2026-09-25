@@ -51,6 +51,21 @@
       "semester": 1,
       "day": 2,
       "type": "QUIZ_1"
+    },
+    {
+      "semester": 1,
+      "day": 3,
+      "type": "MIDTERM"
+    },
+    {
+      "semester": 1,
+      "day": 5,
+      "type": "QUIZ_2"
+    },
+    {
+      "semester": 1,
+      "day": 6,
+      "type": "FINAL"
     }
   ]
 }

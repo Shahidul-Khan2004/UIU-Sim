@@ -76,5 +76,31 @@
     ],
     "correctAnswer": 2,
     "tier": "HARD"
+  },
+  {
+    "id": "SAMPLE-ICS-07",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] Which unit contains eight bits?",
+    "answers": [
+      "Byte",
+      "Kilobyte",
+      "Nibble",
+      "Megabyte"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ICS-08",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] Which data structure removes the most recently added item first?",
+    "answers": [
+      "Queue",
+      "Stack",
+      "Set",
+      "Graph"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
   }
 ]

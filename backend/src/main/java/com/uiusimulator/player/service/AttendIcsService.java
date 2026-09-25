@@ -469,7 +469,7 @@ public class AttendIcsService {
         if (save.getDepartment() == null || !"CSE".equalsIgnoreCase(save.getDepartment().getCode())) {
             throw new IllegalArgumentException("Only CSE students can resolve " + course.courseName() + ".");
         }
-        if (save.getCurrentDay() != course.scheduledDay()) {
+        if (!ClassroomCourseDefinition.isNormalClassDay(save.getSemester(), save.getCurrentDay())) {
             throw new IllegalArgumentException(
                     course.courseName() + " is not scheduled on day " + save.getCurrentDay() + "."
             );
