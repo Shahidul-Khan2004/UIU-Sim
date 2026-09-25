@@ -149,7 +149,7 @@ namespace UIU.Simulator.UI
         /// </summary>
         public void HandleEscape()
         {
-            if (isNavigating)
+            if (isNavigating || LibraryStudyUI.BlocksGameplay)
             {
                 return;
             }
@@ -198,7 +198,7 @@ namespace UIU.Simulator.UI
 
         public void Open()
         {
-            if (IsOpen || isNavigating)
+            if (IsOpen || isNavigating || LibraryStudyUI.BlocksGameplay)
             {
                 return;
             }
@@ -322,7 +322,8 @@ namespace UIU.Simulator.UI
                 || IdCardUI.IsOpen
                 || DailySummaryUI.IsOpen
                 || ClassroomChoiceUI.IsOpen
-                || ClassroomLectureUI.IsOpen;
+                || ClassroomLectureUI.IsOpen
+                || LibraryStudyUI.BlocksGameplay;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)

@@ -23,6 +23,8 @@ namespace UIU.Simulator.Gameplay.UI
 
         public static LibraryStudyUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
+        // Stays true while the panel is hidden for START, gameplay, COMPLETE, and scene cleanup.
+        public static bool BlocksGameplay => Instance != null && Instance.ownsGameplayLock;
 
         private GameObject overlayRoot;
         private GameObject panelRoot;
@@ -30,6 +32,8 @@ namespace UIU.Simulator.Gameplay.UI
         private Action onBack;
         private int openedFrame = -1;
         private bool isArmed;
+        private TextMeshProUGUI promptLabel, limitLabel, startLabel;
+        private Button startButton;
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
@@ -104,6 +108,9 @@ namespace UIU.Simulator.Gameplay.UI
         public void Show(Action onStartStudy, Action onBackChoice)
         {
             EnsureEventSystem();
+            promptLabel.text = "Spend some time studying?";
+            limitLabel.text = "You can study once per day.";
+            startLabel.text = "START STUDY";
             onStart = onStartStudy;
             onBack = onBackChoice;
             overlayRoot.SetActive(true);
@@ -112,14 +119,26 @@ namespace UIU.Simulator.Gameplay.UI
             openedFrame = Time.frameCount;
             isArmed = false;
             LockGameplayControls();
+            EventSystem.current?.SetSelectedGameObject(startButton.gameObject);
+        }
+
+        public void ShowRetry(int score, Action onRetry, Action onBackChoice)
+        {
+            Show(onRetry, onBackChoice);
+            promptLabel.text = $"Save your study score: {score}/100?";
+            limitLabel.text = "Your score is kept for today. No replay is needed.";
+            startLabel.text = "RETRY SAVE";
         }
 
         /// <summary>
         /// Closes the panel. When <paramref name="restoreGameplay"/> is false, controls stay locked
-        /// so a future minigame can take over without a gameplay frame in between.
+        /// so the minigame can take over without a gameplay frame in between.
         /// </summary>
         public void Hide(bool restoreGameplay = true)
         {
+            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null
+                && EventSystem.current.currentSelectedGameObject.transform.IsChildOf(transform))
+                EventSystem.current.SetSelectedGameObject(null);
             HideImmediate();
             onStart = null;
             onBack = null;
@@ -289,9 +308,10 @@ namespace UIU.Simulator.Gameplay.UI
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             CreateLabel(panelRoot.transform, "Title", "LIBRARY STUDY", 28f, UiTheme.BrightOrange);
-            CreateLabel(panelRoot.transform, "Prompt", "Spend some time studying?", 22f, UiTheme.White);
-            CreateLabel(panelRoot.transform, "Limit", "You can study once per day.", 18f, UiTheme.Grey);
-            CreateButton(panelRoot.transform, "StartStudyButton", "START STUDY", InvokeStart);
+            promptLabel = CreateLabel(panelRoot.transform, "Prompt", "Spend some time studying?", 22f, UiTheme.White);
+            limitLabel = CreateLabel(panelRoot.transform, "Limit", "You can study once per day.", 18f, UiTheme.Grey);
+            startButton = CreateButton(panelRoot.transform, "StartStudyButton", "START STUDY", InvokeStart);
+            startLabel = startButton.GetComponentInChildren<TextMeshProUGUI>();
             CreateButton(panelRoot.transform, "BackButton", "BACK", InvokeBack);
         }
 
@@ -310,7 +330,7 @@ namespace UIU.Simulator.Gameplay.UI
             return go;
         }
 
-        private static void CreateLabel(Transform parent, string name, string text, float size, Color color)
+        private static TextMeshProUGUI CreateLabel(Transform parent, string name, string text, float size, Color color)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -325,9 +345,10 @@ namespace UIU.Simulator.Gameplay.UI
             label.fontStyle = FontStyles.Bold;
             label.textWrappingMode = TextWrappingModes.Normal;
             label.raycastTarget = false;
+            return label;
         }
 
-        private static void CreateButton(Transform parent, string name, string label, Action onClick)
+        private static Button CreateButton(Transform parent, string name, string label, Action onClick)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -352,6 +373,7 @@ namespace UIU.Simulator.Gameplay.UI
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.fontStyle = FontStyles.Bold;
             tmp.raycastTarget = false;
+            return button;
         }
 
         private static void EnsureEventSystem()
