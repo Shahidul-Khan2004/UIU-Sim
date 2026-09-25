@@ -9,6 +9,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace UIU.Simulator.Gameplay.Editor.Tests
@@ -142,6 +143,218 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                     run.Advance(1f / 60f, run.RocketY + run.VerticalVelocity * 0.3f < 0f);
                 Assert.That(run.Score, Is.EqualTo(100), $"Seed {seed}");
             }
+        }
+
+        [TestCase(280f, 36f)]
+        [TestCase(102f, 36f)]
+        [TestCase(520f, 36f)]
+        [TestCase(280f, 0f)]
+        [TestCase(280f, 1000f)]
+        public void GeneratedGaps_RespectSharedBoundsAndMinimumTowers(float gap, float padding)
+        {
+            MethodInfo spawn = typeof(RocketStudySimulation).GetMethod("Spawn", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo previousGap = typeof(RocketStudySimulation).GetField("previousGap", BindingFlags.NonPublic | BindingFlags.Instance);
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var run = new RocketStudySimulation(new RocketStudySettings { gapSize = gap, verticalPadding = padding }, seed);
+                // Invoke generation directly to cover long sequences independently of player deaths.
+                for (int i = 0; i < 100; i++)
+                {
+                    // Force both clamped extremes as well as ordinary seeded random walks.
+                    if (i == 1 || i == 2) previousGap.SetValue(run, i == 1 ? float.MinValue : float.MaxValue);
+                    spawn.Invoke(run, null);
+                    var obstacle = run.Obstacles.Last();
+                    Rect bottom = obstacle.Bottom(run.GapSize), top = obstacle.Top(run.GapSize);
+                    Assert.That(obstacle.GapCenter, Is.InRange(run.MinGapCenter, run.MaxGapCenter));
+                    if (i == 1) Assert.That(obstacle.GapCenter, Is.EqualTo(run.MinGapCenter));
+                    if (i == 2) Assert.That(obstacle.GapCenter, Is.EqualTo(run.MaxGapCenter));
+                    Assert.That(bottom.yMin, Is.EqualTo(RocketStudySimulation.PlayAreaBottom).Within(0.001f));
+                    Assert.That(top.yMax, Is.EqualTo(RocketStudySimulation.PlayAreaTop).Within(0.001f));
+                    Assert.That(bottom.height, Is.GreaterThanOrEqualTo(run.MinimumTowerHeight - 0.001f));
+                    Assert.That(top.height, Is.GreaterThanOrEqualTo(run.MinimumTowerHeight - 0.001f));
+                    Assert.That(top.yMin - bottom.yMax, Is.EqualTo(run.GapSize).Within(0.001f));
+                }
+            }
+        }
+
+        [Test]
+        public void SharedBounds_PreserveExistingSeededGapDifficulty()
+        {
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var settings = new RocketStudySettings();
+                var run = new RocketStudySimulation(settings, seed);
+                var random = new System.Random(seed);
+                float previous = 0f;
+                float oldLimit = (RocketStudySimulation.Height - settings.gapSize) / 2f - settings.verticalPadding;
+                for (int i = 0; i < 100; i++)
+                {
+                    float expected = i == 0 ? 0f : Mathf.Clamp(previous + ((float)random.NextDouble() * 2f - 1f) * 80f,
+                        -oldLimit, oldLimit);
+                    typeof(RocketStudySimulation).GetMethod("Spawn", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(run, null);
+                    Assert.That(run.Obstacles.Last().GapCenter, Is.EqualTo(expected));
+                    previous = expected;
+                }
+            }
+        }
+
+        [TestCase(0f)]
+        [TestCase(0.5f)]
+        [TestCase(32.5f)]
+        [TestCase(96.5f)]
+        [TestCase(244f)]
+        [TestCase(458f)]
+        public void Books_FillTowerInCorrectDirectionAndKeepEveryDetailInside(float height)
+        {
+            var host = new GameObject("Book bounds test", typeof(RectTransform));
+            try
+            {
+                foreach (bool top in new[] { false, true })
+                {
+                    float min = top ? RocketStudySimulation.PlayAreaTop - height : RocketStudySimulation.PlayAreaBottom;
+                    var bounds = new Rect(-36f, min, 72f, height);
+                    typeof(LibraryRocketGameController).GetMethod("CreateBookStack", BindingFlags.NonPublic | BindingFlags.Static)
+                        .Invoke(null, new object[] { host.transform, "Stack", bounds, top, 17 });
+                    var stack = (RectTransform)host.transform.GetChild(host.transform.childCount - 1);
+                    AssertRectEqual(BoundsIn(stack, host.transform), bounds);
+                    Assert.That(stack.childCount, Is.EqualTo(Mathf.CeilToInt(height / 24f)));
+                    float cursor = top ? bounds.yMax : bounds.yMin;
+                    foreach (RectTransform book in stack)
+                    {
+                        Rect bookBounds = BoundsIn(book, host.transform);
+                        AssertInside(bookBounds, bounds);
+                        Assert.That(bookBounds.width, Is.GreaterThanOrEqualTo(bounds.width - 4f));
+                        Assert.That(top ? bookBounds.yMax : bookBounds.yMin, Is.EqualTo(cursor).Within(0.001f));
+                        cursor = top ? bookBounds.yMin : bookBounds.yMax;
+                        Assert.That(book.Find("Pages"), Is.Not.Null);
+                        Assert.That(book.Find("Spine"), Is.Not.Null);
+                        foreach (RectTransform detail in book)
+                            AssertInside(BoundsIn(detail, host.transform), bookBounds);
+                    }
+                    Assert.That(cursor, Is.EqualTo(top ? bounds.yMin : bounds.yMax).Within(0.001f));
+                }
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+
+        [Test]
+        public void Controller_AlignsTowersWithSimulationAndKeepsReadoutOutsidePlayfield()
+        {
+            var host = new GameObject("Visual alignment test");
+            try
+            {
+                var controller = host.AddComponent<LibraryRocketGameController>();
+                typeof(LibraryRocketGameController).GetField("settings", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .SetValue(controller, new RocketStudySettings { gravity = 0f });
+                controller.Open(_ => { });
+                var run = controller.Simulation;
+                var area = host.GetComponentsInChildren<RectTransform>().Single(t => t.name == "PlayArea");
+                var hud = host.GetComponentsInChildren<RectTransform>().Single(t => t.name == "Readout");
+                Assert.That(area.rect.yMin, Is.EqualTo(RocketStudySimulation.PlayAreaBottom));
+                Assert.That(area.rect.yMax, Is.EqualTo(RocketStudySimulation.PlayAreaTop));
+                Assert.That(BoundsIn(hud, area).Overlaps(area.rect), Is.False, "HUD must not conceal the actual top boundary.");
+                run.Begin();
+                for (int i = 0; i < 30; i++)
+                {
+                    run.Advance(1f, false);
+                    Render(controller);
+                    var pairs = area.Find("Obstacles").Cast<Transform>().ToArray();
+                    Assert.That(pairs.Length, Is.EqualTo(run.Obstacles.Count));
+                    for (int j = 0; j < pairs.Length; j++)
+                    {
+                        var bottom = (RectTransform)pairs[j].Find("Bottom book stack");
+                        var top = (RectTransform)pairs[j].Find("Top book stack");
+                        Rect bottomBounds = run.Obstacles[j].Bottom(run.GapSize), topBounds = run.Obstacles[j].Top(run.GapSize);
+                        AssertRectEqual(BoundsIn(bottom, area), bottomBounds);
+                        AssertRectEqual(BoundsIn(top, area), topBounds);
+                        foreach (RectTransform visual in bottom.GetComponentsInChildren<RectTransform>())
+                            AssertInside(BoundsIn(visual, area), bottomBounds);
+                        foreach (RectTransform visual in top.GetComponentsInChildren<RectTransform>())
+                            AssertInside(BoundsIn(visual, area), topBounds);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+
+        [Test]
+        public void Controller_RemovesAllBookDescendantsOnExpiryAndCancellation()
+        {
+            var host = new GameObject("Book cleanup test");
+            try
+            {
+                var controller = host.AddComponent<LibraryRocketGameController>();
+                typeof(LibraryRocketGameController).GetField("settings", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .SetValue(controller, new RocketStudySettings { gravity = 0f });
+                controller.Open(_ => { });
+                controller.Simulation.Begin();
+                controller.Simulation.Advance(1.1f, false);
+                Render(controller);
+                var firstPair = host.GetComponentsInChildren<RectTransform>().First(t => t.name == "Study Distractions");
+                var descendants = firstPair.GetComponentsInChildren<RectTransform>();
+                Assert.That(descendants.Count(t => t.name == "Book"), Is.GreaterThan(0));
+                controller.Simulation.Advance(7f, false);
+                Render(controller);
+                Assert.That(descendants.All(t => t == null), Is.True);
+                Assert.That(controller.Simulation.Obstacles.All(o => o.Id != 0), Is.True);
+                controller.Simulation.Cancel();
+                Assert.That(host.GetComponentsInChildren<RectTransform>().Any(t => t.name == "Book"), Is.False);
+                Assert.That(controller.Simulation.Obstacles, Is.Empty);
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+
+        [Test]
+        public void BookVariation_IsDeterministicAndUsesMultipleCoverStyles()
+        {
+            var host = new GameObject("Book variation test", typeof(RectTransform));
+            try
+            {
+                var create = typeof(LibraryRocketGameController).GetMethod("CreateBookStack", BindingFlags.NonPublic | BindingFlags.Static);
+                for (int i = 0; i < 2; i++)
+                    create.Invoke(null, new object[] { host.transform, "Stack", new Rect(-36f, -280f, 72f, 244f), false, 17 });
+                var first = host.transform.GetChild(0).GetComponentsInChildren<Image>();
+                var second = host.transform.GetChild(1).GetComponentsInChildren<Image>();
+                Assert.That(first.Length, Is.EqualTo(second.Length));
+                for (int i = 0; i < first.Length; i++)
+                {
+                    Assert.That(first[i].color, Is.EqualTo(second[i].color));
+                    AssertRectEqual(BoundsIn(first[i].rectTransform, host.transform), BoundsIn(second[i].rectTransform, host.transform));
+                }
+                var books = first.Where(b => b.name == "Book").ToArray();
+                Assert.That(books.Select(b => b.color).Distinct().Count(), Is.InRange(3, 4));
+                Assert.That(books.Select(b => b.rectTransform.rect.height).Distinct().Count(), Is.GreaterThan(1));
+                Assert.That(books.Select(b => b.rectTransform.rect.width).Distinct().Count(), Is.GreaterThan(1));
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+
+        private static void Render(LibraryRocketGameController controller) =>
+            typeof(LibraryRocketGameController).GetMethod("Render", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(controller, null);
+
+        private static Rect BoundsIn(RectTransform rect, Transform space)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Vector3 min = space.InverseTransformPoint(corners[0]);
+            Vector3 max = space.InverseTransformPoint(corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private static void AssertRectEqual(Rect actual, Rect expected)
+        {
+            Assert.That(actual.xMin, Is.EqualTo(expected.xMin).Within(0.001f));
+            Assert.That(actual.xMax, Is.EqualTo(expected.xMax).Within(0.001f));
+            Assert.That(actual.yMin, Is.EqualTo(expected.yMin).Within(0.001f));
+            Assert.That(actual.yMax, Is.EqualTo(expected.yMax).Within(0.001f));
+        }
+
+        private static void AssertInside(Rect inner, Rect outer)
+        {
+            Assert.That(inner.xMin, Is.GreaterThanOrEqualTo(outer.xMin - 0.001f));
+            Assert.That(inner.xMax, Is.LessThanOrEqualTo(outer.xMax + 0.001f));
+            Assert.That(inner.yMin, Is.GreaterThanOrEqualTo(outer.yMin - 0.001f));
+            Assert.That(inner.yMax, Is.LessThanOrEqualTo(outer.yMax + 0.001f));
         }
 
         [Test]
