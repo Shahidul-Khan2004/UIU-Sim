@@ -89,4 +89,37 @@ namespace UIU.Simulator.Gameplay.Activities
             AcademicReputation = academicReputation;
         }
     }
+
+    /// <summary>
+    /// Authoritative Library Study attempt returned by start/complete.
+    /// Stats are absolute server values, never a client-side reputation delta.
+    /// </summary>
+    public readonly struct LibraryStudySessionResult
+    {
+        public ActivityRecord Record { get; }
+        public int Score { get; }
+        public int AppliedReputationDelta { get; }
+        public bool AlreadyStarted { get; }
+        public bool AlreadyCompleted { get; }
+        public float Aura { get; }
+        public float AcademicReputation { get; }
+
+        public LibraryStudySessionResult(
+            ActivityRecord record,
+            int score,
+            int appliedReputationDelta,
+            bool alreadyStarted,
+            bool alreadyCompleted,
+            float aura,
+            float academicReputation)
+        {
+            Record = record;
+            Score = score;
+            AppliedReputationDelta = appliedReputationDelta;
+            AlreadyStarted = alreadyStarted;
+            AlreadyCompleted = alreadyCompleted;
+            Aura = aura;
+            AcademicReputation = academicReputation;
+        }
+    }
 }

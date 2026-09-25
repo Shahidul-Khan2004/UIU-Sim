@@ -24,7 +24,7 @@ namespace UIU.Simulator.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerStats))]
-    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync
+    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync, ILibraryStudyProgressSync
     {
         private const string ActivitiesPath = "api/players/me/activities";
         private const string ResolvePath = "api/players/me/activities/resolve";
@@ -36,6 +36,8 @@ namespace UIU.Simulator.Gameplay.Player
         private const string AttendIcsMilestonePath = "api/players/me/activities/attend-ics/milestone";
         private const string AttendIcsLeavePath = "api/players/me/activities/attend-ics/leave-early";
         private const string AttendIcsProxyPath = "api/players/me/activities/attend-ics/proxy";
+        private const string LibraryStudyStartPath = "api/players/me/activities/library-study/start";
+        private const string LibraryStudyCompletePath = "api/players/me/activities/library-study/complete";
 
         private PlayerStats playerStats;
         private PlayerInventory playerInventory;
@@ -246,6 +248,8 @@ namespace UIU.Simulator.Gameplay.Player
 
             bool breakfastFound = false;
             bool getIdCardFound = false;
+            bool libraryStudyFound = false;
+            ActivityRecord libraryStudyRecord = default;
             var presentClassrooms = new System.Collections.Generic.List<string>();
             if (dto.activities != null)
             {
@@ -281,6 +285,14 @@ namespace UIU.Simulator.Gameplay.Player
                         continue;
                     }
 
+                    if (activity.activityId == ActivityIds.LibraryStudy)
+                    {
+                        libraryStudyFound = true;
+                        libraryStudyRecord = record;
+                        dailyActivityState?.ApplyServerActivity(record);
+                        continue;
+                    }
+
                     if (activity.activityId != ActivityIds.Breakfast)
                     {
                         continue;
@@ -302,15 +314,27 @@ namespace UIU.Simulator.Gameplay.Player
                     || dailyActivityState.DayNumber != dto.dayNumber)
                 {
                     dailyActivityState.ResetForNewDay(dto.dayNumber);
+                    if (libraryStudyFound)
+                    {
+                        dailyActivityState.ApplyServerActivity(libraryStudyRecord);
+                    }
                 }
                 else
                 {
                     dailyActivityState.SetDayNumber(dto.dayNumber);
+                    if (!libraryStudyFound)
+                    {
+                        dailyActivityState.ClearLibraryStudy();
+                    }
                 }
             }
             else if (dto.dayNumber > 0)
             {
                 dailyActivityState?.SetDayNumber(dto.dayNumber);
+                if (!libraryStudyFound)
+                {
+                    dailyActivityState?.ClearLibraryStudy();
+                }
             }
 
             if (breakfastFound && dailyActivityState != null && dto.dayNumber > 0)
@@ -865,6 +889,149 @@ namespace UIU.Simulator.Gameplay.Player
         private static string ClassroomActionPath(string activityId, string action)
         {
             return "api/players/me/activities/classroom/" + activityId + "/" + action;
+        }
+
+        public void RequestLibraryStudyStart(Action<LibraryStudySessionResult> onSuccess, Action onFailure)
+        {
+            StartLibraryStudyMutation(LibraryStudyStartPath, "{}", onSuccess, onFailure);
+        }
+
+        public void RequestLibraryStudyComplete(
+            int score,
+            Action<LibraryStudySessionResult> onSuccess,
+            Action onFailure)
+        {
+            string body = JsonUtility.ToJson(new ApiClient.LibraryStudyCompleteRequestDto(score));
+            StartLibraryStudyMutation(LibraryStudyCompletePath, body, onSuccess, onFailure);
+        }
+
+        /// <summary>
+        /// Applies one authoritative Library Study body. Invalid JSON leaves activity state and stats unchanged.
+        /// </summary>
+        public bool ApplyLibraryStudyResponseForTesting(string json)
+        {
+            EnsureDependencies();
+            return TryApplyLibraryStudyJson(json, out _);
+        }
+
+        private void StartLibraryStudyMutation(
+            string path,
+            string jsonBody,
+            Action<LibraryStudySessionResult> onSuccess,
+            Action onFailure)
+        {
+            if (!isHydrated)
+            {
+                SystemNotificationUI.Show("Player progress is still loading.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            if (isMutationInFlight)
+            {
+                SystemNotificationUI.Show("Progress update is already in progress.");
+                onFailure?.Invoke();
+                return;
+            }
+
+            EnsureDependencies();
+            if (userSession == null || !userSession.HasToken)
+            {
+                string msg = "Your session has expired. Please sign in again.";
+                SystemNotificationUI.Show(msg);
+                OnSyncFailed?.Invoke(msg);
+                onFailure?.Invoke();
+                return;
+            }
+
+            StartCoroutine(LibraryStudyMutationRoutine(path, jsonBody, onSuccess, onFailure));
+        }
+
+        private IEnumerator LibraryStudyMutationRoutine(
+            string path,
+            string jsonBody,
+            Action<LibraryStudySessionResult> onSuccess,
+            Action onFailure)
+        {
+            isMutationInFlight = true;
+            yield return apiClient.Post(
+                path,
+                jsonBody,
+                userSession.JwtToken,
+                onSuccess: json =>
+                {
+                    isMutationInFlight = false;
+                    if (!TryApplyLibraryStudyJson(json, out LibraryStudySessionResult result))
+                    {
+                        Debug.LogError("[PlayerProgressSync] Failed to parse library study response. Local state unchanged.");
+                        onFailure?.Invoke();
+                        return;
+                    }
+
+                    onSuccess?.Invoke(result);
+                },
+                onError: (error, code) =>
+                {
+                    isMutationInFlight = false;
+                    string userMessage = ClassifyErrorMessage(code, error);
+                    Debug.LogWarning($"[PlayerProgressSync] Library study failed (HTTP {code}): {error}. Local state unchanged.");
+                    SystemNotificationUI.Show(userMessage);
+                    OnSyncFailed?.Invoke(userMessage);
+                    onFailure?.Invoke();
+                }
+            );
+        }
+
+        private bool TryApplyLibraryStudyJson(string json, out LibraryStudySessionResult result)
+        {
+            result = default;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            ApiClient.LibraryStudyResponseDto response;
+            try
+            {
+                response = JsonUtility.FromJson<ApiClient.LibraryStudyResponseDto>(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[PlayerProgressSync] Failed to parse library study response: {ex.Message}");
+                return false;
+            }
+
+            if (response == null || string.IsNullOrWhiteSpace(response.activityId))
+            {
+                return false;
+            }
+
+            ActivityRecord record = new ActivityRecord(
+                response.activityId,
+                ParseActivityStatus(response.status),
+                response.outcome,
+                response.auraDelta,
+                response.reputationDelta,
+                response.dayNumber);
+
+            dailyActivityState?.ApplyServerActivity(record);
+            if (playerStats != null)
+            {
+                StatUpdateSource source = response.alreadyCompleted
+                    ? StatUpdateSource.InitialHydration
+                    : StatUpdateSource.GameplayMutation;
+                playerStats.ApplyServerState(response.aura, response.academicReputation, source);
+            }
+
+            result = new LibraryStudySessionResult(
+                record,
+                response.score,
+                response.appliedReputationDelta,
+                response.alreadyStarted,
+                response.alreadyCompleted,
+                response.aura,
+                response.academicReputation);
+            return true;
         }
 
         private void StartAttendIcsMutation(

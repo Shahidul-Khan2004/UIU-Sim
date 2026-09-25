@@ -50,6 +50,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Floors/Floor10.unity
     guid: 3b74ae231abc2cb4387c7b7e2d3c7610
+  - enabled: 1
+    path: Assets/Scenes/Minigames/LibraryRocketStudy.unity
+    guid: a3ca9f4443f0427fa49a2808277323e2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

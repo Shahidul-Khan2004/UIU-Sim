@@ -33958,8 +33958,70 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 141190466}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 141190465}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 141190467}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &141190464 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 141190463}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &141190465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141190464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b80ae2c6d4f41a9c5e7f0b3d6a8c294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibraryStudyInteractable
+  prompt: Study
+  minigameAdapter: {fileID: 141190467}
+--- !u!65 &141190466
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141190464}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5, y: 1, z: 1}
+  m_Center: {x: 0, y: 0.5, z: 0}
+--- !u!114 &141190467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141190464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6638167df0cf481eac62fbe3324c8dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.RocketStudy.RocketLibraryStudyMinigame
+  scenePath: Assets/Scenes/Minigames/LibraryRocketStudy.unity
 --- !u!43 &143218973
 Mesh:
   m_ObjectHideFlags: 0
@@ -35179,8 +35241,70 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 151274289}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 151274288}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 151274287}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &151274286 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 151274285}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &151274287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 151274286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6638167df0cf481eac62fbe3324c8dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.RocketStudy.RocketLibraryStudyMinigame
+  scenePath: Assets/Scenes/Minigames/LibraryRocketStudy.unity
+--- !u!114 &151274288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 151274286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b80ae2c6d4f41a9c5e7f0b3d6a8c294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibraryStudyInteractable
+  prompt: Study
+  minigameAdapter: {fileID: 151274287}
+--- !u!65 &151274289
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 151274286}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5, y: 1, z: 1}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1001 &152081687
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -133556,7 +133680,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 669851261}
+  m_Mesh: {fileID: 709146164}
 --- !u!33 &537250798
 MeshFilter:
   m_ObjectHideFlags: 10
@@ -451829,8 +451953,70 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1869395922}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1869395921}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1869395920}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &1869395919 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 1869395918}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1869395920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869395919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6638167df0cf481eac62fbe3324c8dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.RocketStudy.RocketLibraryStudyMinigame
+  scenePath: Assets/Scenes/Minigames/LibraryRocketStudy.unity
+--- !u!114 &1869395921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869395919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b80ae2c6d4f41a9c5e7f0b3d6a8c294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibraryStudyInteractable
+  prompt: Study
+  minigameAdapter: {fileID: 1869395920}
+--- !u!65 &1869395922
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869395919}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5, y: 1, z: 1}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!43 &1870624048
 Mesh:
   m_ObjectHideFlags: 0
