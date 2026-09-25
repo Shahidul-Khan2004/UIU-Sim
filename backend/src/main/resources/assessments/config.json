@@ -1,0 +1,56 @@
+{
+  "bands": [
+    {
+      "name": "VERY HARD",
+      "minimum": 0,
+      "seconds": 8,
+      "easy": 1,
+      "normal": 2,
+      "hard": 7,
+      "distractorsRemoved": 0
+    },
+    {
+      "name": "HARD",
+      "minimum": 40,
+      "seconds": 12,
+      "easy": 1,
+      "normal": 4,
+      "hard": 5,
+      "distractorsRemoved": 0
+    },
+    {
+      "name": "NORMAL",
+      "minimum": 50,
+      "seconds": 18,
+      "easy": 3,
+      "normal": 4,
+      "hard": 3,
+      "distractorsRemoved": 0
+    },
+    {
+      "name": "EASY",
+      "minimum": 60,
+      "seconds": 25,
+      "easy": 6,
+      "normal": 3,
+      "hard": 1,
+      "distractorsRemoved": 1
+    },
+    {
+      "name": "VERY EASY",
+      "minimum": 68,
+      "seconds": 32,
+      "easy": 8,
+      "normal": 1,
+      "hard": 1,
+      "distractorsRemoved": 1
+    }
+  ],
+  "schedule": [
+    {
+      "semester": 1,
+      "day": 2,
+      "type": "QUIZ_1"
+    }
+  ]
+}

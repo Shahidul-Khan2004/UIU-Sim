@@ -91,24 +91,30 @@ public class PlayerActivityService {
 
         ActivityOutcomeDefinition outcome = resolveOutcome(activityId, outcomeRaw);
 
+        int appliedAura = 0;
+        int appliedReputation = 0;
+        if (outcome.auraDelta() != 0 || outcome.reputationDelta() != 0) {
+            int beforeAura = lockedStats.getAura();
+            int beforeReputation = lockedStats.getAcademicReputation();
+            lockedStats.modifyStats(outcome.auraDelta(), outcome.reputationDelta());
+            playerStatsRepository.saveAndFlush(lockedStats);
+            appliedAura = lockedStats.getAura() - beforeAura;
+            appliedReputation = lockedStats.getAcademicReputation() - beforeReputation;
+        }
+
         PlayerDayActivity created = PlayerDayActivity.resolve(
                 player,
                 activityId,
                 save.getCurrentDay(),
                 outcome.status(),
                 outcome.outcomeName(),
-                outcome.auraDelta(),
-                outcome.reputationDelta()
+                appliedAura,
+                appliedReputation
         );
 
         // player_stats row lock above serializes concurrent resolves for this player,
         // so the unique (player_id, activity_id) insert cannot double-apply Aura.
         playerDayActivityRepository.saveAndFlush(created);
-
-        if (outcome.auraDelta() != 0 || outcome.reputationDelta() != 0) {
-            lockedStats.modifyStats(outcome.auraDelta(), outcome.reputationDelta());
-            playerStatsRepository.saveAndFlush(lockedStats);
-        }
 
         log.info(
                 "Activity resolved for clerkUserId={} activityId={} outcome={} status={} auraDelta={} aura={}",

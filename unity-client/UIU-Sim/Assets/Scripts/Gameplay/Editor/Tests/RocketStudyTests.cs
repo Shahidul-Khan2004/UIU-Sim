@@ -358,6 +358,49 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
+        public void Controller_ReplacesOrangePlayerWithCenteredBrainWithoutChangingHitbox()
+        {
+            var host = new GameObject("Brain visual test");
+            try
+            {
+                Sprite brain = AssetDatabase.LoadAssetAtPath<Sprite>(LibraryRocketGameController.BrainSpritePath);
+                Assert.That(brain, Is.Not.Null, "Brain PNG must be imported as Sprite (2D and UI).");
+                var importer = (TextureImporter)AssetImporter.GetAtPath(LibraryRocketGameController.BrainSpritePath);
+                Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite));
+                Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single));
+                Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Point));
+                Assert.That(importer.alphaIsTransparency, Is.True);
+
+                var controller = host.AddComponent<LibraryRocketGameController>();
+                typeof(LibraryRocketGameController).GetField("settings", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .SetValue(controller, new RocketStudySettings { gravity = 0f });
+                typeof(LibraryRocketGameController).GetField("brainSprite", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .SetValue(controller, brain);
+                controller.Open(_ => { });
+                var run = controller.Simulation;
+                var player = host.GetComponentsInChildren<RectTransform>().Single(t => t.name == "Rocket");
+                var visual = (RectTransform)player.Find("Brain");
+                var image = visual.GetComponent<Image>();
+                Assert.That(player.sizeDelta, Is.EqualTo(run.RocketSize));
+                Assert.That(player.GetComponent<Image>(), Is.Null);
+                Assert.That(player.Find("Window"), Is.Null);
+                Assert.That(image.sprite, Is.EqualTo(brain));
+                Assert.That(image.color, Is.EqualTo(Color.white));
+                Assert.That(image.preserveAspect, Is.True);
+                Assert.That(visual.anchoredPosition, Is.EqualTo(Vector2.zero));
+                Assert.That(visual.sizeDelta.x, Is.GreaterThan(run.RocketSize.x));
+                Assert.That(visual.sizeDelta.x, Is.LessThan(120f));
+                run.Begin();
+                run.Advance(0.25f, true);
+                Render(controller);
+                Assert.That(player.anchoredPosition, Is.EqualTo(new Vector2(RocketStudySimulation.RocketX, run.RocketY)));
+                Assert.That(visual.position, Is.EqualTo(player.position));
+                Assert.That(player.sizeDelta, Is.EqualTo(run.RocketSize));
+            }
+            finally { Object.DestroyImmediate(host); }
+        }
+
+        [Test]
         public void Controller_CleansObstacleViewsAndCreatesNoCameraPlayerOrEventSystem()
         {
             GameObject host = new GameObject("Rocket controller test");

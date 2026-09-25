@@ -260,6 +260,8 @@ public sealed class StatsHUD : MonoBehaviour
         {
             dayHeaderText.gameObject.SetActive(true);
             dayHeaderText.text = $"SEMESTER {semester} · DAY {dayNumber}";
+            if (todayHeaderText != null) todayHeaderText.text = dailyActivityState != null && dailyActivityState.IsAssessmentDay(playerSaveState)
+                ? (dailyActivityState.ReportCard.scheduledAssessment.StartsWith("QUIZ") ? "QUIZ DAY · TODAY" : "ASSESSMENT DAY · TODAY") : "TODAY";
             todayHeaderText.gameObject.SetActive(true);
         }
         else
@@ -345,6 +347,14 @@ public sealed class StatsHUD : MonoBehaviour
         string outcome = dailyActivityState.AttendIcsOutcome;
         string title = dailyActivityState.BuildAttendIcsObjectiveTitle();
         string description = dailyActivityState.BuildAttendIcsObjectiveDescription();
+        if (dailyActivityState.IsAssessmentDay(playerSaveState))
+        {
+            var assessment = dailyActivityState.ScheduledAssessment("ICS");
+            icsStatus = assessment?.HudStatus ?? ActivityStatus.Pending;
+            outcome = assessment?.state;
+            title = "ICS — " + assessment?.displayName;
+            description = dailyActivityState.AssessmentLocation("ICS");
+        }
         if (string.IsNullOrWhiteSpace(description))
         {
             description = icsObjectiveDescriptionFallback;

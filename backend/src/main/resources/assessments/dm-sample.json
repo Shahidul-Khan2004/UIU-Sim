@@ -1,0 +1,80 @@
+[
+  {
+    "id": "SAMPLE-DM-01",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] How many elements are in the set {1, 2, 3}?",
+    "answers": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-DM-02",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] What is the intersection of {1, 2} and {2, 3}?",
+    "answers": [
+      "{1}",
+      "{2}",
+      "{3}",
+      "{1, 2, 3}"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-DM-03",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] If p is true and q is false, what is p AND q?",
+    "answers": [
+      "True",
+      "False",
+      "Both",
+      "Undefined"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-DM-04",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] How many subsets does a set with 2 elements have?",
+    "answers": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 3,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-DM-05",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] When is the implication p implies q false?",
+    "answers": [
+      "p true, q false",
+      "p false, q true",
+      "Both true",
+      "Both false"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "SAMPLE-DM-06",
+    "courseId": "DM",
+    "text": "[SAMPLE / TEST] What is the sum of vertex degrees in an undirected graph with 5 edges?",
+    "answers": [
+      "5",
+      "10",
+      "15",
+      "25"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  }
+]

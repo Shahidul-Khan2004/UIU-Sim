@@ -38,19 +38,25 @@ public class AttendIcsService {
     private final PlayerDayActivityRepository playerDayActivityRepository;
     private final PlayerStatsRepository playerStatsRepository;
     private final Clock clock;
+    private final com.uiusimulator.assessment.service.CourseEnrollmentService enrollments;
+    private final com.uiusimulator.assessment.config.AssessmentCatalog assessments;
 
     public AttendIcsService(
             PlayerService playerService,
             PlayerSaveRepository playerSaveRepository,
             PlayerDayActivityRepository playerDayActivityRepository,
             PlayerStatsRepository playerStatsRepository,
-            Clock clock
+            Clock clock,
+            com.uiusimulator.assessment.service.CourseEnrollmentService enrollments,
+            com.uiusimulator.assessment.config.AssessmentCatalog assessments
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
         this.playerDayActivityRepository = playerDayActivityRepository;
         this.playerStatsRepository = playerStatsRepository;
         this.clock = clock;
+        this.enrollments = enrollments;
+        this.assessments = assessments;
     }
 
     @Transactional
@@ -116,8 +122,8 @@ public class AttendIcsService {
     private AttendIcsSessionResponse startLecture(Jwt jwt, ClassroomCourseDefinition course) {
         Instant now = clock.instant();
         Player player = playerService.getOrProvisionPlayer(jwt);
-        PlayerSave save = requireEligibleSave(player, course);
         PlayerStats lockedStats = lockStats(player);
+        PlayerSave save = requireEligibleSave(player, course);
 
         var existing = playerDayActivityRepository.findByPlayerIdAndActivityIdWithLock(
                 player.getId(),
@@ -216,7 +222,7 @@ public class AttendIcsService {
         lockedStats.modifyStats(0, reputationReward);
         int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
 
-        activity.applyMilestone(milestoneSeconds, reputationReward, now);
+        activity.applyMilestone(milestoneSeconds, appliedRep, now);
         playerDayActivityRepository.saveAndFlush(activity);
         playerStatsRepository.saveAndFlush(lockedStats);
 
@@ -245,8 +251,8 @@ public class AttendIcsService {
     private AttendIcsSessionResponse leaveEarly(Jwt jwt, ClassroomCourseDefinition course) {
         Instant now = clock.instant();
         Player player = playerService.getOrProvisionPlayer(jwt);
-        requireEligibleSave(player, course);
         PlayerStats lockedStats = lockStats(player);
+        requireEligibleSave(player, course);
 
         PlayerDayActivity activity = playerDayActivityRepository
                 .findByPlayerIdAndActivityIdWithLock(player.getId(), course.activityId())
@@ -281,7 +287,7 @@ public class AttendIcsService {
         lockedStats.modifyStats(0, penalty);
         int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
 
-        activity.applyEarlyLeave(penalty, now);
+        activity.applyEarlyLeave(appliedRep, now);
         playerDayActivityRepository.saveAndFlush(activity);
         playerStatsRepository.saveAndFlush(lockedStats);
 
@@ -336,7 +342,7 @@ public class AttendIcsService {
                 save.getCurrentDay(),
                 AttendIcsOutcome.PROXY.status(),
                 AttendIcsOutcome.PROXY.name(),
-                auraReward,
+                appliedAura,
                 0
         );
         playerDayActivityRepository.saveAndFlush(created);
@@ -373,7 +379,8 @@ public class AttendIcsService {
         Instant now = clock.instant();
 
         PlayerSave eligibleProbe = playerSaveRepository.findByPlayerId(player.getId()).orElse(save);
-        if (!course.isEligible(eligibleProbe)) {
+        if (!course.isEligible(eligibleProbe) || assessments.scheduled(save) != null
+                || enrollments.isDropped(player.getId(), save.getSemester(), course.courseId())) {
             return;
         }
 
@@ -384,6 +391,9 @@ public class AttendIcsService {
 
         if (existing.isEmpty()) {
             int penalty = ClassroomCourseDefinition.SKIPPED_REPUTATION_PENALTY;
+            int beforeRep = lockedStats.getAcademicReputation();
+            lockedStats.modifyStats(0, penalty);
+            int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
             PlayerDayActivity created = PlayerDayActivity.resolve(
                     player,
                     course.activityId(),
@@ -391,10 +401,9 @@ public class AttendIcsService {
                     AttendIcsOutcome.SKIPPED.status(),
                     AttendIcsOutcome.SKIPPED.name(),
                     0,
-                    penalty
+                    appliedRep
             );
             playerDayActivityRepository.saveAndFlush(created);
-            lockedStats.modifyStats(0, penalty);
             playerStatsRepository.saveAndFlush(lockedStats);
             log.info(
                     "Auto-skipped classroom on day finalize activityId={} clerkUserId={} day={} reputationDelta={}",
@@ -413,8 +422,10 @@ public class AttendIcsService {
 
         if (!activity.isEarlyLeavePenaltyApplied()) {
             int penalty = ClassroomCourseDefinition.EARLY_LEAVE_REPUTATION_PENALTY;
+            int beforeRep = lockedStats.getAcademicReputation();
             lockedStats.modifyStats(0, penalty);
-            activity.applyEarlyLeave(penalty, now);
+            int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
+            activity.applyEarlyLeave(appliedRep, now);
             playerDayActivityRepository.saveAndFlush(activity);
             playerStatsRepository.saveAndFlush(lockedStats);
             log.info(
@@ -429,8 +440,8 @@ public class AttendIcsService {
 
     private SessionContext loadInProgressSession(Jwt jwt, ClassroomCourseDefinition course, Instant now) {
         Player player = playerService.getOrProvisionPlayer(jwt);
-        requireEligibleSave(player, course);
         PlayerStats lockedStats = lockStats(player);
+        requireEligibleSave(player, course);
 
         PlayerDayActivity activity = playerDayActivityRepository
                 .findByPlayerIdAndActivityIdWithLock(player.getId(), course.activityId())
@@ -448,6 +459,9 @@ public class AttendIcsService {
     private PlayerSave requireEligibleSave(Player player, ClassroomCourseDefinition course) {
         PlayerSave save = playerSaveRepository.findByPlayerId(player.getId())
                 .orElseThrow(PlayerSaveNotFoundException::new);
+
+        enrollments.requireActive(player.getId(), save.getSemester(), course.courseId());
+        if (assessments.scheduled(save) != null) throw new IllegalArgumentException("Assessment today; normal attendance is unavailable.");
 
         if (save.getRole() != PlayerRole.STUDENT) {
             throw new IllegalArgumentException("Only CSE students can resolve " + course.courseName() + ".");

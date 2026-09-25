@@ -24,7 +24,7 @@ namespace UIU.Simulator.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerStats))]
-    public sealed class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync, ILibraryStudyProgressSync
+    public sealed partial class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync, ILibraryStudyProgressSync
     {
         private const string ActivitiesPath = "api/players/me/activities";
         private const string ResolvePath = "api/players/me/activities/resolve";
@@ -194,6 +194,7 @@ namespace UIU.Simulator.Gameplay.Player
             if (isHydrated)
             {
                 yield return HydrateActivitiesRoutine();
+                yield return HydrateReportCardRoutine();
             }
 
             isHydrating = false;
@@ -472,6 +473,7 @@ namespace UIU.Simulator.Gameplay.Player
                             response.totalAcademicReputationDelta,
                             response.aura,
                             response.academicReputation);
+                        StartCoroutine(HydrateReportCardRoutine());
                         onSuccess?.Invoke(result);
                         Debug.Log(
                             $"[PlayerProgressSync] Day finalized: semester={response.semester} day={response.day} " +
@@ -547,6 +549,8 @@ namespace UIU.Simulator.Gameplay.Player
                             response.idCardIssued,
                             response.aura,
                             response.academicReputation);
+                        dailyActivityState?.ClearAssessmentSchedule();
+                        StartCoroutine(HydrateReportCardRoutine());
                         onSuccess?.Invoke(result);
                         Debug.Log(
                             $"[PlayerProgressSync] Day advanced: semester={response.semester} " +
@@ -586,7 +590,9 @@ namespace UIU.Simulator.Gameplay.Player
                     ParseActivityStatus(item != null ? item.status : null),
                     item != null ? item.outcome : string.Empty,
                     item != null ? item.auraDelta : 0,
-                    item != null ? item.academicReputationDelta : 0);
+                    item != null ? item.academicReputationDelta : 0,
+                    item != null ? item.marksObtained : 0, item != null ? item.maxMarks : 0,
+                    item != null ? item.assessmentName : null, item != null && item.courseDropped);
             }
 
             return mapped;

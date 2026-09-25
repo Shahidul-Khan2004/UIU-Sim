@@ -1,4 +1,5 @@
 using System.Collections;
+using UIU.Simulator.Gameplay.Assessment;
 using TMPro;
 using UIU.Simulator.Authentication;
 using UIU.Simulator.Core;
@@ -149,7 +150,7 @@ namespace UIU.Simulator.UI
         /// </summary>
         public void HandleEscape()
         {
-            if (isNavigating || LibraryStudyUI.BlocksGameplay)
+            if (isNavigating || AcademicModal.BlocksGameplay || LibraryStudyUI.BlocksGameplay)
             {
                 return;
             }
@@ -198,7 +199,7 @@ namespace UIU.Simulator.UI
 
         public void Open()
         {
-            if (IsOpen || isNavigating || LibraryStudyUI.BlocksGameplay)
+            if (IsOpen || isNavigating || AcademicModal.BlocksGameplay || LibraryStudyUI.BlocksGameplay)
             {
                 return;
             }
@@ -314,7 +315,8 @@ namespace UIU.Simulator.UI
 
         private static bool IsBlockingModalOpen()
         {
-            return ElevatorUI.IsOpen
+            return AcademicModal.BlocksGameplay
+                || ElevatorUI.IsOpen
                 || AdvisorUI.IsOpen
                 || DialogueUI.IsOpen
                 || CanteenQueueUI.IsOpen
@@ -490,6 +492,35 @@ namespace UIU.Simulator.UI
             }
 
             ShowEndDayConfirm(saveState.CurrentDay);
+        }
+
+        private void OnReportCardClicked()
+        {
+            if (isBusy || isNavigating || IsConfirmOpen || IsEndDayConfirmOpen)
+            {
+                return;
+            }
+
+            PlayerSaveState saveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+
+            if (saveState == null || !saveState.IsHydrated || !saveState.HasSave || !saveState.HasActiveUniversityDay)
+            {
+                SetStatus("Complete admission to view your Report Card.", UiTheme.Red);
+                return;
+            }
+
+            if (!string.Equals(saveState.Role, "STUDENT", System.StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(saveState.Department, "CSE", System.StringComparison.OrdinalIgnoreCase))
+            {
+                SetStatus("Report Card is available to CSE students.", UiTheme.Grey);
+                return;
+            }
+
+            // Release menu ownership before the report captures input state.
+            Close(restoreGameplayControls: true);
+            ReportCardUI.EnsureExists().Show();
         }
 
         private void OnIdCardClicked()
@@ -929,6 +960,7 @@ namespace UIU.Simulator.UI
             Button save = CreateMenuButton(panel.transform, "Button_SaveGame", "Save Game", OnSaveGameClicked);
             Button nextDay = CreateMenuButton(panel.transform, "Button_NextDay", "Next Day", OnNextDayClicked);
             Button newGame = CreateMenuButton(panel.transform, "Button_NewGame", "New Game", OnNewGameClicked);
+            Button reportCard = CreateMenuButton(panel.transform, "Button_ReportCard", "Report Card", OnReportCardClicked);
             Button idCard = CreateMenuButton(panel.transform, "Button_IdCard", "ID Card", OnIdCardClicked);
             Button classRoutine = CreateMenuButton(panel.transform, "Button_ClassRoutine", "Class Routine", () => OnPlaceholderClicked("Class Routine"));
             Button settings = CreateMenuButton(panel.transform, "Button_Settings", "Settings", () => OnPlaceholderClicked("Settings"));
@@ -936,7 +968,7 @@ namespace UIU.Simulator.UI
             Button quit = CreateMenuButton(panel.transform, "Button_QuitGame", "Quit Game", OnQuitClicked);
 
             nextDayButton = nextDay;
-            menuButtons = new[] { resume, save, nextDay, newGame, idCard, classRoutine, settings, logout, quit };
+            menuButtons = new[] { resume, save, nextDay, newGame, idCard, reportCard, classRoutine, settings, logout, quit };
 
             GameObject statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(panel.transform, false);

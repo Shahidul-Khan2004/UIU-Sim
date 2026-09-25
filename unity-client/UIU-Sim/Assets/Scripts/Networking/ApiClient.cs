@@ -258,6 +258,7 @@ namespace UIU.Simulator.Networking
             public int score;
             public int auraDelta;
             public int reputationDelta;
+            public int requestedReputationDelta;
             public int appliedReputationDelta;
             public bool alreadyStarted;
             public bool alreadyCompleted;
@@ -274,6 +275,9 @@ namespace UIU.Simulator.Networking
             public string outcome;
             public int auraDelta;
             public int academicReputationDelta;
+            public int marksObtained, maxMarks;
+            public string assessmentName;
+            public bool courseDropped;
         }
 
         [Serializable]

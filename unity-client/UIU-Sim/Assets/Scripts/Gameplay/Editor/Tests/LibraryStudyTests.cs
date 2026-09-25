@@ -256,11 +256,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             DaySummaryActivity[] activities =
             {
-                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 5, 0),
+                new DaySummaryActivity(ActivityIds.Breakfast, ActivityStatus.Completed, "RICE", 3, 0),
                 new DaySummaryActivity(ActivityIds.LibraryStudy, ActivityStatus.InProgress, "STARTED", 0, 0),
                 new DaySummaryActivity(ActivityIds.LibraryStudy, ActivityStatus.Completed, "COMPLETED", 0, 3)
             };
-            summaryUi.ShowForTesting(new DayFinalizeResult(1, 1, activities, 5, 3, 55, 53));
+            summaryUi.ShowForTesting(new DayFinalizeResult(1, 1, activities, 3, 3, 53, 53));
 
             Assert.That(FindChild(summaryUi.transform, "ActivityRow_2"), Is.Null);
             TextMeshProUGUI studyTitle = FindLabel(FindChild(summaryUi.transform, "ActivityRow_1"), "Title");

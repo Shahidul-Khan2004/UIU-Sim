@@ -54,7 +54,7 @@ class PlayerActivityControllerTest {
         when(playerActivityService.listCurrentDayActivities(any())).thenReturn(
                 ActivityListResponse.of(
                         1,
-                        List.of(new ActivityStateResponse("BREAKFAST", "COMPLETED", "RICE", 5, 0, 1, 0))
+                        List.of(new ActivityStateResponse("BREAKFAST", "COMPLETED", "RICE", 3, 0, 1, 0))
                 )
         );
 
@@ -73,11 +73,11 @@ class PlayerActivityControllerTest {
                         "BREAKFAST",
                         "COMPLETED",
                         "RICE",
-                        5,
+                        3,
                         0,
                         1,
                         false,
-                        55,
+                        53,
                         50
                 )
         );
@@ -88,7 +88,7 @@ class PlayerActivityControllerTest {
                         .content(objectMapper.writeValueAsString(new ActivityResolveRequest("BREAKFAST", "RICE"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activityId").value("BREAKFAST"))
-                .andExpect(jsonPath("$.aura").value(55))
+                .andExpect(jsonPath("$.aura").value(53))
                 .andExpect(jsonPath("$.alreadyResolved").value(false));
     }
 

@@ -34,17 +34,26 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @ActiveProfiles("test")
 @Import({
+        com.uiusimulator.assessment.service.AssessmentService.class,
+        com.uiusimulator.assessment.service.CourseEnrollmentService.class,
+        com.uiusimulator.assessment.service.SecureAssessmentRandom.class,
+        com.uiusimulator.assessment.config.AssessmentCatalog.class,
+        com.uiusimulator.assessment.config.CheatPolicy.class,
         PlayerService.class,
         PlayerSaveService.class,
         PlayerActivityService.class,
         PlayerDayService.class,
         AttendIcsService.class,
+        LibraryStudyService.class,
         AttendIcsServiceTest.MutableClockConfig.class
 })
 class AttendIcsServiceTest {
 
     @Autowired
     private AttendIcsService attendIcsService;
+
+    @Autowired
+    private LibraryStudyService libraryStudyService;
 
     @Autowired
     private PlayerDayService playerDayService;
@@ -84,7 +93,7 @@ class AttendIcsServiceTest {
     }
 
     @Test
-    void milestone30_awardsPlus4Reputation() {
+    void milestone30_awardsPlus2Reputation() {
         Jwt jwt = jwtWith("ics_m30");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -93,16 +102,16 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse response = attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(30));
 
         assertThat(response.milestoneSeconds()).isEqualTo(30);
-        assertThat(response.requestedReputationDelta()).isEqualTo(4);
-        assertThat(response.appliedReputationDelta()).isEqualTo(4);
-        assertThat(response.reputationDelta()).isEqualTo(4);
+        assertThat(response.requestedReputationDelta()).isEqualTo(2);
+        assertThat(response.appliedReputationDelta()).isEqualTo(2);
+        assertThat(response.reputationDelta()).isEqualTo(2);
         assertThat(response.auraDelta()).isEqualTo(0);
-        assertThat(response.academicReputation()).isEqualTo(54);
+        assertThat(response.academicReputation()).isEqualTo(52);
         assertThat(response.status()).isEqualTo("IN_PROGRESS");
     }
 
     @Test
-    void milestone60_cumulativePlus8() {
+    void milestone60_cumulativePlus4() {
         Jwt jwt = jwtWith("ics_m60");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -114,14 +123,14 @@ class AttendIcsServiceTest {
         ).orElseThrow();
 
         assertThat(activity.getMilestoneSeconds()).isEqualTo(60);
-        assertThat(activity.getReputationDelta()).isEqualTo(8);
+        assertThat(activity.getReputationDelta()).isEqualTo(4);
         assertThat(activity.getAuraDelta()).isEqualTo(0);
         assertThat(playerStatsRepository.findByPlayerId(activity.getPlayer().getId()).orElseThrow()
-                .getAcademicReputation()).isEqualTo(58);
+                .getAcademicReputation()).isEqualTo(54);
     }
 
     @Test
-    void milestone90_cumulativePlus12_andCompletes() {
+    void milestone90_cumulativePlus6_andCompletes() {
         Jwt jwt = jwtWith("ics_m90");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -133,12 +142,12 @@ class AttendIcsServiceTest {
         ).orElseThrow();
 
         assertThat(activity.getMilestoneSeconds()).isEqualTo(90);
-        assertThat(activity.getReputationDelta()).isEqualTo(12);
+        assertThat(activity.getReputationDelta()).isEqualTo(6);
         assertThat(activity.getAuraDelta()).isEqualTo(0);
         assertThat(activity.getStatus().name()).isEqualTo("COMPLETED");
         assertThat(activity.getOutcome()).isEqualTo("COMPLETED");
         assertThat(playerStatsRepository.findByPlayerId(activity.getPlayer().getId()).orElseThrow()
-                .getAcademicReputation()).isEqualTo(62);
+                .getAcademicReputation()).isEqualTo(56);
     }
 
     @Test
@@ -154,7 +163,7 @@ class AttendIcsServiceTest {
     }
 
     @Test
-    void leaveAt0s_netMinus5() {
+    void leaveAt0s_netMinus4() {
         Jwt jwt = jwtWith("ics_leave0");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -162,13 +171,13 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse response = attendIcsService.leaveEarly(jwt);
 
         assertThat(response.outcome()).isEqualTo("LEFT_EARLY");
-        assertThat(response.reputationDelta()).isEqualTo(-5);
-        assertThat(response.academicReputation()).isEqualTo(45);
+        assertThat(response.reputationDelta()).isEqualTo(-4);
+        assertThat(response.academicReputation()).isEqualTo(46);
         assertThat(response.auraDelta()).isEqualTo(0);
     }
 
     @Test
-    void leaveAt30s_netMinus1() {
+    void leaveAt30s_netMinus2() {
         Jwt jwt = jwtWith("ics_leave30");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -177,12 +186,12 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse response = attendIcsService.leaveEarly(jwt);
 
         assertThat(response.outcome()).isEqualTo("LEFT_EARLY");
-        assertThat(response.reputationDelta()).isEqualTo(-1);
-        assertThat(response.academicReputation()).isEqualTo(49);
+        assertThat(response.reputationDelta()).isEqualTo(-2);
+        assertThat(response.academicReputation()).isEqualTo(48);
     }
 
     @Test
-    void leaveAt60s_netPlus3() {
+    void leaveAt60s_netZero() {
         Jwt jwt = jwtWith("ics_leave60");
         createCseStudent(jwt);
         attendIcsService.startLecture(jwt);
@@ -191,8 +200,8 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse response = attendIcsService.leaveEarly(jwt);
 
         assertThat(response.outcome()).isEqualTo("LEFT_EARLY");
-        assertThat(response.reputationDelta()).isEqualTo(3);
-        assertThat(response.academicReputation()).isEqualTo(53);
+        assertThat(response.reputationDelta()).isEqualTo(0);
+        assertThat(response.academicReputation()).isEqualTo(50);
     }
 
     @Test
@@ -212,9 +221,9 @@ class AttendIcsServiceTest {
                 .first()
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("COMPLETED");
-                    assertThat(a.academicReputationDelta()).isEqualTo(12);
+                    assertThat(a.academicReputationDelta()).isEqualTo(6);
                 });
-        assertThat(summary.academicReputation()).isEqualTo(52);
+        assertThat(summary.academicReputation()).isEqualTo(48);
     }
 
     @Test
@@ -234,23 +243,23 @@ class AttendIcsServiceTest {
 
         AttendIcsSessionResponse leaveAgain = attendIcsService.leaveEarly(jwt);
         assertThat(leaveAgain.alreadyApplied()).isTrue();
-        assertThat(leaveAgain.reputationDelta()).isEqualTo(-1);
+        assertThat(leaveAgain.reputationDelta()).isEqualTo(-2);
         assertThat(playerStatsRepository.findByPlayerId(
                 playerRepository.findByClerkUserId("ics_no_farm").orElseThrow().getId()
-        ).orElseThrow().getAcademicReputation()).isEqualTo(49);
+        ).orElseThrow().getAcademicReputation()).isEqualTo(48);
     }
 
     @Test
-    void proxy_awardsPlus5AuraZeroReputation() {
+    void proxy_awardsPlus3AuraZeroReputation() {
         Jwt jwt = jwtWith("ics_proxy");
         createCseStudent(jwt);
 
         AttendIcsSessionResponse response = attendIcsService.punchProxy(jwt);
 
         assertThat(response.outcome()).isEqualTo("PROXY");
-        assertThat(response.auraDelta()).isEqualTo(5);
+        assertThat(response.auraDelta()).isEqualTo(3);
         assertThat(response.reputationDelta()).isEqualTo(0);
-        assertThat(response.aura()).isEqualTo(55);
+        assertThat(response.aura()).isEqualTo(53);
         assertThat(response.academicReputation()).isEqualTo(50);
         assertThat(response.status()).isEqualTo("COMPLETED");
     }
@@ -264,10 +273,10 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse second = attendIcsService.punchProxy(jwt);
 
         assertThat(second.alreadyApplied()).isTrue();
-        assertThat(second.aura()).isEqualTo(55);
+        assertThat(second.aura()).isEqualTo(53);
         assertThat(playerStatsRepository.findByPlayerId(
                 playerRepository.findByClerkUserId("ics_proxy_dup").orElseThrow().getId()
-        ).orElseThrow().getAura()).isEqualTo(55);
+        ).orElseThrow().getAura()).isEqualTo(53);
     }
 
     @Test
@@ -298,16 +307,16 @@ class AttendIcsServiceTest {
                 .first()
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("PROXY");
-                    assertThat(a.auraDelta()).isEqualTo(5);
+                    assertThat(a.auraDelta()).isEqualTo(3);
                     assertThat(a.academicReputationDelta()).isEqualTo(0);
                 });
-        assertThat(first.aura()).isEqualTo(50); // breakfast also auto-missed −5 → 50? wait 55-5=50
+        assertThat(first.aura()).isEqualTo(50); // proxy +3, breakfast auto-miss −3
         assertThat(second.aura()).isEqualTo(first.aura());
-        assertThat(second.academicReputation()).isEqualTo(40);
+        assertThat(second.academicReputation()).isEqualTo(42);
     }
 
     @Test
-    void neverAttended_skipMinus5Reputation() {
+    void neverAttended_skipMinus4Reputation() {
         Jwt jwt = jwtWith("ics_skip");
         createCseStudent(jwt);
 
@@ -319,10 +328,10 @@ class AttendIcsServiceTest {
                 .satisfies(a -> {
                     assertThat(a.status()).isEqualTo("MISSED");
                     assertThat(a.outcome()).isEqualTo("SKIPPED");
-                    assertThat(a.academicReputationDelta()).isEqualTo(-5);
+                    assertThat(a.academicReputationDelta()).isEqualTo(-4);
                     assertThat(a.auraDelta()).isEqualTo(0);
                 });
-        assertThat(summary.academicReputation()).isEqualTo(35);
+        assertThat(summary.academicReputation()).isEqualTo(38);
     }
 
     @Test
@@ -339,9 +348,9 @@ class AttendIcsServiceTest {
         assertThat(first.activities())
                 .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
                 .first()
-                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(3));
-        assertThat(first.academicReputation()).isEqualTo(43);
-        assertThat(second.academicReputation()).isEqualTo(43);
+                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(0));
+        assertThat(first.academicReputation()).isEqualTo(42);
+        assertThat(second.academicReputation()).isEqualTo(42);
     }
 
     @Test
@@ -356,7 +365,7 @@ class AttendIcsServiceTest {
 
         assertThat(first.alreadyApplied()).isFalse();
         assertThat(second.alreadyApplied()).isTrue();
-        assertThat(second.academicReputation()).isEqualTo(54);
+        assertThat(second.academicReputation()).isEqualTo(52);
     }
 
     @Test
@@ -372,8 +381,8 @@ class AttendIcsServiceTest {
         assertThat(summary.activities())
                 .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
                 .first()
-                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(-1));
-        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-11);
+                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(-2));
+        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(-10);
     }
 
     @Test
@@ -422,7 +431,7 @@ class AttendIcsServiceTest {
 
         assertThatThrownBy(() -> attendIcsService.startLecture(jwt))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("not scheduled");
+                .hasMessageContaining("Assessment today");
     }
 
     @Test
@@ -455,7 +464,7 @@ class AttendIcsServiceTest {
 
         mutableClock.advanceSeconds(1);
         AttendIcsSessionResponse response = attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(30));
-        assertThat(response.reputationDelta()).isEqualTo(4);
+        assertThat(response.reputationDelta()).isEqualTo(2);
     }
 
     @Test
@@ -489,7 +498,7 @@ class AttendIcsServiceTest {
         var dm = playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow();
 
         assertThat(english.getMilestoneSeconds()).isEqualTo(30);
-        assertThat(english.getReputationDelta()).isEqualTo(4);
+        assertThat(english.getReputationDelta()).isEqualTo(2);
         assertThat(dm.getMilestoneSeconds()).isEqualTo(0);
         assertThat(dm.getReputationDelta()).isEqualTo(0);
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ICS")).isEmpty();
@@ -498,10 +507,10 @@ class AttendIcsServiceTest {
         claimThrough(jwt, "ATTEND_ENGLISH", 90);
 
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ENGLISH").orElseThrow()
-                .getReputationDelta()).isEqualTo(12);
+                .getReputationDelta()).isEqualTo(6);
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow()
                 .getOutcome()).isEqualTo("COMPLETED");
-        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(74);
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(62);
         assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAura()).isEqualTo(50);
     }
 
@@ -515,10 +524,10 @@ class AttendIcsServiceTest {
         attendIcsService.startLecture(jwt, "ATTEND_DM");
 
         assertThat(first.outcome()).isEqualTo("PROXY");
-        assertThat(first.auraDelta()).isEqualTo(5);
+        assertThat(first.auraDelta()).isEqualTo(3);
         assertThat(first.reputationDelta()).isEqualTo(0);
         assertThat(second.alreadyApplied()).isTrue();
-        assertThat(second.aura()).isEqualTo(55);
+        assertThat(second.aura()).isEqualTo(53);
 
         var playerId = playerRepository.findByClerkUserId("classrooms_proxy").orElseThrow().getId();
         assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_DM").orElseThrow()
@@ -532,7 +541,7 @@ class AttendIcsServiceTest {
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("PROXY");
                     assertThat(a.academicReputationDelta()).isEqualTo(0);
-                    assertThat(a.auraDelta()).isEqualTo(5);
+                    assertThat(a.auraDelta()).isEqualTo(3);
                 });
         assertThat(summary.activities())
                 .filteredOn(a -> "ATTEND_DM".equals(a.activityId()))
@@ -563,24 +572,65 @@ class AttendIcsServiceTest {
                 .first()
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("COMPLETED");
-                    assertThat(a.academicReputationDelta()).isEqualTo(12);
+                    assertThat(a.academicReputationDelta()).isEqualTo(6);
                 });
         assertThat(summary.activities())
                 .filteredOn(a -> "ATTEND_DM".equals(a.activityId()))
                 .first()
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("COMPLETED");
-                    assertThat(a.academicReputationDelta()).isEqualTo(12);
+                    assertThat(a.academicReputationDelta()).isEqualTo(6);
                 });
         assertThat(summary.activities())
                 .filteredOn(a -> "ATTEND_ENGLISH".equals(a.activityId()))
                 .first()
                 .satisfies(a -> {
                     assertThat(a.outcome()).isEqualTo("SKIPPED");
-                    assertThat(a.academicReputationDelta()).isEqualTo(-5);
+                    assertThat(a.academicReputationDelta()).isEqualTo(-4);
                 });
-        assertThat(summary.academicReputation()).isEqualTo(69);
-        assertThat(playerDayService.finalizeCurrentDay(jwt).academicReputation()).isEqualTo(69);
+        assertThat(summary.academicReputation()).isEqualTo(58);
+        assertThat(playerDayService.finalizeCurrentDay(jwt).academicReputation()).isEqualTo(58);
+    }
+
+    @Test
+    void threeCourses_fullAttendance_reaches68() {
+        Jwt jwt = jwtWith("classrooms_full_68");
+        createCseStudent(jwt);
+        attendIcsService.startLecture(jwt);
+        claimThrough(jwt, 90);
+        attendIcsService.startLecture(jwt, "ATTEND_ENGLISH");
+        claimThrough(jwt, "ATTEND_ENGLISH", 90);
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+        claimThrough(jwt, "ATTEND_DM", 90);
+
+        var playerId = playerRepository.findByClerkUserId("classrooms_full_68").orElseThrow().getId();
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(68);
+
+        playerActivityService.resolveActivity(
+                jwt,
+                new com.uiusimulator.player.dto.ActivityResolveRequest("BREAKFAST", "POROTTA_WAIT")
+        );
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.totalAcademicReputationDelta()).isEqualTo(18);
+        assertThat(summary.academicReputation()).isEqualTo(68);
+    }
+
+    @Test
+    void threeCourses_fullAttendance_plusLibrary100_reaches73() {
+        Jwt jwt = jwtWith("classrooms_full_lib");
+        createCseStudent(jwt);
+        attendIcsService.startLecture(jwt);
+        claimThrough(jwt, 90);
+        attendIcsService.startLecture(jwt, "ATTEND_ENGLISH");
+        claimThrough(jwt, "ATTEND_ENGLISH", 90);
+        attendIcsService.startLecture(jwt, "ATTEND_DM");
+        claimThrough(jwt, "ATTEND_DM", 90);
+
+        libraryStudyService.start(jwt);
+        libraryStudyService.complete(jwt, new com.uiusimulator.player.dto.LibraryStudyCompleteRequest(100));
+
+        var playerId = playerRepository.findByClerkUserId("classrooms_full_lib").orElseThrow().getId();
+        assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(73);
     }
 
     @Test
@@ -594,12 +644,12 @@ class AttendIcsServiceTest {
         AttendIcsSessionResponse again = attendIcsService.leaveEarly(jwt, "ATTEND_ENGLISH");
 
         assertThat(left.outcome()).isEqualTo("LEFT_EARLY");
-        assertThat(left.reputationDelta()).isEqualTo(-1);
+        assertThat(left.reputationDelta()).isEqualTo(-2);
         assertThat(again.alreadyApplied()).isTrue();
 
         attendIcsService.startLecture(jwt, "ATTEND_DM");
         AttendIcsSessionResponse dmLeave = attendIcsService.leaveEarly(jwt, "ATTEND_DM");
-        assertThat(dmLeave.reputationDelta()).isEqualTo(-5);
+        assertThat(dmLeave.reputationDelta()).isEqualTo(-4);
 
         var playerId = playerRepository.findByClerkUserId("classrooms_leave").orElseThrow().getId();
         assertThat(playerStatsRepository.findByPlayerId(playerId).orElseThrow().getAcademicReputation()).isEqualTo(44);
@@ -692,7 +742,87 @@ class AttendIcsServiceTest {
 
         assertThat(first.alreadyApplied()).isFalse();
         assertThat(second.alreadyApplied()).isTrue();
-        assertThat(second.academicReputation()).isEqualTo(54);
+        assertThat(second.academicReputation()).isEqualTo(52);
+    }
+
+    @Test
+    void milestone_storesActualAppliedDeltaWhenClamped() {
+        Jwt jwt = jwtWith("ics_clamp_m30");
+        createCseStudent(jwt);
+        var player = playerRepository.findByClerkUserId("ics_clamp_m30").orElseThrow();
+        var stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(0, 49);
+        playerStatsRepository.saveAndFlush(stats);
+
+        attendIcsService.startLecture(jwt);
+        mutableClock.advanceSeconds(30);
+        AttendIcsSessionResponse response = attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(30));
+
+        assertThat(response.requestedReputationDelta()).isEqualTo(2);
+        assertThat(response.appliedReputationDelta()).isEqualTo(1);
+        assertThat(response.reputationDelta()).isEqualTo(1);
+        assertThat(response.academicReputation()).isEqualTo(100);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), AttendIcsDefinition.ACTIVITY_ID)
+                .orElseThrow().getReputationDelta()).isEqualTo(1);
+    }
+
+    @Test
+    void leaveAfterClampedMilestone_summaryUsesActualNet() {
+        Jwt jwt = jwtWith("ics_clamp_leave");
+        createCseStudent(jwt);
+        var player = playerRepository.findByClerkUserId("ics_clamp_leave").orElseThrow();
+        var stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(0, 49);
+        playerStatsRepository.saveAndFlush(stats);
+
+        attendIcsService.startLecture(jwt);
+        mutableClock.advanceSeconds(30);
+        attendIcsService.claimMilestone(jwt, new AttendIcsMilestoneRequest(30));
+        AttendIcsSessionResponse leave = attendIcsService.leaveEarly(jwt);
+
+        assertThat(leave.appliedReputationDelta()).isEqualTo(-4);
+        assertThat(leave.reputationDelta()).isEqualTo(-3);
+        assertThat(leave.academicReputation()).isEqualTo(96);
+
+        playerActivityService.resolveActivity(
+                jwt,
+                new com.uiusimulator.player.dto.ActivityResolveRequest("BREAKFAST", "POROTTA_WAIT")
+        );
+        attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH");
+        attendIcsService.punchProxy(jwt, "ATTEND_DM");
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.activities())
+                .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
+                .first()
+                .satisfies(a -> assertThat(a.academicReputationDelta()).isEqualTo(-3));
+    }
+
+    @Test
+    void skip_storesActualAppliedDeltaWhenClamped() {
+        Jwt jwt = jwtWith("ics_clamp_skip");
+        createCseStudent(jwt);
+        var player = playerRepository.findByClerkUserId("ics_clamp_skip").orElseThrow();
+        var stats = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow();
+        stats.modifyStats(0, -49);
+        playerStatsRepository.saveAndFlush(stats);
+
+        playerActivityService.resolveActivity(
+                jwt,
+                new com.uiusimulator.player.dto.ActivityResolveRequest("BREAKFAST", "POROTTA_WAIT")
+        );
+        attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH");
+        attendIcsService.punchProxy(jwt, "ATTEND_DM");
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.activities())
+                .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
+                .first()
+                .satisfies(a -> {
+                    assertThat(a.outcome()).isEqualTo("SKIPPED");
+                    assertThat(a.academicReputationDelta()).isEqualTo(-1);
+                });
+        assertThat(summary.academicReputation()).isEqualTo(0);
     }
 
     private Department bbaDepartment() {

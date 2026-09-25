@@ -10,6 +10,7 @@ public record LibraryStudyResponse(
         Integer score,
         int auraDelta,
         int reputationDelta,
+        int requestedReputationDelta,
         int appliedReputationDelta,
         boolean alreadyStarted,
         boolean alreadyCompleted,
@@ -20,6 +21,7 @@ public record LibraryStudyResponse(
     public static LibraryStudyResponse of(
             PlayerDayActivity activity,
             PlayerStats stats,
+            int requestedReputationDelta,
             int appliedReputationDelta,
             boolean alreadyStarted,
             boolean alreadyCompleted
@@ -31,6 +33,7 @@ public record LibraryStudyResponse(
                 activity.getNormalizedScore(),
                 activity.getAuraDelta(),
                 activity.getReputationDelta(),
+                requestedReputationDelta,
                 appliedReputationDelta,
                 alreadyStarted,
                 alreadyCompleted,

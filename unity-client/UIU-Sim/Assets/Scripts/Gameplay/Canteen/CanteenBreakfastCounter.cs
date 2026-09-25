@@ -21,11 +21,11 @@ public enum CanteenBreakfastState
 /// Interactive middle counter at the campus canteen (Neptune).
 /// Implements <see cref="IInteractable"/> to provide the breakfast dilemma:
 /// <list type="bullet">
-///   <item><b>Rice</b>: Instant breakfast, +5 Aura bonus (shortcut).</item>
+///   <item><b>Rice</b>: Instant breakfast, +3 Aura bonus (shortcut).</item>
 ///   <item><b>Porotta</b>: Real-time queue timer. Player enters a modal waiting state.</item>
 ///   <item><b>Wait to Completion</b>: Progress reaches 100%, 0 Aura delta, breakfast COMPLETED.</item>
-///   <item><b>Skip Breakfast</b>: -5 Aura penalty, no food, breakfast MISSED.</item>
-///   <item><b>Skip the Line</b>: -10 Aura penalty, instant food, breakfast COMPLETED.</item>
+///   <item><b>Skip Breakfast</b>: -3 Aura penalty, no food, breakfast MISSED.</item>
+///   <item><b>Skip the Line</b>: -6 Aura penalty, instant food, breakfast COMPLETED.</item>
 /// </list>
 /// Gated by <see cref="CampusDayState.HasCompletedBreakfastEvent"/> to prevent farming.
 /// Aura and activity status are committed together via <see cref="IActivityProgressSync"/>.
@@ -181,7 +181,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     // ── Choice Handlers ────────────────────────────────────────────────
 
     /// <summary>
-    /// Rice route: Instant breakfast after successful resolve (+5 Aura, COMPLETED).
+    /// Rice route: Instant breakfast after successful resolve (+3 Aura, COMPLETED).
     /// </summary>
     private void OnSelectRice()
     {
@@ -283,7 +283,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// Skip Breakfast: Cancels queue, -5 Aura, MISSED (resolved but not successful).
+    /// Skip Breakfast: Cancels queue, -3 Aura, MISSED (resolved but not successful).
     /// </summary>
     private void OnSkipBreakfast()
     {
@@ -295,7 +295,7 @@ public sealed class CanteenBreakfastCounter : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// Skip the Line: Cancels queue, -10 Aura, breakfast COMPLETED.
+    /// Skip the Line: Cancels queue, -6 Aura, breakfast COMPLETED.
     /// </summary>
     private void OnSkipLine()
     {

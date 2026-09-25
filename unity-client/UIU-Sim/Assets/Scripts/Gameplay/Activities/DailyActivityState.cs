@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UIU.Simulator.Gameplay.Assessment;
 using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
@@ -71,6 +72,31 @@ namespace UIU.Simulator.Gameplay.Activities
         private readonly Dictionary<string, ClassroomRuntime> extraClassrooms = new Dictionary<string, ClassroomRuntime>();
 
         private int dayNumber = 1;
+        public ReportCard ReportCard { get; private set; }
+        public void ApplyReportCard(ReportCard card)
+        {
+            ReportCard = card;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+        public void ClearAssessmentSchedule()
+        {
+            if (ReportCard != null) ReportCard.scheduledAssessment = null;
+            OnAttendIcsStatusChanged?.Invoke();
+        }
+        public bool IsCourseDropped(string course) => ReportCard?.Course(course)?.IsDropped == true;
+        public bool IsAssessmentDay(PlayerSaveState save) => save != null && ReportCard != null
+            && ReportCard.semester == save.Semester && ReportCard.day == save.CurrentDay
+            && !string.IsNullOrEmpty(ReportCard.scheduledAssessment);
+        public AssessmentComponent ScheduledAssessment(string course) =>
+            ReportCard?.Course(course)?.Component(ReportCard.scheduledAssessment);
+        public string AssessmentLocation(string course)
+        {
+            var config = FindLocationConfig("ATTEND_" + course);
+            if (config != null && config.IsConfigured)
+                return $"Go to Room {config.ClassroomNumber} on Floor {config.Floor}.";
+            return course == "ICS" ? BuildAttendIcsObjectiveDescription() : "Classroom location is not configured.";
+        }
+        public void NotifyAssessmentChanged() => OnAttendIcsStatusChanged?.Invoke();
 
         // Cached from the floor scene classroom so the HUD stays correct when that
         // additive floor unloads (Unity destroyed references become fake-null).
@@ -242,7 +268,7 @@ namespace UIU.Simulator.Gameplay.Activities
                 return false;
             }
 
-            return saveState.CurrentDay == scheduledDay;
+            return !IsCourseDropped("ICS") && (IsAssessmentDay(saveState) || saveState.CurrentDay == scheduledDay);
         }
 
         /// <summary>
@@ -329,10 +355,10 @@ namespace UIU.Simulator.Gameplay.Activities
                     : "Classroom location is not configured.";
                 views.Add(new ClassroomObjectiveView(
                     config.ActivityId,
-                    config.BuildObjectiveTitle(),
-                    description,
-                    runtime.Status,
-                    runtime.Outcome));
+                    IsAssessmentDay(saveState) ? config.CourseName + " — " + ScheduledAssessment(config.CourseId)?.displayName : config.BuildObjectiveTitle(),
+                    IsAssessmentDay(saveState) ? AssessmentLocation(config.CourseId) : description,
+                    IsAssessmentDay(saveState) ? (ScheduledAssessment(config.CourseId)?.HudStatus ?? ActivityStatus.Pending) : runtime.Status,
+                    IsAssessmentDay(saveState) ? ScheduledAssessment(config.CourseId)?.state : runtime.Outcome));
             }
 
             return views.ToArray();
@@ -539,6 +565,7 @@ namespace UIU.Simulator.Gameplay.Activities
 
         public void ResetForNewGame()
         {
+            ReportCard = null;
             dayNumber = 1;
             getIdCardStatus = ActivityStatus.Pending;
             getIdCardOutcome = string.Empty;
@@ -728,7 +755,7 @@ namespace UIU.Simulator.Gameplay.Activities
                 return false;
             }
 
-            return saveState.CurrentDay == config.ScheduledGameplayDay;
+            return !IsCourseDropped(config.CourseId) && (IsAssessmentDay(saveState) || saveState.CurrentDay == config.ScheduledGameplayDay);
         }
 
         private IcsClassroomLocationConfig FindLocationConfig(string activityId)

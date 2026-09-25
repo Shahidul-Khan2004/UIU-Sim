@@ -1,0 +1,80 @@
+[
+  {
+    "id": "SAMPLE-ICS-01",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] Which component executes program instructions?",
+    "answers": [
+      "CPU",
+      "Monitor",
+      "Keyboard",
+      "Printer"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ICS-02",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] Which is an input device?",
+    "answers": [
+      "Speaker",
+      "Keyboard",
+      "Monitor",
+      "Projector"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ICS-03",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] What is binary 101 in decimal?",
+    "answers": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-ICS-04",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] Which memory normally loses its contents when power is removed?",
+    "answers": [
+      "ROM",
+      "SSD",
+      "Hard disk",
+      "RAM"
+    ],
+    "correctAnswer": 3,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-ICS-05",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] How many distinct values can 3 bits represent?",
+    "answers": [
+      "3",
+      "6",
+      "8",
+      "9"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "SAMPLE-ICS-06",
+    "courseId": "ICS",
+    "text": "[SAMPLE / TEST] What is the worst-case search cost in an unsorted list of n items?",
+    "answers": [
+      "Constant",
+      "Logarithmic",
+      "Linear",
+      "Exponential"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  }
+]

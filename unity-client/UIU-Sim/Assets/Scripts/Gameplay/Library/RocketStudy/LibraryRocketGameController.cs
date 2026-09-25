@@ -12,7 +12,10 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
     [DisallowMultipleComponent]
     public sealed class LibraryRocketGameController : MonoBehaviour
     {
+        public const string BrainSpritePath = "Assets/Art/Minigames/RocketStudy/brain.png";
+        private const float BrainVisualSize = 88f;
         [SerializeField] private RocketStudySettings settings = new RocketStudySettings();
+        [SerializeField] private Sprite brainSprite;
         private readonly Dictionary<int, RectTransform> obstacleViews = new Dictionary<int, RectTransform>();
         private readonly List<int> expiredViews = new List<int>();
         private RocketStudySimulation simulation;
@@ -156,10 +159,7 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
             playArea.gameObject.AddComponent<RectMask2D>();
             obstacleLayer = CreateRect(playArea, "Obstacles", Vector2.zero, playArea.sizeDelta);
             rocket = CreateRect(playArea, "Rocket", Vector2.zero, simulation.RocketSize);
-            rocket.gameObject.AddComponent<Image>().color = UiTheme.BrightOrange;
-            RectTransform window = CreateRect(rocket, "Window", new Vector2(simulation.RocketSize.x * 0.2f, 0f),
-                simulation.RocketSize * new Vector2(0.2f, 0.45f));
-            window.gameObject.AddComponent<Image>().color = UiTheme.White;
+            CreateBrainVisual(rocket);
 
             // Keep the readout outside the simulation area: the old overlay obscured its top 58 units.
             float readoutY = playArea.anchoredPosition.y + RocketStudySimulation.PlayAreaBottom - 8f - 21f;
@@ -172,6 +172,28 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
                 new Vector2(50f, 20f), new Vector2(700f, 150f), 26f, UiTheme.White);
             Label(canvasRect, "Controls", "SPACE / CLICK / TOUCH — THRUST     •     ESC — CANCEL",
                 new Vector2(0f, readoutY - 21f - 8f - 16f), new Vector2(1100f, 32f), 21f, UiTheme.Grey);
+        }
+
+        private void CreateBrainVisual(RectTransform playerRoot)
+        {
+            Sprite sprite = brainSprite;
+#if UNITY_EDITOR
+            if (sprite == null)
+                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(BrainSpritePath);
+#endif
+            if (sprite == null)
+            {
+                Debug.LogWarning("[RocketStudy] Brain sprite is not assigned.");
+                return;
+            }
+
+            RectTransform visual = CreateRect(playerRoot, "Brain", Vector2.zero,
+                new Vector2(BrainVisualSize, BrainVisualSize));
+            Image image = visual.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.color = Color.white;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
         }
 
         private static void CreateBookStack(Transform parent, string name, Rect bounds, bool top, int id)

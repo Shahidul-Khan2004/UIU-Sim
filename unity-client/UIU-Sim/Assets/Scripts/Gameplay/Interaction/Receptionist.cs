@@ -127,12 +127,12 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
     // ── Choice callbacks ──────────────────────────────────────────────
 
     /// <summary>
-    /// Player forgot their ID. Minor Aura penalty (-5). Issues a temporary ID.
+    /// Player forgot their ID. Minor Aura penalty (-3). Issues a temporary ID.
     /// Does NOT resolve the ID problem — that happens when the temporary card is scanned.
     /// </summary>
     private void OnForgotID()
     {
-        RequestAuraDelta(-5);
+        RequestAuraDelta(-3);
         if (playerInventory == null)
         {
             playerInventory = FindFirstObjectByType<PlayerInventory>();
@@ -141,16 +141,16 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
         {
             playerInventory.AddTemporaryID();
         }
-        Debug.Log("[Receptionist] Forgot ID chosen. Aura -5 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
+        Debug.Log("[Receptionist] Forgot ID chosen. Aura -3 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
     }
 
     /// <summary>
-    /// Player lost their ID. Larger Aura penalty (-10). Issues a temporary ID.
+    /// Player lost their ID. Larger Aura penalty (-6). Issues a temporary ID.
     /// Does NOT resolve the ID problem — that happens when the temporary card is scanned.
     /// </summary>
     private void OnLostID()
     {
-        RequestAuraDelta(-10);
+        RequestAuraDelta(-6);
         if (playerInventory == null)
         {
             playerInventory = FindFirstObjectByType<PlayerInventory>();
@@ -159,7 +159,7 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
         {
             playerInventory.AddTemporaryID();
         }
-        Debug.Log("[Receptionist] Lost ID chosen. Aura -10 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
+        Debug.Log("[Receptionist] Lost ID chosen. Aura -6 requested. Temporary ID issued. HasIDProblem remains true until scanned.");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

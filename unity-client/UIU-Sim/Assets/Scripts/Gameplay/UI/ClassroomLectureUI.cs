@@ -384,7 +384,10 @@ namespace UIU.Simulator.Gameplay.UI
             }
 
             int reward = ConfirmedReputationReward(Mathf.Max(claimedMilestone, 90));
-            SystemNotificationUI.Show($"ICS class completed! +{reward} Academic Reputation earned.");
+            string courseName = classroom != null && !string.IsNullOrWhiteSpace(classroom.CourseName)
+                ? classroom.CourseName.Trim()
+                : "Class";
+            SystemNotificationUI.Show($"{courseName} completed! +{reward} Academic Reputation earned.");
 
             CloseLecture(LectureUiState.Completed);
         }
@@ -640,23 +643,23 @@ namespace UIU.Simulator.Gameplay.UI
         }
 
         /// <summary>
-        /// Confirmed cumulative Academic Reputation from awarded milestones only (+4 each).
+        /// Confirmed cumulative Academic Reputation from awarded milestones only (+2 each).
         /// </summary>
         public static int ConfirmedReputationReward(int confirmedMilestoneSeconds)
         {
             if (confirmedMilestoneSeconds >= 90)
             {
-                return 12;
+                return 6;
             }
 
             if (confirmedMilestoneSeconds >= 60)
             {
-                return 8;
+                return 4;
             }
 
             if (confirmedMilestoneSeconds >= 30)
             {
-                return 4;
+                return 2;
             }
 
             return 0;
@@ -775,19 +778,19 @@ namespace UIU.Simulator.Gameplay.UI
             milestone30Label = CreateLabel(
                 panelRoot.transform,
                 "Milestone30",
-                "30s milestone — +4 Academic Reputation",
+                "30s milestone — +2 Academic Reputation",
                 16f,
                 UiTheme.BrightOrange);
             milestone60Label = CreateLabel(
                 panelRoot.transform,
                 "Milestone60",
-                "60s milestone — +4 Academic Reputation",
+                "60s milestone — +2 Academic Reputation",
                 16f,
                 UiTheme.Grey);
             milestone90Label = CreateLabel(
                 panelRoot.transform,
                 "Milestone90",
-                "90s milestone — +4 Academic Reputation",
+                "90s milestone — +2 Academic Reputation",
                 16f,
                 UiTheme.Grey);
 
@@ -797,7 +800,7 @@ namespace UIU.Simulator.Gameplay.UI
             CreateLabel(
                 confirmRoot.transform,
                 "ConfirmText",
-                "Leave this class early? You will keep the Academic Reputation you have earned, but receive a -5 Academic Reputation penalty.",
+                "Leave this class early? You will keep the Academic Reputation you have earned, but receive a -4 Academic Reputation penalty.",
                 18f,
                 UiTheme.White);
             CreateButton(confirmRoot.transform, "StayButton", "STAY", StayInClass);

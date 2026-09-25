@@ -27,6 +27,8 @@ public class PlayerSaveService {
 
     private static final Logger log = LoggerFactory.getLogger(PlayerSaveService.class);
 
+    private final com.uiusimulator.assessment.repository.PlayerAssessmentResultRepository assessments;
+    private final com.uiusimulator.assessment.repository.PlayerCourseEnrollmentRepository enrollments;
     private final PlayerService playerService;
     private final PlayerSaveRepository playerSaveRepository;
     private final DepartmentRepository departmentRepository;
@@ -38,9 +40,13 @@ public class PlayerSaveService {
             PlayerSaveRepository playerSaveRepository,
             DepartmentRepository departmentRepository,
             PlayerStatsRepository playerStatsRepository,
-            PlayerDayActivityRepository playerDayActivityRepository
+            PlayerDayActivityRepository playerDayActivityRepository,
+            com.uiusimulator.assessment.repository.PlayerAssessmentResultRepository assessments,
+            com.uiusimulator.assessment.repository.PlayerCourseEnrollmentRepository enrollments
     ) {
         this.playerService = playerService;
+        this.assessments = assessments;
+        this.enrollments = enrollments;
         this.playerSaveRepository = playerSaveRepository;
         this.departmentRepository = departmentRepository;
         this.playerStatsRepository = playerStatsRepository;
@@ -122,14 +128,17 @@ public class PlayerSaveService {
     public PlayerSaveStatusResponse deleteSave(Jwt jwt) {
         Player player = playerService.getOrProvisionPlayer(jwt);
 
+        PlayerStats lockedStats = playerStatsRepository.findByPlayerIdWithLock(player.getId())
+                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
+        playerSaveRepository.findByPlayerIdWithLock(player.getId());
+        assessments.deleteByPlayerId(player.getId());
+        enrollments.deleteByPlayerId(player.getId());
         playerDayActivityRepository.deleteByPlayer_Id(player.getId());
         playerDayActivityRepository.flush();
 
         playerSaveRepository.deleteByPlayer_Id(player.getId());
         playerSaveRepository.flush();
 
-        PlayerStats lockedStats = playerStatsRepository.findByPlayerIdWithLock(player.getId())
-                .orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
         lockedStats.resetToDefaults();
         playerStatsRepository.saveAndFlush(lockedStats);
 

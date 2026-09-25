@@ -1,0 +1,80 @@
+[
+  {
+    "id": "SAMPLE-ENGLISH-01",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the plural of child.",
+    "answers": [
+      "Childs",
+      "Children",
+      "Childes",
+      "Child"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-02",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the correct article: ___ apple.",
+    "answers": [
+      "A",
+      "An",
+      "The a",
+      "No article is possible"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-03",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the grammatically correct sentence.",
+    "answers": [
+      "She go home.",
+      "She going home.",
+      "She goes home.",
+      "She gone home."
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-04",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Which word is an adverb?",
+    "answers": [
+      "Quick",
+      "Quickness",
+      "Quickly",
+      "Quicken"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-05",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the correct sentence.",
+    "answers": [
+      "If I was you, I would wait.",
+      "If I were you, I would wait.",
+      "If I am you, I would wait.",
+      "If I be you, I would wait."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-06",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Which sentence uses the passive voice?",
+    "answers": [
+      "The student wrote a note.",
+      "The student is writing.",
+      "A note was written by the student.",
+      "The student writes notes."
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  }
+]

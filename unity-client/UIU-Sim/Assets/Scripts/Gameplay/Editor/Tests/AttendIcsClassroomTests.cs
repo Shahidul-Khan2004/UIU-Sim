@@ -224,7 +224,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 ActivityStatus.Completed,
                 "COMPLETED",
                 0,
-                12,
+                6,
                 90);
 
             statsHud.enabled = false;
@@ -291,7 +291,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 ActivityStatus.Completed,
                 "COMPLETED",
                 0,
-                12,
+                6,
                 90);
 
             string result = classroom.Interact();
@@ -311,17 +311,17 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 1,
                 new[]
                 {
-                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Completed, "PROXY", 5, 0)
+                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Completed, "PROXY", 3, 0)
                 },
-                5,
+                3,
                 0,
-                55,
+                53,
                 50);
 
             summaryUi.ShowForTesting(summary);
             string body = summaryUi.GetActivityBodyTextForTesting();
             Assert.That(body, Does.Contain("Proxy — Punched ID and Left"));
-            Assert.That(body, Does.Contain("Aura: +5"));
+            Assert.That(body, Does.Contain("Aura: +3"));
             Assert.That(body, Does.Contain("Academic: 0"));
 
             TextMeshProUGUI title = FindLabel(FindChild(summaryUi.transform, "ActivityRow_0"), "Title");
@@ -341,17 +341,17 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 1,
                 new[]
                 {
-                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Missed, "LEFT_EARLY", 0, -1)
+                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Missed, "LEFT_EARLY", 0, -2)
                 },
                 0,
-                -1,
+                -2,
                 50,
-                49);
+                48);
 
             summaryUi.ShowForTesting(summary);
             string body = summaryUi.GetActivityBodyTextForTesting();
             Assert.That(body, Does.Contain("Left Early"));
-            Assert.That(body, Does.Contain("Academic: -1"));
+            Assert.That(body, Does.Contain("Academic: -2"));
 
             UnityEngine.Object.DestroyImmediate(summaryObject);
         }
@@ -363,7 +363,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 ActivityStatus.Completed,
                 "COMPLETED",
                 0,
-                12,
+                6,
                 90);
             dailyActivityState.ResetForNewDay(2);
 
@@ -475,9 +475,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             Assert.That(ClassroomLectureUI.ConfirmedReputationReward(0), Is.EqualTo(0));
             Assert.That(ClassroomLectureUI.ConfirmedReputationReward(29), Is.EqualTo(0));
-            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(30), Is.EqualTo(4));
-            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(60), Is.EqualTo(8));
-            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(90), Is.EqualTo(12));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(30), Is.EqualTo(2));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(60), Is.EqualTo(4));
+            Assert.That(ClassroomLectureUI.ConfirmedReputationReward(90), Is.EqualTo(6));
         }
 
         [Test]
@@ -491,6 +491,14 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindChild(lecture.transform, "NextMilestone"), Is.Not.Null);
             Assert.That(FindChild(lecture.transform, "CurrentReward"), Is.Not.Null);
             Assert.That(FindChild(lecture.transform, "LeaveButton"), Is.Not.Null);
+            Assert.That(FindLabel(lecture.transform, "Milestone30").text,
+                Is.EqualTo("30s milestone — +2 Academic Reputation"));
+            Assert.That(FindLabel(lecture.transform, "Milestone60").text,
+                Is.EqualTo("60s milestone — +2 Academic Reputation"));
+            Assert.That(FindLabel(lecture.transform, "Milestone90").text,
+                Is.EqualTo("90s milestone — +2 Academic Reputation"));
+            Assert.That(FindLabel(lecture.transform, "ConfirmText").text,
+                Does.Contain("-4 Academic Reputation penalty"));
 
             CanvasScaler scaler = lecture.GetComponentInChildren<CanvasScaler>(true);
             Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
@@ -509,13 +517,13 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             InteractionController interaction = playerObject.AddComponent<InteractionController>();
 
             var sync = new FakeAttendIcsSync();
-            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 2, 6);
 
             ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
             lecture.SetCompletionCloseDelayForTesting(0f);
 
             var start = new AttendIcsSessionResult(
-                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 4, 1, 60),
                 false,
                 true,
                 60000,
@@ -524,7 +532,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 0,
                 0,
                 50f,
-                58f);
+                54f);
 
             lecture.BeginLecture(classroom, sync, start, () => { });
             Assert.That(ClassroomLectureUI.IsOpen, Is.True);
@@ -548,13 +556,13 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             var sync = new FakeAttendIcsSync();
             sync.QueueMilestoneFailure();
-            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 2, 6);
 
             ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
             lecture.SetCompletionCloseDelayForTesting(0f);
 
             var start = new AttendIcsSessionResult(
-                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 4, 1, 60),
                 false,
                 true,
                 60000,
@@ -563,7 +571,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 0,
                 0,
                 50f,
-                58f);
+                54f);
 
             lecture.BeginLecture(classroom, sync, start, () => { });
 
@@ -587,7 +595,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             lecture.SetCompletionCloseDelayForTesting(0f);
 
             var start = new AttendIcsSessionResult(
-                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 4, 1, 60),
                 false,
                 true,
                 60000,
@@ -596,7 +604,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 0,
                 0,
                 50f,
-                58f);
+                54f);
 
             lecture.BeginLecture(classroom, sync, start, () => { });
             RunToCompletion(lecture.ClaimMilestoneForTesting(30));
@@ -610,12 +618,12 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             dailyActivityState.SetAttendIcsStatusForTesting(ActivityStatus.Pending);
 
             var sync = new FakeAttendIcsSync();
-            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 2, 6);
 
             ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
             lecture.SetCompletionCloseDelayForTesting(0f);
             var start = new AttendIcsSessionResult(
-                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                new ActivityRecord(ActivityIds.AttendIcs, ActivityStatus.InProgress, "ATTENDING", 0, 4, 1, 60),
                 false,
                 true,
                 60000,
@@ -624,7 +632,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 0,
                 0,
                 50f,
-                58f);
+                54f);
 
             lecture.BeginLecture(classroom, sync, start, () => { });
             RunToCompletion(lecture.ClaimMilestoneForTesting(90));
@@ -718,7 +726,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 ActivityStatus.Completed,
                 "COMPLETED",
                 0,
-                12,
+                6,
                 90);
             dailyActivityState.SetClassroomStatusForTesting(
                 ActivityIds.AttendDm,
@@ -747,7 +755,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             dailyActivityState.SetLocationConfigForTesting(locationConfigAsset);
             dailyActivityState.SetAdditionalLocationConfigsForTesting(new[] { english, dm });
             dailyActivityState.SetClassroomStatusForTesting(
-                ActivityIds.AttendEnglish, ActivityStatus.Completed, "COMPLETED", 0, 12, 90);
+                ActivityIds.AttendEnglish, ActivityStatus.Completed, "COMPLETED", 0, 6, 90);
 
             saveState.SetDayProgressForTesting(1, 2);
             dailyActivityState.ResetForNewDay(2);
@@ -781,26 +789,26 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 1,
                 new[]
                 {
-                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Completed, "COMPLETED", 0, 12),
-                    new DaySummaryActivity(ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -5),
-                    new DaySummaryActivity(ActivityIds.AttendDm, ActivityStatus.Missed, "LEFT_EARLY", 0, -1)
+                    new DaySummaryActivity(ActivityIds.AttendIcs, ActivityStatus.Completed, "COMPLETED", 0, 6),
+                    new DaySummaryActivity(ActivityIds.AttendEnglish, ActivityStatus.Missed, "SKIPPED", 0, -4),
+                    new DaySummaryActivity(ActivityIds.AttendDm, ActivityStatus.Missed, "LEFT_EARLY", 0, -2)
                 },
                 0,
-                6,
+                0,
                 50,
-                56);
+                50);
 
             summaryUi.ShowForTesting(summary);
             string body = summaryUi.GetActivityBodyTextForTesting();
             TextMeshProUGUI totals = FindLabel(summaryUi.transform, "Totals");
             Assert.That(body, Does.Contain("Introduction to Computer Science"));
-            Assert.That(body, Does.Contain("Academic: +12"));
+            Assert.That(body, Does.Contain("Academic: +6"));
             Assert.That(body, Does.Contain("English (Missed)"));
-            Assert.That(body, Does.Contain("Academic: -5"));
+            Assert.That(body, Does.Contain("Academic: -4"));
             Assert.That(body, Does.Contain("Discrete Mathematics (Left Early)"));
-            Assert.That(body, Does.Contain("Academic: -1"));
+            Assert.That(body, Does.Contain("Academic: -2"));
             Assert.That(totals.text, Does.Contain("TODAY'S TOTAL"));
-            Assert.That(totals.text, Does.Contain("Academic Reputation: +6"));
+            Assert.That(totals.text, Does.Contain("Academic Reputation: 0"));
             Assert.That(FindChild(summaryUi.transform, "ActivityScroll"), Is.Not.Null);
             UnityEngine.Object.DestroyImmediate(summaryObject);
         }
@@ -815,11 +823,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             SetCourseFields(classroom, ActivityIds.AttendEnglish, "ENGLISH", "English", "702", 7);
 
             var sync = new FakeAttendIcsSync();
-            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 4, 12);
+            sync.QueueMilestoneSuccess(90, ActivityStatus.Completed, "COMPLETED", 2, 6);
             ClassroomLectureUI lecture = ClassroomLectureUI.EnsureExists();
             lecture.SetCompletionCloseDelayForTesting(0f);
             var start = new AttendIcsSessionResult(
-                new ActivityRecord(ActivityIds.AttendEnglish, ActivityStatus.InProgress, "ATTENDING", 0, 8, 1, 60),
+                new ActivityRecord(ActivityIds.AttendEnglish, ActivityStatus.InProgress, "ATTENDING", 0, 4, 1, 60),
                 false,
                 true,
                 60000,
@@ -828,7 +836,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 0,
                 0,
                 50f,
-                58f);
+                54f);
 
             lecture.BeginLecture(classroom, sync, start, () => { });
             Assert.That(FindLabel(lecture.transform, "Header").text, Is.EqualTo("ENGLISH"));
@@ -881,7 +889,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             ShowHud();
             PlayerProgressSync sync = playerObject.AddComponent<PlayerProgressSync>();
             Assert.That(sync.ApplySessionResponseForTesting(SessionJson(
-                ActivityIds.AttendEnglish, "COMPLETED", "COMPLETED", 90, 0, 12, 62)), Is.True);
+                ActivityIds.AttendEnglish, "COMPLETED", "COMPLETED", 90, 0, 6, 56)), Is.True);
 
             TextMeshProUGUI marker = FindLabel(statsHud.transform, "ATTEND_ENGLISHMarker");
             TextMeshProUGUI title = FindLabel(statsHud.transform, "ATTEND_ENGLISHTitle");
@@ -891,7 +899,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(title.color, Is.EqualTo(UiTheme.Success));
             AssertPendingMarker("Ics");
             AssertPending("ATTEND_DM", "Attend Discrete Mathematics");
-            Assert.That(FindLabel(statsHud.transform, "AcademicText").text, Is.EqualTo("ACADEMIC: 62"));
+            Assert.That(FindLabel(statsHud.transform, "AcademicText").text, Is.EqualTo("ACADEMIC: 56"));
         }
 
         [Test]
@@ -901,7 +909,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             ShowHud();
             PlayerProgressSync sync = playerObject.AddComponent<PlayerProgressSync>();
             Assert.That(sync.ApplySessionResponseForTesting(SessionJson(
-                ActivityIds.AttendEnglish, "COMPLETED", "PROXY", 0, 5, 0, 50)), Is.True);
+                ActivityIds.AttendEnglish, "COMPLETED", "PROXY", 0, 3, 0, 50)), Is.True);
 
             TextMeshProUGUI marker = FindLabel(statsHud.transform, "ATTEND_ENGLISHMarker");
             TextMeshProUGUI title = FindLabel(statsHud.transform, "ATTEND_ENGLISHTitle");
@@ -959,7 +967,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(dailyActivityState.GetClassroomOutcome(ActivityIds.AttendEnglish), Is.EqualTo("LEFT_EARLY"));
 
             dailyActivityState.ApplyServerActivity(new ActivityRecord(
-                ActivityIds.AttendDm, ActivityStatus.Missed, "SKIPPED", 0, -5, 1));
+                ActivityIds.AttendDm, ActivityStatus.Missed, "SKIPPED", 0, -4, 1));
             Assert.That(stats.AcademicReputation, Is.EqualTo(53f));
             AssertLeftEarly("ATTEND_DM", "Attend Discrete Mathematics — Missed");
             AssertLeftEarly("ATTEND_ENGLISH", "Attend English — Left Early");

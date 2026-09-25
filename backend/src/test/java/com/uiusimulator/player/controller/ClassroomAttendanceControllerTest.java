@@ -44,7 +44,7 @@ class ClassroomAttendanceControllerTest {
     @Test
     void englishMilestone_usesActivityPath() throws Exception {
         when(attendIcsService.claimMilestone(any(), eq("ATTEND_ENGLISH"), eq(new AttendIcsMilestoneRequest(30))))
-                .thenReturn(session("ATTEND_ENGLISH", "IN_PROGRESS", "ATTENDING", 30, 0, 4, 54));
+                .thenReturn(session("ATTEND_ENGLISH", "IN_PROGRESS", "ATTENDING", 30, 0, 2, 52));
 
         mockMvc.perform(post("/api/players/me/activities/classroom/ATTEND_ENGLISH/milestone")
                         .with(jwt())
@@ -53,19 +53,19 @@ class ClassroomAttendanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activityId").value("ATTEND_ENGLISH"))
                 .andExpect(jsonPath("$.milestoneSeconds").value(30))
-                .andExpect(jsonPath("$.reputationDelta").value(4));
+                .andExpect(jsonPath("$.reputationDelta").value(2));
     }
 
     @Test
     void dmProxy_usesActivityPath() throws Exception {
         when(attendIcsService.punchProxy(any(), eq("ATTEND_DM")))
-                .thenReturn(session("ATTEND_DM", "COMPLETED", "PROXY", 0, 5, 0, 50));
+                .thenReturn(session("ATTEND_DM", "COMPLETED", "PROXY", 0, 3, 0, 50));
 
         mockMvc.perform(post("/api/players/me/activities/classroom/ATTEND_DM/proxy").with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.activityId").value("ATTEND_DM"))
                 .andExpect(jsonPath("$.outcome").value("PROXY"))
-                .andExpect(jsonPath("$.auraDelta").value(5));
+                .andExpect(jsonPath("$.auraDelta").value(3));
     }
 
     private static AttendIcsSessionResponse session(
