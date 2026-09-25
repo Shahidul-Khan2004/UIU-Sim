@@ -28,6 +28,11 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @ActiveProfiles("test")
 @Import({
+        com.uiusimulator.assessment.service.AssessmentService.class,
+        com.uiusimulator.assessment.service.CourseEnrollmentService.class,
+        com.uiusimulator.assessment.service.SecureAssessmentRandom.class,
+        com.uiusimulator.assessment.config.AssessmentCatalog.class,
+        com.uiusimulator.assessment.config.CheatPolicy.class,
         PlayerService.class,
         PlayerSaveService.class,
         PlayerActivityService.class,

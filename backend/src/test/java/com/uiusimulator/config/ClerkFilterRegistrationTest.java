@@ -32,6 +32,9 @@ class ClerkFilterRegistrationTest {
     private ApplicationContext applicationContext;
 
     @MockitoBean
+    private com.uiusimulator.assessment.service.AssessmentService assessmentService;
+
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     @MockitoBean
