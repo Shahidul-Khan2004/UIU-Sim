@@ -4,10 +4,10 @@ import java.util.List;
 
 /**
  * Server-authoritative CSE classroom courses that share one lecture ruleset.
- * Unity location assets must use the same {@code scheduledDay} values.
+ * Normal lecture days are centralized here; location assets only describe the rooms.
  * The server does not trust a client-submitted schedule.
  *
- * <p>Semester 1, day 1: Introduction to Computer Science, English, Discrete Mathematics.
+ * <p>Semester 1, days 1 and 4: Introduction to Computer Science, English, Discrete Mathematics.
  */
 public final class ClassroomCourseDefinition {
 
@@ -87,6 +87,10 @@ public final class ClassroomCourseDefinition {
         return scheduledDay;
     }
 
+    public static boolean isNormalClassDay(int semester, int day) {
+        return semester == 1 && (day == 1 || day == 4);
+    }
+
     public boolean isEligible(PlayerSave save) {
         if (save == null || save.getRole() != PlayerRole.STUDENT) {
             return false;
@@ -94,7 +98,7 @@ public final class ClassroomCourseDefinition {
         Department department = save.getDepartment();
         return department != null
                 && "CSE".equalsIgnoreCase(department.getCode())
-                && save.getCurrentDay() == scheduledDay;
+                && isNormalClassDay(save.getSemester(), save.getCurrentDay());
     }
 
     public static int reputationRewardForMilestone(int milestoneSeconds) {

@@ -76,5 +76,31 @@
     ],
     "correctAnswer": 2,
     "tier": "HARD"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-07",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the past tense of go.",
+    "answers": [
+      "Goes",
+      "Going",
+      "Went",
+      "Gone"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "SAMPLE-ENGLISH-08",
+    "courseId": "ENGLISH",
+    "text": "[SAMPLE / TEST] Choose the correct verb: Neither of the answers ___ correct.",
+    "answers": [
+      "are",
+      "were",
+      "be",
+      "is"
+    ],
+    "correctAnswer": 3,
+    "tier": "HARD"
   }
 ]

@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Text;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.UI;
@@ -9,6 +11,7 @@ namespace UIU.Simulator.Gameplay.Assessment
     {
         public static ReportCardUI Instance { get; private set; }
         private ReportCard card;
+        private Action onClosed;
         private IAssessmentProgressSync progress;
         public void Configure(IAssessmentProgressSync sync) { progress = sync; }
         private int courseIndex, openedFrame;
@@ -18,11 +21,19 @@ namespace UIU.Simulator.Gameplay.Assessment
             return Instance;
         }
         protected override void Awake() { base.Awake(); Instance = this; }
-        protected override void OnDestroy() { base.OnDestroy(); if (Instance == this) Instance = null; }
-        public void Show()
+        protected override void OnDestroy() { onClosed = null; base.OnDestroy(); if (Instance == this) Instance = null; }
+        public void Show(Action whenClosed = null)
         {
             if (BlocksGameplay) return;
+            onClosed = whenClosed;
             OpenModal(); openedFrame = Time.frameCount; courseIndex = 0; Load();
+        }
+        public override void CloseModal()
+        {
+            var callback = onClosed;
+            onClosed = null;
+            base.CloseModal();
+            callback?.Invoke();
         }
         private void Load()
         {
@@ -42,6 +53,7 @@ namespace UIU.Simulator.Gameplay.Assessment
             Clear(); Label("REPORT CARD · SEMESTER " + card.semester, 28, UiTheme.BrightOrange);
             if (card.courses == null || card.courses.Length == 0)
             { Label("No assessment courses available."); Button("CLOSE", CloseModal); return; }
+            Label(FormatCgpa(card), 24, UiTheme.BrightOrange);
             courseIndex = Mathf.Clamp(courseIndex, 0, card.courses.Length - 1);
             var course = card.courses[courseIndex];
             Label(course.courseName.ToUpperInvariant(), 25, null, 70);
@@ -67,6 +79,9 @@ namespace UIU.Simulator.Gameplay.Assessment
             }
             Button("CLOSE", CloseModal);
         }
+        public static string FormatCgpa(ReportCard report) => report.cgpaStatus == "FINAL"
+            ? "CGPA: " + report.cgpa.ToString("F2", CultureInfo.InvariantCulture)
+            : "CGPA: Pending";
         public static string FormatFinalResult(CourseResult course)
         {
             if (course.IsDropped) return "COURSE DROPPED\nFinal Result: 0 / 100\nGrade: F · Grade Point: 0.00";

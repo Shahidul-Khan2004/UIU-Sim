@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.*;
 
-/** Editable server configuration. Only Semester 1 / Day 2 is scheduled. */
+/** Editable server configuration. Semester 1 assessment days share the same engine. */
 @Component
 public class AssessmentCatalog {
     public record Band(String name, int minimum, int seconds, double easy, double normal, double hard, int distractorsRemoved) {
@@ -56,7 +56,7 @@ public class AssessmentCatalog {
             if (!days.add(s.semester() + ":" + s.day()) || s.semester() < 1 || s.day() < 1 || s.type() == null)
                 throw new IllegalArgumentException("Invalid assessment schedule");
             for (var bank : banks.values()) if (bank.size() < s.type().questionCount())
-                throw new IllegalArgumentException("Add enough real questions before scheduling this assessment");
+                throw new IllegalArgumentException("Add enough questions before scheduling this assessment");
         }
     }
     public static boolean eligible(PlayerSave save) {

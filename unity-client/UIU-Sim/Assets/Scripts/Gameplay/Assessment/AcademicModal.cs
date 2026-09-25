@@ -41,7 +41,7 @@ namespace UIU.Simulator.Gameplay.Assessment
             if (control == null) return;
             controls.Add(control); previous.Add(control.enabled); control.enabled = false;
         }
-        public void CloseModal()
+        public virtual void CloseModal()
         {
             if (!owners.Remove(this)) return;
             if (root != null) root.SetActive(false);

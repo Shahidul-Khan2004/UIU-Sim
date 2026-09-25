@@ -17,7 +17,7 @@ namespace UIU.Simulator.Gameplay.UI
 {
     /// <summary>
     /// Modal daily summary shown after End Day finalization.
-    /// Continue advances the day once; failed advances keep the modal open for retry.
+    /// Continue advances once, or opens the beta ending after Day 6. Failed advances allow retry.
     /// Layout: fixed header + scrollable activity rows + fixed footer (totals + Continue).
     /// </summary>
     [DisallowMultipleComponent]
@@ -190,6 +190,16 @@ namespace UIU.Simulator.Gameplay.UI
         {
             if (!hasPendingSummary || isAdvancing || advanceSucceeded)
             {
+                return;
+            }
+
+            if (SemesterSchedule.IsBetaEnd(pendingSummary.Semester, pendingSummary.Day))
+            {
+                // Summary is from successful server finalization. No advance request or respawn.
+                advanceSucceeded = true;
+                HideImmediate();
+                ReleaseGameplayAfterSuccessfulAdvance();
+                UIU.Simulator.Gameplay.Assessment.BetaEndUI.EnsureExists().Show();
                 return;
             }
 

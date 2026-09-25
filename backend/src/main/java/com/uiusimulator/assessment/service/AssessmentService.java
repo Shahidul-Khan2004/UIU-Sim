@@ -132,7 +132,7 @@ public class AssessmentService {
         return report(player.getId(), save);
     }
     private ReportCardResponse report(UUID player, PlayerSave save) {
-        if (!AssessmentCatalog.eligible(save)) return new ReportCardResponse(save.getSemester(), save.getCurrentDay(), null, List.of());
+        if (!AssessmentCatalog.eligible(save)) return new ReportCardResponse(save.getSemester(), save.getCurrentDay(), null, List.of(), null);
         var rows = results.findByPlayerIdAndSemester(player, save.getSemester());
         var dropped = enrollments.findByPlayerIdAndSemester(player, save.getSemester()).stream()
                 .filter(e -> e.getStatus() == CourseStatus.DROPPED_CHEATING).map(PlayerCourseEnrollment::getCourseId).toList();
@@ -155,8 +155,12 @@ public class AssessmentService {
                     total, grade == null ? "Pending" : grade.letter(), grade == null ? null : grade.gradePoint(),
                     grade == null ? "Pending" : grade.description(), components));
         }
+        Double cgpa = reportCourses.stream().allMatch(c -> c.gradePoint() != null)
+                ? java.math.BigDecimal.valueOf(reportCourses.stream().mapToDouble(c -> c.gradePoint()).sum())
+                    .divide(java.math.BigDecimal.valueOf(reportCourses.size()), 2, java.math.RoundingMode.HALF_UP).doubleValue()
+                : null;
         var scheduled = catalog.scheduled(save);
-        return new ReportCardResponse(save.getSemester(), save.getCurrentDay(), scheduled == null ? null : scheduled.name(), reportCourses);
+        return new ReportCardResponse(save.getSemester(), save.getCurrentDay(), scheduled == null ? null : scheduled.name(), reportCourses, cgpa);
     }
     /** Caller (End Day) already owns the same stats/save locks. Joins that transaction. */
     @Transactional

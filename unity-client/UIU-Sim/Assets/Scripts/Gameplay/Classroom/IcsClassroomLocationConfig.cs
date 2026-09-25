@@ -27,7 +27,7 @@ namespace UIU.Simulator.Gameplay.Classroom
         [SerializeField] private int floor = 4;
 
         [Header("Schedule")]
-        [Tooltip("Must match backend ClassroomCourseDefinition.scheduledDay for this activity. Day 1 for ICS, English, and Discrete Mathematics.")]
+        [Tooltip("Legacy first-day value. Normal lecture days are defined by SemesterSchedule.")]
         [SerializeField] private int scheduledGameplayDay = 1;
 
         public string ActivityId => string.IsNullOrWhiteSpace(activityId) ? "ATTEND_ICS" : activityId.Trim();

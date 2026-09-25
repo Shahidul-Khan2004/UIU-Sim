@@ -45,7 +45,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             if (ReportCardUI.Instance != null) { ReportCardUI.Instance.CloseModal(); Object.DestroyImmediate(ReportCardUI.Instance.gameObject); }
             if (GameMenuManager.Instance != null) Object.DestroyImmediate(GameMenuManager.Instance.gameObject);
             if (DailySummaryUI.Instance != null) Object.DestroyImmediate(DailySummaryUI.Instance.gameObject);
-            if (ClassroomChoiceUI.Instance != null) Object.DestroyImmediate(ClassroomChoiceUI.Instance.gameObject);
+            if (ClassroomChoiceUI.Instance != null) DestroyInitialized(ClassroomChoiceUI.Instance);
+            if (ClassroomLectureUI.Instance != null) DestroyInitialized(ClassroomLectureUI.Instance);
+            if (BetaEndUI.Instance != null) Object.DestroyImmediate(BetaEndUI.Instance.gameObject);
             Object.DestroyImmediate(player);
             foreach(var config in locations) Object.DestroyImmediate(config);
         }
@@ -169,6 +171,174 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             }
             finally { Object.DestroyImmediate(doorObject); }
         }
+        [TestCase(2, "QUIZ_1", "Quiz 1", 3, 15, "QUIZ DAY · TODAY", "START QUIZ")]
+        [TestCase(3, "MIDTERM", "Midterm", 6, 30, "MIDTERM DAY · TODAY", "START MIDTERM")]
+        [TestCase(5, "QUIZ_2", "Quiz 2", 3, 15, "QUIZ DAY · TODAY", "START QUIZ")]
+        [TestCase(6, "FINAL", "Final Exam", 8, 40, "FINAL DAY · TODAY", "START FINAL EXAM")]
+        public void ScheduledDaysReuseAssessmentUiAndHud(int day, string type, string name, int count, int marks, string header, string start)
+        {
+            save.SetDayProgressForTesting(1, day); sync.Card.day = day; sync.Card.scheduledAssessment = type;
+            daily.ApplyReportCard(sync.Card);
+            var hud = CreateHud();
+            StringAssert.Contains(header, Text(hud));
+            Assert.That(daily.BuildAdditionalClassroomObjectives(save).All(v => v.Title.Contains(name)), Is.True);
+            var ui = AssessmentUI.EnsureExists(); ui.Configure(sync);
+            foreach (var location in locations)
+            {
+                var doorObject = new GameObject("Exam Door");
+                try
+                {
+                    doorObject.AddComponent<BoxCollider>(); var door = doorObject.AddComponent<IcsClassroomInteractable>();
+                    Field(door, "locationConfig", location); Assert.That(door.Interact(), Is.Null);
+                    StringAssert.Contains(name, Text(ui)); StringAssert.Contains($"{marks} Marks · {count} Questions", Text(ui));
+                    Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+                    Click(ui, start);
+                    Assert.That(sync.Result.assessmentType, Is.EqualTo(type));
+                    for (int i = 0; i < count; i++) Click(ui, "A. Correct");
+                    StringAssert.Contains($"Result: {marks} / {marks}", Text(ui));
+                    Click(ui, "RETURN TO CAMPUS");
+                }
+                finally { Object.DestroyImmediate(doorObject); }
+            }
+        }
+        [TestCase(1)] [TestCase(4)]
+        public void NormalDaysOpenExistingMenuForAllCoursesAndExcludeDrops(int day)
+        {
+            save.SetDayProgressForTesting(1, day); sync.Card.day = day; sync.Card.scheduledAssessment = null;
+            daily.ApplyReportCard(sync.Card);
+            var hud = CreateHud();
+            Assert.That(hud.GetComponentsInChildren<TextMeshProUGUI>().Single(t => t.name == "TodayHeader").text, Is.EqualTo("TODAY"));
+            Assert.That(daily.ShouldShowAttendIcsObjective(save), Is.True);
+            Assert.That(daily.BuildAdditionalClassroomObjectives(save).All(v => v.Title.StartsWith("Attend ")), Is.True);
+            foreach (var location in locations)
+            {
+                var doorObject = new GameObject("Normal Door");
+                try
+                {
+                    doorObject.AddComponent<BoxCollider>(); var door = doorObject.AddComponent<IcsClassroomInteractable>();
+                    InitializeEditMode(ClassroomChoiceUI.EnsureExists());
+                    Field(door, "locationConfig", location); Assert.That(door.Interact(), Is.Null);
+                    Assert.That(ClassroomChoiceUI.IsOpen, Is.True);
+                    var choice = ClassroomChoiceUI.Instance;
+                    StringAssert.Contains("ATTEND CLASS", Text(choice).ToUpperInvariant());
+                    StringAssert.Contains("PUNCH ID", Text(choice).ToUpperInvariant());
+                    DestroyInitialized(choice);
+                    sync.Card.Course(location.CourseId).status = "DROPPED_CHEATING";
+                    AssessmentUI.EnsureExists().Configure(sync); door.Interact();
+                    StringAssert.Contains("You were removed from this course", Text(AssessmentUI.Instance));
+                    Assert.That(ClassroomChoiceUI.IsOpen, Is.False); Click(AssessmentUI.Instance, "BACK");
+                }
+                finally { Object.DestroyImmediate(doorObject); }
+            }
+            Assert.That(daily.ShouldShowAttendIcsObjective(save), Is.False);
+            Assert.That(daily.BuildAdditionalClassroomObjectives(save), Is.Empty);
+        }
+        [TestCase("{\"cgpa\":null,\"cgpaStatus\":\"PENDING\"}", "CGPA: Pending")]
+        [TestCase("{\"cgpa\":0.0,\"cgpaStatus\":\"FINAL\"}", "CGPA: 0.00")]
+        [TestCase("{\"cgpa\":4.0,\"cgpaStatus\":\"FINAL\"}", "CGPA: 4.00")]
+        [TestCase("{\"cgpa\":2.33,\"cgpaStatus\":\"FINAL\"}", "CGPA: 2.33")]
+        public void ReportCardDisplaysServerCgpaIncludingNullAndZero(string json, string label)
+        {
+            var data = JsonUtility.FromJson<ReportCard>(json);
+            sync.Card.cgpa = data.cgpa; sync.Card.cgpaStatus = data.cgpaStatus;
+            var report = ReportCardUI.EnsureExists(); report.Configure(sync); report.Show();
+            StringAssert.Contains(label, Text(report));
+        }
+        [Test] public void DaySixSummaryContinuesToBetaAndReportReturnsWithControlsLocked()
+        {
+            save.SetDayProgressForTesting(1, 6); sync.Card.day = 6; sync.Card.cgpaStatus = "FINAL"; sync.Card.cgpa = 2.33f;
+            var report = ReportCardUI.EnsureExists(); report.Configure(sync);
+            var menu = GameMenuManager.EnsureExists(); menu.Open(); Click(menu, "Button_NextDay");
+            Assert.That(menu.IsEndDayConfirmOpen, Is.True);
+            menu.Close(restoreGameplayControls: false);
+            var summary = DailySummaryUI.EnsureExists();
+            for (int pass = 0; pass < 2; pass++)
+            {
+                summary.Show(new DayFinalizeResult(1, 6, new[]{new DaySummaryActivity("ASSESSMENT_ICS", ActivityStatus.Missed,
+                    "MISSED", 0, 0, 0, 40, "Final Exam")}, 0, 0, 50, 50));
+                StringAssert.Contains("Final Exam", Text(summary));
+                StringAssert.DoesNotContain("CGPA", Text(summary));
+                Click(summary, "Button_Continue");
+                Assert.That(DailySummaryUI.IsOpen, Is.False);
+                Assert.That(save.CurrentDay, Is.EqualTo(6));
+                var beta = BetaEndUI.Instance;
+                Assert.That(beta, Is.Not.Null); StringAssert.Contains("SEMESTER COMPLETE", Text(beta));
+                StringAssert.DoesNotContain("CGPA", Text(beta));
+                Assert.That(Buttons(beta).Any(b => b.name == "QUIT GAME"), Is.True);
+                for (int cycle = 0; cycle < 2; cycle++)
+                {
+                    Assert.That(movement.enabled || look.enabled || interaction.enabled, Is.False);
+                    Click(beta, "VIEW REPORT CARD"); StringAssert.Contains("CGPA: 2.33", Text(report));
+                    Assert.That(movement.enabled || look.enabled || interaction.enabled, Is.False);
+                    Click(report, "CLOSE");
+                    Assert.That(movement.enabled || look.enabled || interaction.enabled, Is.False);
+                    Assert.That(AcademicModal.BlocksGameplay, Is.True);
+                    Assert.That(Cursor.visible, Is.True);
+                    StringAssert.Contains("SEMESTER COMPLETE", Text(beta));
+                }
+                beta.CloseModal();
+            }
+        }
+        [TestCase(0, false)] [TestCase(1, false)] [TestCase(2, false)]
+        [TestCase(0, true)] [TestCase(1, true)] [TestCase(2, true)]
+        public void DayFourAttendAndProxyUseExistingClassroomActions(int course, bool proxy)
+        {
+            save.SetDayProgressForTesting(1, 4); save.SetIdentityForTesting("STUDENT", "CSE", true);
+            sync.Card.day = 4; sync.Card.scheduledAssessment = null; daily.ApplyReportCard(sync.Card);
+            InitializeEditMode(ClassroomChoiceUI.EnsureExists());
+            InitializeEditMode(ClassroomLectureUI.EnsureExists());
+            var doorObject = new GameObject("Day4 Door");
+            try
+            {
+                doorObject.AddComponent<BoxCollider>(); var door = doorObject.AddComponent<IcsClassroomInteractable>();
+                Field(door, "locationConfig", locations[course]);
+                var lectureSync = new FakeLectureSync(locations[course].ActivityId); door.SetAttendIcsSyncForTesting(lectureSync);
+                Assert.That(door.Interact(), Is.Null);
+                Click(ClassroomChoiceUI.Instance, proxy ? "ProxyButton" : "AttendButton");
+                Assert.That(lectureSync.StartCount, Is.EqualTo(proxy ? 0 : 1));
+                Assert.That(lectureSync.ProxyCount, Is.EqualTo(proxy ? 1 : 0));
+                Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+                Assert.That(ClassroomLectureUI.IsOpen, Is.EqualTo(!proxy));
+                if (!proxy) StringAssert.Contains(locations[course].CourseName, Text(ClassroomLectureUI.Instance));
+            }
+            finally { Object.DestroyImmediate(doorObject); }
+        }
+        // Ordinary MonoBehaviour Awake/OnEnable are not guaranteed by AddComponent in EditMode.
+        private static void InitializeEditMode(Component target)
+        {
+            if (target.GetComponentInChildren<Canvas>(true) == null)
+                target.GetType().GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(target, null);
+        }
+        private static void DestroyInitialized(Component target)
+        {
+            // Pair the manual EditMode Awake with cleanup of static modal ownership.
+            target.GetType().GetMethod("OnDestroy", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(target, null);
+            Object.DestroyImmediate(target.gameObject);
+        }
+        private StatsHUD CreateHud()
+        {
+            var hud = player.AddComponent<StatsHUD>(); InitializeEditMode(hud);
+            typeof(StatsHUD).GetMethod("OnEnable", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(hud, null);
+            return hud;
+        }
+        private sealed class FakeLectureSync : IAttendIcsProgressSync
+        {
+            private readonly string activity;
+            public FakeLectureSync(string id) { activity = id; }
+            public bool IsHydrated => true;
+            public bool IsMutationInFlight => false;
+            public int StartCount, ProxyCount;
+            private AttendIcsSessionResult Result(bool proxy) => new AttendIcsSessionResult(
+                new ActivityRecord(activity, proxy ? ActivityStatus.Completed : ActivityStatus.InProgress,
+                    proxy ? "PROXY" : "IN_PROGRESS", proxy ? 3 : 0, 0, 4, 0),
+                false, !proxy, 0, proxy ? 3 : 0, 0, proxy ? 3 : 0, 0, proxy ? 53 : 50, 50);
+            public void RequestAttendIcsStart(Action<AttendIcsSessionResult> ok, Action fail) { StartCount++; ok(Result(false)); }
+            public void RequestAttendIcsProxy(Action<AttendIcsSessionResult> ok, Action fail) { ProxyCount++; ok(Result(true)); }
+            public void RequestAttendIcsPause(Action<AttendIcsSessionResult> ok, Action fail) => ok(Result(false));
+            public void RequestAttendIcsResume(Action<AttendIcsSessionResult> ok, Action fail) => ok(Result(false));
+            public void RequestAttendIcsMilestone(int milestone, Action<AttendIcsSessionResult> ok, Action fail) => fail();
+            public void RequestAttendIcsLeaveEarly(Action<AttendIcsSessionResult> ok, Action fail) => fail();
+        }
         private AssessmentUI OpenQuiz(){var ui=AssessmentUI.EnsureExists();ui.Configure(sync);ui.Show("ICS");Click(ui,"START QUIZ");return ui;}
         private static void Field(object target,string name,object value){target.GetType().GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(target,value);}
         private static IcsClassroomLocationConfig Location(string course,string room,int floor)
@@ -195,13 +365,14 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             public void RequestReportCard(Action<ReportCard> ok,Action<string> fail)=>ok(Card);
             public void RequestAssessmentStart(string course,string type,Action<AssessmentResult> ok,Action<string> fail)
             {
-                StartCount++;Result=new AssessmentResult{attemptId="test",courseId=course,courseName=course,assessmentType=type,displayName="Quiz 1",state="STARTED",
-                    questionCount=3,maxMarks=15,difficulty="NORMAL",secondsRemaining=18,reportCard=Card,
+                var component = Card.Course(course).Component(type);
+                StartCount++;Result=new AssessmentResult{attemptId="test",courseId=course,courseName=course,assessmentType=type,displayName=component.displayName,state="STARTED",
+                    questionCount=component.questionCount,maxMarks=component.maxMarks,difficulty="NORMAL",secondsRemaining=18,reportCard=Card,
                     question=new AssessmentQuestion{id="sample",text="[SAMPLE] Test?",options=new[]{new AssessmentOption{index=0,text="Correct"},new AssessmentOption{index=1,text="Wrong"},new AssessmentOption{index=2,text="Other"},new AssessmentOption{index=3,text="Another"}}}};
                 ok(Result);
             }
             public void RequestAssessmentAnswer(AssessmentResult a,int answer,Action<AssessmentResult> ok,Action<string> fail)
-            {AnswerCount++;LastAnswer=answer;Result.marksObtained+=answer==0?5:0;Result.questionIndex++;if(Result.questionIndex==3)Result.state="COMPLETED";ok(Result);}
+            {AnswerCount++;LastAnswer=answer;Result.marksObtained+=answer==0?5:0;Result.questionIndex++;if(Result.questionIndex==Result.questionCount)Result.state="COMPLETED";ok(Result);}
             public void RequestAssessmentCheat(AssessmentResult a,Action<AssessmentResult> ok,Action<string> fail)
             {CheatCount++;cheatCallback=ok;if(FailCheat){fail("Response lost");return;}if(!HoldCheat)FinishCheat("CHEAT_CAUGHT");}
             public void FinishCheat(string state)
