@@ -39,19 +39,23 @@ namespace UIU.Simulator.Gameplay.Activities
         public readonly string Outcome;
         public readonly int AuraDelta;
         public readonly int AcademicReputationDelta;
+        public readonly int MarksObtained, MaxMarks;
+        public readonly string AssessmentName;
+        public readonly bool CourseDropped;
 
         public DaySummaryActivity(
             string activityId,
             ActivityStatus status,
             string outcome,
             int auraDelta,
-            int academicReputationDelta)
+            int academicReputationDelta, int marksObtained = 0, int maxMarks = 0, string assessmentName = null, bool courseDropped = false)
         {
             ActivityId = activityId ?? string.Empty;
             Status = status;
             Outcome = outcome ?? string.Empty;
             AuraDelta = auraDelta;
             AcademicReputationDelta = academicReputationDelta;
+            MarksObtained = marksObtained; MaxMarks = maxMarks; AssessmentName = assessmentName; CourseDropped = courseDropped;
         }
     }
 

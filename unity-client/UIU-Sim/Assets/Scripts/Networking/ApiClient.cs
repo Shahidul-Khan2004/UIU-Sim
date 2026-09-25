@@ -275,6 +275,9 @@ namespace UIU.Simulator.Networking
             public string outcome;
             public int auraDelta;
             public int academicReputationDelta;
+            public int marksObtained, maxMarks;
+            public string assessmentName;
+            public bool courseDropped;
         }
 
         [Serializable]

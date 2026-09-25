@@ -92,6 +92,7 @@ public class FirstPersonLook : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked &&
             Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
+            !UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay &&
             !ElevatorUI.IsOpen &&
             !AdvisorUI.IsOpen &&
             !GameMenuManager.IsOpen &&

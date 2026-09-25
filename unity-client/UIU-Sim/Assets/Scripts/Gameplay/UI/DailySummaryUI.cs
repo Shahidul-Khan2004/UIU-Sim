@@ -393,6 +393,12 @@ namespace UIU.Simulator.Gameplay.UI
                 title = AttendIcsOutcomeApi.SummaryLabel(item.Outcome, courseName);
             }
 
+            if (item.MaxMarks > 0)
+            {
+                string course = item.ActivityId.Replace("ASSESSMENT_", "");
+                title = course + " — " + item.AssessmentName + " — " +
+                    UIU.Simulator.Gameplay.Assessment.AssessmentUI.OutcomeLabel(item.Outcome);
+            }
             string marker = StatusMarkerForActivity(item);
             Color statusColor = StatusColorForActivity(item);
 
@@ -428,7 +434,9 @@ namespace UIU.Simulator.Gameplay.UI
             TextMeshProUGUI detailLabel = CreateText(
                 row.transform,
                 "Details",
-                $"Aura: {FormatSigned(item.AuraDelta)} | Academic: {FormatSigned(item.AcademicReputationDelta)}",
+                (item.MaxMarks > 0 ? $"Result: {item.MarksObtained} / {item.MaxMarks}\n" : "") +
+                (item.CourseDropped ? "COURSE DROPPED · Final Course Result: 0 / 100 · F · 0.00\n" : "") +
+                $"Aura: {FormatSigned(item.AuraDelta)} | " + (item.MaxMarks > 0 ? "Academic Reputation: " : "Academic: ") + FormatSigned(item.AcademicReputationDelta),
                 ActivityDetailFontSize,
                 FontStyles.Normal,
                 UiTheme.Grey,

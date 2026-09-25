@@ -1,4 +1,5 @@
 using System;
+using UIU.Simulator.Gameplay.Assessment;
 using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
@@ -108,7 +109,7 @@ namespace UIU.Simulator.Gameplay.Classroom
 
         public string Interact()
         {
-            if (isBusy || DialogueUI.IsOpen || ClassroomLectureUI.IsOpen || ClassroomChoiceUI.IsOpen)
+            if (AcademicModal.BlocksGameplay || isBusy || DialogueUI.IsOpen || ClassroomLectureUI.IsOpen || ClassroomChoiceUI.IsOpen)
             {
                 return null;
             }
@@ -124,6 +125,23 @@ namespace UIU.Simulator.Gameplay.Classroom
             if (save == null || !save.HasActiveUniversityDay)
             {
                 return "Complete admission before attending class.";
+            }
+
+            if (activities != null && activities.IsCourseDropped(CourseId))
+            {
+                AssessmentUI.EnsureExists().Show(CourseId);
+                return null;
+            }
+
+            // Quiz Day uses the hydrated server schedule. Other non-lecture days keep the
+            // existing eligibility message and must not open the assessment UI.
+            if (string.Equals(save.Role, StudentRole, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(save.Department, DepartmentCode, StringComparison.OrdinalIgnoreCase)
+                && activities != null
+                && activities.IsAssessmentDay(save))
+            {
+                AssessmentUI.EnsureExists().Show(CourseId);
+                return null;
             }
 
             if (!IsEligible(save))
