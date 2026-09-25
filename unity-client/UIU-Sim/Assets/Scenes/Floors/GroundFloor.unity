@@ -33965,6 +33965,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 141190465}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 141190467}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
 --- !u!1 &141190464 stripped
 GameObject:
@@ -33984,7 +33987,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibraryStudyInteractable
   prompt: Study
-  minigameAdapter: {fileID: 0}
+  minigameAdapter: {fileID: 141190467}
+--- !u!114 &141190467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 141190464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6638167df0cf481eac62fbe3324c8dda, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.RocketStudy.RocketLibraryStudyMinigame
+  scenePath: Assets/Scenes/Minigames/LibraryRocketStudy.unity
 --- !u!65 &141190466
 BoxCollider:
   m_ObjectHideFlags: 0
