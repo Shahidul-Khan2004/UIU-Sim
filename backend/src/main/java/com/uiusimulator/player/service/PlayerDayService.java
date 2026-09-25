@@ -194,21 +194,27 @@ public class PlayerDayService {
         }
 
         BreakfastOutcome missed = BreakfastOutcome.SKIP_BREAKFAST;
+        int appliedAura = 0;
+        int appliedReputation = 0;
+        if (missed.auraDelta() != 0 || missed.reputationDelta() != 0) {
+            int beforeAura = lockedStats.getAura();
+            int beforeReputation = lockedStats.getAcademicReputation();
+            lockedStats.modifyStats(missed.auraDelta(), missed.reputationDelta());
+            playerStatsRepository.saveAndFlush(lockedStats);
+            appliedAura = lockedStats.getAura() - beforeAura;
+            appliedReputation = lockedStats.getAcademicReputation() - beforeReputation;
+        }
+
         PlayerDayActivity created = PlayerDayActivity.resolve(
                 player,
                 BreakfastOutcome.ACTIVITY_ID,
                 save.getCurrentDay(),
                 missed.status(),
                 missed.name(),
-                missed.auraDelta(),
-                missed.reputationDelta()
+                appliedAura,
+                appliedReputation
         );
         playerDayActivityRepository.saveAndFlush(created);
-
-        if (missed.auraDelta() != 0 || missed.reputationDelta() != 0) {
-            lockedStats.modifyStats(missed.auraDelta(), missed.reputationDelta());
-            playerStatsRepository.saveAndFlush(lockedStats);
-        }
 
         log.info(
                 "Auto-missed breakfast on day finalize for clerkUserId={} day={} auraDelta={}",

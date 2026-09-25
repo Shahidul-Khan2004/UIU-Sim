@@ -188,7 +188,7 @@ public class PlayerDayActivity {
 
     /**
      * Completes today's Library Study exactly once. Aura stays 0.
-     * Reputation is the server-calculated reward, not a client delta.
+     * Reputation is the actual applied Academic Reputation delta after clamping.
      */
     public void completeLibraryStudy(int score, int reputationReward, Instant now) {
         this.status = ActivityStatus.COMPLETED;

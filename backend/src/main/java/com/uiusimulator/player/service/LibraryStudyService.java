@@ -66,7 +66,7 @@ public class LibraryStudyService {
                     save.getCurrentDay(),
                     activity.getStatus()
             );
-            return LibraryStudyResponse.of(activity, lockedStats, 0, true, completed);
+            return LibraryStudyResponse.of(activity, lockedStats, 0, 0, true, completed);
         }
 
         PlayerDayActivity created = PlayerDayActivity.startLibraryStudy(player, save.getCurrentDay(), Instant.now());
@@ -76,7 +76,7 @@ public class LibraryStudyService {
                 player.getClerkUserId(),
                 save.getCurrentDay()
         );
-        return LibraryStudyResponse.of(created, lockedStats, 0, false, false);
+        return LibraryStudyResponse.of(created, lockedStats, 0, 0, false, false);
     }
 
     @Transactional
@@ -99,7 +99,7 @@ public class LibraryStudyService {
                     activity.getNormalizedScore(),
                     activity.getReputationDelta()
             );
-            return LibraryStudyResponse.of(activity, lockedStats, 0, true, true);
+            return LibraryStudyResponse.of(activity, lockedStats, 0, 0, true, true);
         }
 
         if (activity.getStatus() != ActivityStatus.IN_PROGRESS) {
@@ -107,26 +107,29 @@ public class LibraryStudyService {
         }
 
         int auraBefore = lockedStats.getAura();
-        activity.completeLibraryStudy(score, reward, Instant.now());
-        playerDayActivityRepository.saveAndFlush(activity);
-
+        int beforeReputation = lockedStats.getAcademicReputation();
         if (reward != 0) {
             lockedStats.modifyStats(0, reward);
             playerStatsRepository.saveAndFlush(lockedStats);
         }
+        int appliedReputation = lockedStats.getAcademicReputation() - beforeReputation;
+
+        activity.completeLibraryStudy(score, appliedReputation, Instant.now());
+        playerDayActivityRepository.saveAndFlush(activity);
 
         if (lockedStats.getAura() != auraBefore) {
             throw new IllegalStateException("Library study must not change Aura.");
         }
 
         log.info(
-                "Library study completed for clerkUserId={} score={} reputationDelta={} reputation={}",
+                "Library study completed for clerkUserId={} score={} requestedRep={} appliedRep={} reputation={}",
                 player.getClerkUserId(),
                 score,
-                activity.getReputationDelta(),
+                reward,
+                appliedReputation,
                 lockedStats.getAcademicReputation()
         );
-        return LibraryStudyResponse.of(activity, lockedStats, reward, true, false);
+        return LibraryStudyResponse.of(activity, lockedStats, reward, appliedReputation, true, false);
     }
 
     private PlayerSave requireActiveSave(Player player) {

@@ -258,6 +258,7 @@ namespace UIU.Simulator.Networking
             public int score;
             public int auraDelta;
             public int reputationDelta;
+            public int requestedReputationDelta;
             public int appliedReputationDelta;
             public bool alreadyStarted;
             public bool alreadyCompleted;

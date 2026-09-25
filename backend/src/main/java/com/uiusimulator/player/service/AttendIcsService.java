@@ -216,7 +216,7 @@ public class AttendIcsService {
         lockedStats.modifyStats(0, reputationReward);
         int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
 
-        activity.applyMilestone(milestoneSeconds, reputationReward, now);
+        activity.applyMilestone(milestoneSeconds, appliedRep, now);
         playerDayActivityRepository.saveAndFlush(activity);
         playerStatsRepository.saveAndFlush(lockedStats);
 
@@ -281,7 +281,7 @@ public class AttendIcsService {
         lockedStats.modifyStats(0, penalty);
         int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
 
-        activity.applyEarlyLeave(penalty, now);
+        activity.applyEarlyLeave(appliedRep, now);
         playerDayActivityRepository.saveAndFlush(activity);
         playerStatsRepository.saveAndFlush(lockedStats);
 
@@ -336,7 +336,7 @@ public class AttendIcsService {
                 save.getCurrentDay(),
                 AttendIcsOutcome.PROXY.status(),
                 AttendIcsOutcome.PROXY.name(),
-                auraReward,
+                appliedAura,
                 0
         );
         playerDayActivityRepository.saveAndFlush(created);
@@ -384,6 +384,9 @@ public class AttendIcsService {
 
         if (existing.isEmpty()) {
             int penalty = ClassroomCourseDefinition.SKIPPED_REPUTATION_PENALTY;
+            int beforeRep = lockedStats.getAcademicReputation();
+            lockedStats.modifyStats(0, penalty);
+            int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
             PlayerDayActivity created = PlayerDayActivity.resolve(
                     player,
                     course.activityId(),
@@ -391,10 +394,9 @@ public class AttendIcsService {
                     AttendIcsOutcome.SKIPPED.status(),
                     AttendIcsOutcome.SKIPPED.name(),
                     0,
-                    penalty
+                    appliedRep
             );
             playerDayActivityRepository.saveAndFlush(created);
-            lockedStats.modifyStats(0, penalty);
             playerStatsRepository.saveAndFlush(lockedStats);
             log.info(
                     "Auto-skipped classroom on day finalize activityId={} clerkUserId={} day={} reputationDelta={}",
@@ -413,8 +415,10 @@ public class AttendIcsService {
 
         if (!activity.isEarlyLeavePenaltyApplied()) {
             int penalty = ClassroomCourseDefinition.EARLY_LEAVE_REPUTATION_PENALTY;
+            int beforeRep = lockedStats.getAcademicReputation();
             lockedStats.modifyStats(0, penalty);
-            activity.applyEarlyLeave(penalty, now);
+            int appliedRep = lockedStats.getAcademicReputation() - beforeRep;
+            activity.applyEarlyLeave(appliedRep, now);
             playerDayActivityRepository.saveAndFlush(activity);
             playerStatsRepository.saveAndFlush(lockedStats);
             log.info(

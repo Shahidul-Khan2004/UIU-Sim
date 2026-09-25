@@ -20,7 +20,7 @@ public final class AttendIcsDefinition {
     public static final int MILESTONE_60_SECONDS = ClassroomCourseDefinition.MILESTONE_60_SECONDS;
     public static final int MILESTONE_90_SECONDS = ClassroomCourseDefinition.MILESTONE_90_SECONDS;
     public static final int MILESTONE_REPUTATION_REWARD = ClassroomCourseDefinition.MILESTONE_REPUTATION_REWARD;
-    public static final int FULL_ATTENDANCE_REPUTATION = 12;
+    public static final int FULL_ATTENDANCE_REPUTATION = 6;
     public static final int EARLY_LEAVE_REPUTATION_PENALTY = ClassroomCourseDefinition.EARLY_LEAVE_REPUTATION_PENALTY;
     public static final int SKIPPED_REPUTATION_PENALTY = ClassroomCourseDefinition.SKIPPED_REPUTATION_PENALTY;
     public static final int PROXY_AURA_REWARD = ClassroomCourseDefinition.PROXY_AURA_REWARD;

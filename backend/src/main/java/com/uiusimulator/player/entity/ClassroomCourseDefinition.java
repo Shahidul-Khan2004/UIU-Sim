@@ -15,10 +15,10 @@ public final class ClassroomCourseDefinition {
     public static final int MILESTONE_30_SECONDS = 30;
     public static final int MILESTONE_60_SECONDS = 60;
     public static final int MILESTONE_90_SECONDS = 90;
-    public static final int MILESTONE_REPUTATION_REWARD = 4;
-    public static final int EARLY_LEAVE_REPUTATION_PENALTY = -5;
-    public static final int SKIPPED_REPUTATION_PENALTY = -5;
-    public static final int PROXY_AURA_REWARD = 5;
+    public static final int MILESTONE_REPUTATION_REWARD = 2;
+    public static final int EARLY_LEAVE_REPUTATION_PENALTY = -4;
+    public static final int SKIPPED_REPUTATION_PENALTY = -4;
+    public static final int PROXY_AURA_REWARD = 3;
 
     public static final ClassroomCourseDefinition ICS = new ClassroomCourseDefinition(
             "ATTEND_ICS",

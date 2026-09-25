@@ -5,10 +5,10 @@ package com.uiusimulator.player.entity;
  * Client must not invent Aura amounts for these outcomes.
  */
 public enum BreakfastOutcome {
-    RICE(ActivityStatus.COMPLETED, 5, 0),
+    RICE(ActivityStatus.COMPLETED, 3, 0),
     POROTTA_WAIT(ActivityStatus.COMPLETED, 0, 0),
-    SKIP_LINE(ActivityStatus.COMPLETED, -10, 0),
-    SKIP_BREAKFAST(ActivityStatus.MISSED, -5, 0);
+    SKIP_LINE(ActivityStatus.COMPLETED, -6, 0),
+    SKIP_BREAKFAST(ActivityStatus.MISSED, -3, 0);
 
     public static final String ACTIVITY_ID = "BREAKFAST";
 
