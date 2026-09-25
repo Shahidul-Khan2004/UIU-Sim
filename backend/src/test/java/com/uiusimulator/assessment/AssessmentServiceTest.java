@@ -133,7 +133,7 @@ class AssessmentServiceTest {
     }
     @ParameterizedTest @EnumSource(AssessmentType.class)
     void cheatSuccessUsesDefinitionFullMarksAndOneReward(AssessmentType type) {
-        catalog.override=type; // test-only schedule: no future days added in production
+        setDay(dayFor(type));
         var a=service.start(jwt,"ICS",type);
         random.calls=0;
         var success=service.resolveCheat(jwt,a.attemptId());
@@ -263,6 +263,131 @@ class AssessmentServiceTest {
         assertThat(enrollments.findByPlayerIdAndSemester(player.getId(),1)).isEmpty();
         assertThat(stats().getAura()).isEqualTo(50);assertThat(stats().getAcademicReputation()).isEqualTo(50);
     }
+    @ParameterizedTest @CsvSource({"1,", "2,QUIZ_1", "3,MIDTERM", "4,", "5,QUIZ_2", "6,FINAL"})
+    void productionScheduleRoutesAttendanceAndFinalization(int day, String expected) {
+        setDay(day);
+        var save = saveRepository.findByPlayerId(player.getId()).orElseThrow();
+        assertThat(service.reportCard(jwt).scheduledAssessment()).isEqualTo(expected);
+        for (var course : ClassroomCourseDefinition.all()) {
+            assertThat(course.isEligible(save)).isEqualTo(expected == null);
+            if (expected != null) {
+                assertThatThrownBy(() -> attendance.startLecture(jwt, course.activityId())).hasMessageContaining("Assessment today");
+                assertThatThrownBy(() -> attendance.punchProxy(jwt, course.activityId())).hasMessageContaining("Assessment today");
+            } else {
+                assertThat(attendance.startLecture(jwt, course.activityId()).status()).isEqualTo("IN_PROGRESS");
+            }
+        }
+        var summary = days.finalizeCurrentDay(jwt);
+        assertThat(summary.activities().stream().filter(a -> a.activityId().startsWith("ATTEND_")).count())
+                .isEqualTo(expected == null ? 3 : 0);
+        assertThat(results.findByPlayerIdAndSemester(player.getId(), 1)).hasSize(expected == null ? 0 : 3);
+    }
+    @ParameterizedTest @CsvSource({"20,20,20,4.00", "20,16,0,2.33", "0,0,0,0.00", "-1,20,20,2.67"})
+    void fullSemesterCgpaUsesAllThreeFinalGrades(int ics, int english, int dm, double expected) throws Exception {
+        int[] remaining = {ics, english, dm};
+        var courses = List.of("ICS", "ENGLISH", "DM");
+        assertThat(service.reportCard(jwt).cgpa()).isNull();
+        for (int day = 2; day <= 6; day++) {
+            var type = catalog.scheduled(saveRepository.findByPlayerId(player.getId()).orElseThrow());
+            if (type != null) for (int c = 0; c < courses.size(); c++) {
+                if (remaining[c] < 0 && day != 2) continue;
+                var a = service.start(jwt, courses.get(c), type);
+                if (remaining[c] < 0) {
+                    random.value = 0;
+                    service.resolveCheat(jwt, a.attemptId());
+                    continue;
+                }
+                for (int i = 0; i < type.questionCount(); i++) {
+                    boolean correct = remaining[c] > 0;
+                    a = service.answer(jwt, a.attemptId(), new AssessmentAnswerRequest(i, correct ? key(a) : wrongKey(a)));
+                    if (correct) remaining[c]--;
+                }
+                assertThat(a.auraDelta()).isZero();
+                assertThat(a.academicReputationDelta()).isZero();
+            }
+            if (day < 6) {
+                assertThat(service.reportCard(jwt).cgpa()).isNull();
+                days.advanceDay(jwt, new DayAdvanceRequest(1, day));
+            }
+        }
+        int aura = stats().getAura(), reputation = stats().getAcademicReputation();
+        var card = service.reportCard(jwt);
+        assertThat(card.cgpa()).isEqualTo(expected);
+        assertThat(card.cgpaStatus()).isEqualTo("FINAL");
+        assertThat(stats().getAura()).isEqualTo(aura);
+        assertThat(stats().getAcademicReputation()).isEqualTo(reputation);
+        if (ics < 0) assertThat(card.courses().get(0)).satisfies(c -> {
+            assertThat(c.total()).isZero(); assertThat(c.grade()).isEqualTo("F"); assertThat(c.gradePoint()).isZero();
+        });
+    }
+    @Test void daySixFinalizationCompletesResultsAndCannotCreateDaySeven() throws Exception {
+        for (int day = 2; day < 6; day++) days.advanceDay(jwt, new DayAdvanceRequest(1, day));
+        activities.resolveActivity(jwt, new ActivityResolveRequest("BREAKFAST", "POROTTA_WAIT"));
+        var a = service.start(jwt, "ICS", AssessmentType.FINAL);
+        service.answer(jwt, a.attemptId(), new AssessmentAnswerRequest(0, key(a)));
+        assertThat(service.reportCard(jwt).cgpa()).isNull();
+        int aura = stats().getAura(), reputation = stats().getAcademicReputation();
+        var first = days.finalizeCurrentDay(jwt);
+        var second = days.finalizeCurrentDay(jwt);
+        assertThat(second).isEqualTo(first);
+        assertThat(first.aura()).isEqualTo(aura); assertThat(first.academicReputation()).isEqualTo(reputation);
+        assertThat(first.activities().stream().filter(x -> x.activityId().startsWith("ASSESSMENT_")))
+                .hasSize(3).allMatch(x -> x.outcome().equals("MISSED") && x.marksObtained() == 0 && x.maxMarks() == 40
+                    && x.auraDelta() == 0 && x.academicReputationDelta() == 0);
+        assertThat(results.findByPlayerIdAndSemester(player.getId(), 1)).hasSize(12).allMatch(PlayerAssessmentResult::isTerminal);
+        assertThat(service.reportCard(jwt).courses()).allMatch(c -> c.grade().equals("F") && c.gradePoint() == 0.0);
+        assertThat(service.reportCard(jwt).cgpa()).isZero();
+        assertThatThrownBy(() -> days.advanceDay(jwt, new DayAdvanceRequest(1, 6))).hasMessageContaining("progression");
+        assertThat(saveRepository.findByPlayerId(player.getId()).orElseThrow().getCurrentDay()).isEqualTo(6);
+    }
+    @ParameterizedTest @EnumSource(AssessmentType.class)
+    void droppedCourseStaysExcludedOnEveryLaterDay(AssessmentType type) {
+        while (saveRepository.findByPlayerId(player.getId()).orElseThrow().getCurrentDay() < dayFor(type)) {
+            int day = saveRepository.findByPlayerId(player.getId()).orElseThrow().getCurrentDay();
+            days.advanceDay(jwt, new DayAdvanceRequest(1, day));
+        }
+        var a = service.start(jwt, "ICS", type); random.value = 0;
+        var caught = service.resolveCheat(jwt, a.attemptId());
+        assertThat(caught.marksObtained()).isZero();
+        assertThat(caught.auraDelta()).isEqualTo(-5); assertThat(caught.academicReputationDelta()).isEqualTo(-10);
+        for (int day = dayFor(type); day <= 6; day++) {
+            assertThatThrownBy(() -> attendance.startLecture(jwt)).hasMessageContaining("removed");
+            assertThatThrownBy(() -> attendance.punchProxy(jwt)).hasMessageContaining("removed");
+            var scheduled = catalog.scheduled(saveRepository.findByPlayerId(player.getId()).orElseThrow());
+            if (day > dayFor(type) && scheduled != null)
+                assertThatThrownBy(() -> service.start(jwt, "ICS", scheduled)).hasMessageContaining("removed");
+            var summary = days.finalizeCurrentDay(jwt);
+            assertThat(summary.activities()).noneMatch(x -> x.activityId().equals("ATTEND_ICS"));
+            if (day > dayFor(type)) assertThat(summary.activities()).noneMatch(x -> x.activityId().equals("ASSESSMENT_ICS"));
+            var report = service.reportCard(jwt);
+            assertThat(report.courses().get(0).total()).isZero();
+            assertThat(report.courses().get(0).grade()).isEqualTo("F");
+            assertThat(report.courses().subList(1, 3)).allMatch(c -> c.status().equals("ACTIVE"));
+            if (day < 6) days.advanceDay(jwt, new DayAdvanceRequest(1, day));
+        }
+    }
+    @ParameterizedTest @ValueSource(strings={"ATTEND_ICS", "ATTEND_ENGLISH", "ATTEND_DM"})
+    void dayFourLectureRewardsRemainUnchanged(String activity) {
+        setDay(4);
+        attendance.startLecture(jwt, activity);
+        for (int milestone : List.of(30, 60, 90)) {
+            clock.now = clock.now.plusSeconds(30);
+            var response = attendance.claimMilestone(jwt, activity, new AttendIcsMilestoneRequest(milestone));
+            assertThat(response.appliedReputationDelta()).isEqualTo(2);
+        }
+        assertThat(stats().getAcademicReputation()).isEqualTo(56);
+        assertThat(stats().getAura()).isEqualTo(50);
+    }
+    @ParameterizedTest @ValueSource(strings={"ATTEND_ICS", "ATTEND_ENGLISH", "ATTEND_DM"})
+    void dayFourProxyRewardsRemainUnchanged(String activity) {
+        setDay(4);
+        ReflectionTestUtils.setField(saveRepository.findByPlayerId(player.getId()).orElseThrow(), "idCardIssued", true);
+        var proxy = attendance.punchProxy(jwt, activity);
+        assertThat(proxy.auraDelta()).isEqualTo(3); assertThat(proxy.reputationDelta()).isZero();
+        assertThat(stats().getAcademicReputation()).isEqualTo(50);
+    }
+    private void setDay(int day) { ReflectionTestUtils.setField(saveRepository.findByPlayerId(player.getId()).orElseThrow(), "currentDay", day); }
+    private static int dayFor(AssessmentType type) { return switch (type) { case QUIZ_1 -> 2; case MIDTERM -> 3; case QUIZ_2 -> 5; case FINAL -> 6; }; }
     private PlayerStats stats() { return statsRepository.findByPlayerId(player.getId()).orElseThrow(); }
     private int key(AssessmentResponse a) throws Exception {
         var row=results.findById(a.attemptId()).orElseThrow();
@@ -282,12 +407,6 @@ class AssessmentServiceTest {
     static class TestCatalog extends AssessmentCatalog {
         AssessmentType override;
         public AssessmentType scheduled(PlayerSave save) { return override != null && AssessmentCatalog.eligible(save) ? override : super.scheduled(save); }
-        public Snapshot select(String course,AssessmentType type,int rep,AssessmentRandom random) {
-            if(type!=AssessmentType.FINAL) return super.select(course,type,rep,random);
-            var base=super.select(course,AssessmentType.MIDTERM,rep,random);
-            var questions=new ArrayList<>(base.questions());
-            for(int i=6;i<8;i++) { var q=base.questions().get(i-6); questions.add(new SelectedQuestion("TEST-FINAL-"+i,q.text(),q.answers(),q.correctAnswer(),q.visibleOptions())); }
-            return new Snapshot(base.difficulty(),base.seconds(),questions);
-        }
+
     }
 }

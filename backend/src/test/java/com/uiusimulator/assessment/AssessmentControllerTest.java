@@ -30,6 +30,14 @@ class AssessmentControllerTest {
     @Autowired MockMvc mvc;
     @MockitoBean AssessmentService service;
     @MockitoBean JwtDecoder decoder;
+    @Test void reportCardSerializesPendingAndFinalCgpa() throws Exception {
+        when(service.reportCard(any())).thenReturn(new ReportCardResponse(1, 3, "MIDTERM", List.of(), null));
+        mvc.perform(get("/api/players/me/report-card").with(jwt())).andExpect(status().isOk())
+            .andExpect(jsonPath("$.cgpa").value(org.hamcrest.Matchers.nullValue())).andExpect(jsonPath("$.cgpaStatus").value("PENDING"));
+        when(service.reportCard(any())).thenReturn(new ReportCardResponse(1, 6, "FINAL", List.of(), 2.33));
+        mvc.perform(get("/api/players/me/report-card").with(jwt())).andExpect(status().isOk())
+            .andExpect(jsonPath("$.cgpa").value(2.33)).andExpect(jsonPath("$.cgpaStatus").value("FINAL"));
+    }
     @Test void unauthenticatedRequestsAreRejected() throws Exception {
         mvc.perform(get("/api/players/me/report-card")).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/players/me/assessments/ICS/QUIZ_1/start")).andExpect(status().isUnauthorized());

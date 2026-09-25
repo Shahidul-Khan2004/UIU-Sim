@@ -22,9 +22,9 @@ class AssessmentRulesTest {
     }
     @Test void selectionHasUniqueStableQuestions_andOnlyRemovesWrongDistractor() {
         var catalog=new AssessmentCatalog();
-        for(var course:List.of("ICS","ENGLISH","DM")) for(int rep:List.of(0,40,50,60,68,100)) {
-            var selected=catalog.select(course,AssessmentType.QUIZ_1,rep,()->.5);
-            assertThat(selected.questions()).hasSize(3);
+        for(var course:List.of("ICS","ENGLISH","DM")) for(int rep:List.of(0,40,50,60,68,100)) for(var type:AssessmentType.values()) {
+            var selected=catalog.select(course,type,rep,()->.5);
+            assertThat(selected.questions()).hasSize(type.questionCount());
             assertThat(selected.questions().stream().map(AssessmentCatalog.SelectedQuestion::id)).doesNotHaveDuplicates();
             for(var q:selected.questions()) {
                 assertThat(q.visibleOptions()).contains(q.correctAnswer()).hasSize(rep>=60 ? 3 : 4);
