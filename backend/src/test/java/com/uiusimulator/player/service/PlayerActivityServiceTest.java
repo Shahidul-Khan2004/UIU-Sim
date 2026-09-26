@@ -320,6 +320,100 @@ class PlayerActivityServiceTest {
                 .orElseThrow().getAuraDelta()).isEqualTo(-1);
     }
 
+    @Test
+    void resolve_npcConversation_studentEarnsPlus2Aura() {
+        Jwt jwt = jwtWith("user_act_npc_student");
+        createSave(jwt);
+
+        ActivityResolveResponse response = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_BATCHMATE_01", "COMPLETED")
+        );
+
+        assertThat(response.activityId()).isEqualTo("NPC_TALK_BATCHMATE_01");
+        assertThat(response.status()).isEqualTo("COMPLETED");
+        assertThat(response.auraDelta()).isEqualTo(2);
+        assertThat(response.reputationDelta()).isEqualTo(0);
+        assertThat(response.alreadyResolved()).isFalse();
+        assertThat(response.aura()).isEqualTo(52);
+    }
+
+    @Test
+    void resolve_npcConversation_sameNpcSameDay_doesNotRewardTwice() {
+        Jwt jwt = jwtWith("user_act_npc_repeat");
+        createSave(jwt);
+
+        playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("NPC_TALK_SENIOR_02", "COMPLETED"));
+        ActivityResolveResponse second = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("npc_talk_senior_02", "completed")
+        );
+
+        assertThat(second.alreadyResolved()).isTrue();
+        assertThat(second.aura()).isEqualTo(52);
+        Player player = playerRepository.findByClerkUserId("user_act_npc_repeat").orElseThrow();
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(52);
+    }
+
+    @Test
+    void resolve_npcConversation_eachNpcRewardsOncePerDay() {
+        Jwt jwt = jwtWith("user_act_npc_multi");
+        createSave(jwt);
+
+        playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("NPC_TALK_SENIOR_01", "COMPLETED"));
+        ActivityResolveResponse other = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_BATCHMATE_03", "COMPLETED")
+        );
+
+        assertThat(other.alreadyResolved()).isFalse();
+        assertThat(other.aura()).isEqualTo(54);
+    }
+
+    @Test
+    void resolve_npcConversation_facultyEarnsNoAura() {
+        Jwt jwt = jwtWith("user_act_npc_faculty");
+        playerSaveService.createSave(
+                jwt,
+                new PlayerSaveCreateRequest(PlayerRole.FACULTY, "Faculty Member", cse.getId(), "F-2001")
+        );
+
+        ActivityResolveResponse response = playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_SENIOR_01", "COMPLETED")
+        );
+
+        assertThat(response.status()).isEqualTo("COMPLETED");
+        assertThat(response.auraDelta()).isEqualTo(0);
+        assertThat(response.aura()).isEqualTo(50);
+    }
+
+    @Test
+    void resolve_npcConversation_rejectsInvalidIdsAndOutcomes() {
+        Jwt jwt = jwtWith("user_act_npc_invalid");
+        createSave(jwt);
+
+        assertThatThrownBy(() -> playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_", "COMPLETED")
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_BAD-ID", "COMPLETED")
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_" + "X".repeat(41), "COMPLETED")
+        )).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> playerActivityService.resolveActivity(
+                jwt,
+                new ActivityResolveRequest("NPC_TALK_SENIOR_01", "LEFT_EARLY")
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        Player player = playerRepository.findByClerkUserId("user_act_npc_invalid").orElseThrow();
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura()).isEqualTo(50);
+    }
+
     private void createSave(Jwt jwt) {
         playerSaveService.createSave(
                 jwt,
