@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_08_CampusShortcuts
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_campus_shortcuts
+  topic: "Campus shortcuts"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Want to know a campus secret?"
+    choices:
+    - playerLine: "Of course."
+      npcReaction: "Take the stairs for one or two floors. The elevator wait is longer than the climb."
+      nextNodeId: elevator
+    - playerLine: "Is it about food?"
+      npcReaction: "Later. First: take the stairs for short trips. The elevator wait is longer."
+      nextNodeId: elevator
+    - playerLine: "Only if it's allowed."
+      npcReaction: "Totally allowed. Take the stairs for short trips instead of waiting for the elevator."
+      nextNodeId: elevator
+  - id: elevator
+    npcLine: "Do you usually wait for the elevator?"
+    choices:
+    - playerLine: "Always."
+      npcReaction: "Try the stairs once when you're late. You'll see."
+      nextNodeId: canteen
+    - playerLine: "Only for the high floors."
+      npcReaction: "Smart. That's the right balance."
+      nextNodeId: canteen
+    - playerLine: "I avoid it completely."
+      npcReaction: "Legendary. Your legs must be made of steel."
+      nextNodeId: canteen
+  - id: canteen
+    npcLine: "Next secret: hit the canteen just before the lunch rush. Have you been caught in it yet?"
+    choices:
+    - playerLine: "Yes, it was chaos."
+      npcReaction: "Ten minutes earlier and it's a different world."
+      nextNodeId: rooms
+    - playerLine: "Not yet."
+      npcReaction: "Lucky. Keep it that way with good timing."
+      nextNodeId: rooms
+    - playerLine: "I bring food from home."
+      npcReaction: "The ultimate shortcut, honestly."
+      nextNodeId: rooms
+  - id: rooms
+    npcLine: "Also, the first digit of a room number is the floor. Did you know that?"
+    choices:
+    - playerLine: "Yes, I figured that out."
+      npcReaction: "Quick learner."
+      nextNodeId: office
+    - playerLine: "Wait, really?"
+      npcReaction: "Really. Room 427 is on the fourth floor. Life-changing, right?"
+      nextNodeId: office
+    - playerLine: "That would have saved me an hour."
+      npcReaction: "Ha, everyone learns it the hard way."
+      nextNodeId: office
+  - id: office
+    npcLine: "Have you found your department office? You're {department}, right?"
+    choices:
+    - playerLine: "Yes, {department}. I still need to find the office."
+      npcReaction: "Ask at reception. They'll point you to the right floor."
+      nextNodeId: end
+  - id: end
+    npcLine: "Alright, that's enough secrets for today. Use them wisely!"
+    choices: []

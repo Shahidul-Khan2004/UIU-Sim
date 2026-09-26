@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_03_WhyDepartment
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_why_department
+  topic: "Why they chose CSE/BBA"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Random question, but why did you pick {department}?"
+    choices:
+    - playerLine: "I've always been interested in it."
+      npcReaction: "That's the best reason. It makes the hard days easier."
+      nextNodeId: commit
+    - playerLine: "Honestly, my family pushed me a bit."
+      npcReaction: "Ha, you're not alone. Half of us have that story."
+      nextNodeId: commit
+    - playerLine: "It seemed to have good career options."
+      npcReaction: "Practical. Can't argue with that."
+      nextNodeId: commit
+  - id: commit
+    npcLine: "So it's {departmentName} for the next four years, huh?"
+    choices:
+    - playerLine: "Yep, {departmentName}. No going back now."
+      npcReaction: "No going back! We're officially committed."
+      nextNodeId: expect
+  - id: expect
+    npcLine: "What are you most looking forward to?"
+    choices:
+    - playerLine: "Learning something actually useful."
+      npcReaction: "Hopefully the courses agree with you."
+      nextNodeId: worry
+    - playerLine: "Meeting people and building a network."
+      npcReaction: "That's half of university, honestly."
+      nextNodeId: worry
+    - playerLine: "Just getting through this trimester."
+      npcReaction: "One step at a time. Solid plan."
+      nextNodeId: worry
+  - id: worry
+    npcLine: "And what worries you the most?"
+    choices:
+    - playerLine: "Keeping my CGPA up."
+      npcReaction: "Same. Everyone talks about CGPA like it's a boss fight."
+      nextNodeId: switch
+    - playerLine: "Managing time with the commute."
+      npcReaction: "Dhaka traffic is the real final exam."
+      nextNodeId: switch
+    - playerLine: "Nothing yet. Ask me after the quizzes."
+      npcReaction: "Ha, fair. Ask me again then too."
+      nextNodeId: switch
+  - id: switch
+    npcLine: "Would you ever switch departments if you had the chance?"
+    choices:
+    - playerLine: "No, I think I made the right call."
+      npcReaction: "Good. That confidence will help."
+      nextNodeId: end
+    - playerLine: "Maybe, if I really don't enjoy it."
+      npcReaction: "Fair. It's okay to figure that out."
+      nextNodeId: end
+    - playerLine: "Too early to say."
+      npcReaction: "Wise. Let's see how this trimester goes."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, good talk. I think we're going to be fine, {name}."
+    choices: []

@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Faculty_Batchmate_01_Greeting
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: faculty_batchmate_greeting
+  topic: "Student greets a new faculty member"
+  npcType: 0
+  requirements:
+    playerRole: 1
+    department: 0
+    semester: 0
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "You too. Study well."
+  nodes:
+  - id: start
+    npcLine: "Oh! Good morning, {honorific}."
+    choices:
+    - playerLine: "Good morning. How are you?"
+      npcReaction: "I'm good, {honorific}, thank you for asking."
+      nextNodeId: new
+    - playerLine: "Morning. Busy day?"
+      npcReaction: "A little, {honorific}. Classes back to back."
+      nextNodeId: new
+    - playerLine: "Good morning. Shouldn't you be in class?"
+      npcReaction: "I'm heading there now, {honorific}. I promise!"
+      nextNodeId: new
+  - id: new
+    npcLine: "Sorry if this is rude, {honorific}, but are you new here? I haven't seen you before."
+    choices:
+    - playerLine: "Yes, I've just joined the {department} department."
+      npcReaction: "Welcome to UIU, {honorific}! The {department} students will be happy to hear that."
+      nextNodeId: courses
+  - id: courses
+    npcLine: "Will you be teaching first trimester courses, {honorific}?"
+    choices:
+    - playerLine: "Possibly. I'm still getting my schedule."
+      npcReaction: "I hope our section gets you, {honorific}."
+      nextNodeId: campus
+    - playerLine: "Yes, some introductory courses."
+      npcReaction: "That's great, {honorific}. We need patient teachers."
+      nextNodeId: campus
+    - playerLine: "That's still being decided."
+      npcReaction: "Fair, {honorific}. Good luck with it."
+      nextNodeId: campus
+  - id: campus
+    npcLine: "How do you find the campus so far, {honorific}?"
+    choices:
+    - playerLine: "Impressive, but big."
+      npcReaction: "It took me weeks to learn it, {honorific}."
+      nextNodeId: tip
+    - playerLine: "Very lively."
+      npcReaction: "It is, {honorific}. Especially around lunch."
+      nextNodeId: tip
+    - playerLine: "I'm still finding my way around."
+      npcReaction: "Us too, {honorific}. The room numbers help."
+      nextNodeId: tip
+  - id: tip
+    npcLine: "If I may, {honorific}, the canteen gets very crowded at lunch. Going a bit early helps."
+    choices:
+    - playerLine: "Thanks for the tip."
+      npcReaction: "Anytime, {honorific}."
+      nextNodeId: end
+    - playerLine: "Noted. Any recommendations?"
+      npcReaction: "The rice and curry is always a safe choice, {honorific}."
+      nextNodeId: end
+    - playerLine: "I'll bring lunch from home, then."
+      npcReaction: "Smart choice, {honorific}. No queue at all."
+      nextNodeId: end
+  - id: end
+    npcLine: "I should get to class. Have a good day, {honorific}!"
+    choices: []

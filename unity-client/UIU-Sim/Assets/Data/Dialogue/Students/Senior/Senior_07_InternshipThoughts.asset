@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_07_InternshipThoughts
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_internship_thoughts
+  topic: "Internship thoughts"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Have you started thinking about internships yet?"
+    choices:
+    - playerLine: "Isn't it too early?"
+      npcReaction: "For applying, yes. For thinking about it, never too early."
+      nextNodeId: skills
+    - playerLine: "A little, yes."
+      npcReaction: "Good. That puts you ahead of most people."
+      nextNodeId: skills
+    - playerLine: "Not at all."
+      npcReaction: "That's fine. Just keep it in the back of your mind."
+      nextNodeId: skills
+  - id: skills
+    npcLine: "What kind of skills do you want to build first?"
+    choices:
+    - playerLine: "Technical skills in my field."
+      npcReaction: "Start small. Projects count more than certificates."
+      nextNodeId: field
+    - playerLine: "Communication and presentation."
+      npcReaction: "Underrated. Every interviewer notices it."
+      nextNodeId: field
+    - playerLine: "I'm not sure yet."
+      npcReaction: "Try a bit of everything this year and see what sticks."
+      nextNodeId: field
+  - id: field
+    npcLine: "In {department}, internships come later, but building a profile starts now."
+    choices:
+    - playerLine: "Makes sense. I'll start building something in {department} early."
+      npcReaction: "That's the right mindset."
+      nextNodeId: cv
+  - id: cv
+    npcLine: "Do you have a CV yet?"
+    choices:
+    - playerLine: "No, I don't know what to put on it."
+      npcReaction: "Clubs, volunteering, small projects. It adds up."
+      nextNodeId: network
+    - playerLine: "A basic one."
+      npcReaction: "Good. Update it every trimester."
+      nextNodeId: network
+    - playerLine: "Do I need one already?"
+      npcReaction: "Not urgently, but a draft shows you the gaps."
+      nextNodeId: network
+  - id: network
+    npcLine: "Last thing: know your seniors. We hear about opportunities first. Would you reach out?"
+    choices:
+    - playerLine: "Definitely."
+      npcReaction: "Good. Most seniors are happy to help."
+      nextNodeId: end
+    - playerLine: "I'd feel awkward."
+      npcReaction: "Get over it early. Nobody minds a polite message."
+      nextNodeId: end
+    - playerLine: "Only if I really wanted the role."
+      npcReaction: "Fair. Just don't wait too long when you do."
+      nextNodeId: end
+  - id: end
+    npcLine: "No rush, just keep it in mind. Good luck, {name}!"
+    choices: []

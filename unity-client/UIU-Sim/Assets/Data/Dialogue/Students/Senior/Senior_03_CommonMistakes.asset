@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_03_CommonMistakes
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_common_mistakes
+  topic: "Common first semester mistakes"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Want to know the biggest mistake I made in my first trimester?"
+    choices:
+    - playerLine: "Sure, tell me."
+      npcReaction: "I skipped classes in the first month because everything felt easy."
+      nextNodeId: skipped
+    - playerLine: "Let me guess, skipping classes?"
+      npcReaction: "Exactly that. How did you know?"
+      nextNodeId: skipped
+    - playerLine: "Only if it's not scary."
+      npcReaction: "It's a little scary. I skipped classes because the first month felt easy."
+      nextNodeId: skipped
+  - id: skipped
+    npcLine: "Then the first quiz came and I had no idea what was going on. Have you missed any classes yet?"
+    choices:
+    - playerLine: "Not a single one."
+      npcReaction: "Keep that streak going."
+      nextNodeId: outline
+    - playerLine: "One, but I had a reason."
+      npcReaction: "Fine, just don't make it a habit."
+      nextNodeId: outline
+    - playerLine: "Maybe a couple..."
+      npcReaction: "Stop now, while it's still easy to catch up."
+      nextNodeId: outline
+  - id: outline
+    npcLine: "Second mistake: I never read the course outline. Have you read yours?"
+    choices:
+    - playerLine: "Yes, I know the marks breakdown."
+      npcReaction: "Great. Then you know quizzes and attendance matter."
+      nextNodeId: lucky
+    - playerLine: "I skimmed it."
+      npcReaction: "Read it properly. The marks breakdown tells you where to focus."
+      nextNodeId: lucky
+    - playerLine: "What outline?"
+      npcReaction: "The one your teacher shared on day one. Find it tonight."
+      nextNodeId: lucky
+  - id: lucky
+    npcLine: "At least you're hearing this in your {trimester} trimester, not your third."
+    choices:
+    - playerLine: "Glad I'm hearing it in my {trimester} trimester, then."
+      npcReaction: "Exactly. Learn from my pain for free."
+      nextNodeId: cram
+  - id: cram
+    npcLine: "Last one: I tried to study everything the night before exams. How do you usually prepare?"
+    choices:
+    - playerLine: "A little every day."
+      npcReaction: "Perfect. That's the secret nobody follows."
+      nextNodeId: end
+    - playerLine: "Big sessions on weekends."
+      npcReaction: "That can work if you're consistent."
+      nextNodeId: end
+    - playerLine: "The night before, honestly."
+      npcReaction: "Please change that. Trust me."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, you're already ahead just by listening. Good luck, fresher!"
+    choices: []

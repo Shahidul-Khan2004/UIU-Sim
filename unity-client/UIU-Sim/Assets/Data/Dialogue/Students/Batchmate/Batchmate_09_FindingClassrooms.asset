@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_09_FindingClassrooms
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_finding_classrooms
+  topic: "Finding classrooms"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 1
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "Good luck finding it!"
+  nodes:
+  - id: start
+    npcLine: "Wait, do you know how the room numbers work on this floor?"
+    choices:
+    - playerLine: "I think they go up from the elevator."
+      npcReaction: "That makes sense. I've been walking in circles."
+      nextNodeId: late
+    - playerLine: "No idea, I'm lost too."
+      npcReaction: "Great, two lost freshers. At least we're lost together."
+      nextNodeId: late
+    - playerLine: "Check the sign near the stairs."
+      npcReaction: "Oh! I walked right past that. Thanks."
+      nextNodeId: late
+  - id: late
+    npcLine: "Have you been late to a class yet?"
+    choices:
+    - playerLine: "Almost. The elevator took forever."
+      npcReaction: "The elevator is the enemy at peak hours."
+      nextNodeId: routine
+    - playerLine: "No, I leave extra early."
+      npcReaction: "Teach me your ways."
+      nextNodeId: routine
+    - playerLine: "Once. The teacher just gave me a look."
+      npcReaction: "The look is worse than a scolding."
+      nextNodeId: routine
+  - id: routine
+    npcLine: "Your class routine is for {department}, right?"
+    choices:
+    - playerLine: "Yeah, my routine is for {department}. I checked it twice this morning."
+      npcReaction: "Twice? I checked mine five times and still went to the wrong floor."
+      nextNodeId: trick
+  - id: trick
+    npcLine: "Any trick for remembering rooms?"
+    choices:
+    - playerLine: "The first digit is the floor."
+      npcReaction: "Wait, really? That changes everything."
+      nextNodeId: seat
+    - playerLine: "I saved my routine as my lock screen."
+      npcReaction: "That's genius. I'm stealing that."
+      nextNodeId: seat
+    - playerLine: "I just follow people from my section."
+      npcReaction: "The herd method. It works until they're lost too."
+      nextNodeId: seat
+  - id: seat
+    npcLine: "Do you usually sit in the front or at the back?"
+    choices:
+    - playerLine: "Front, so I actually pay attention."
+      npcReaction: "Respect. Teachers remember front-row faces."
+      nextNodeId: end
+    - playerLine: "Back, near the door."
+      npcReaction: "Strategic. Quick escape to the canteen."
+      nextNodeId: end
+    - playerLine: "Wherever there's a free seat."
+      npcReaction: "Honestly, that's how it goes on day one."
+      nextNodeId: end
+  - id: end
+    npcLine: "Okay, I think my room is this way. Thanks for the help. See you!"
+    choices: []

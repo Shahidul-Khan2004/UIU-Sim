@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_09_BalancingStudies
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_balancing_studies
+  topic: "Balancing studies"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "How are you balancing classes with everything else?"
+    choices:
+    - playerLine: "Pretty well so far."
+      npcReaction: "Nice. The first weeks are when good habits form."
+      nextNodeId: routine
+    - playerLine: "Not great, honestly."
+      npcReaction: "That's okay. Most people struggle with it at first."
+      nextNodeId: routine
+    - playerLine: "What 'everything else'?"
+      npcReaction: "Ha, classes only? That's one way to do it."
+      nextNodeId: routine
+  - id: routine
+    npcLine: "Do you follow any kind of routine?"
+    choices:
+    - playerLine: "Yes, a rough daily plan."
+      npcReaction: "That's already better than most."
+      nextNodeId: phone
+    - playerLine: "No, I just go with the flow."
+      npcReaction: "Try writing down just three tasks a day."
+      nextNodeId: phone
+    - playerLine: "I try, but I never stick to it."
+      npcReaction: "Start smaller. A routine you keep beats a perfect one you don't."
+      nextNodeId: phone
+  - id: phone
+    npcLine: "Be honest, how much time do you spend on your phone?"
+    choices:
+    - playerLine: "Too much."
+      npcReaction: "At least you know. Keep it away while studying."
+      nextNodeId: breaks
+    - playerLine: "Not that much."
+      npcReaction: "Impressive. Teach the rest of us."
+      nextNodeId: breaks
+    - playerLine: "I don't want to know."
+      npcReaction: "Ha, that's an answer in itself."
+      nextNodeId: breaks
+  - id: breaks
+    npcLine: "Do you take time off to relax?"
+    choices:
+    - playerLine: "Yes, I play games or watch something."
+      npcReaction: "Good. Rest is part of studying."
+      nextNodeId: trimester
+    - playerLine: "Not really, I feel guilty."
+      npcReaction: "Don't. Burnout is worse than a short break."
+      nextNodeId: trimester
+    - playerLine: "I hang out with friends."
+      npcReaction: "Best stress relief there is."
+      nextNodeId: trimester
+  - id: trimester
+    npcLine: "Remember, it's only your {trimester} trimester. You don't need to have it all figured out."
+    choices:
+    - playerLine: "True, it's only my {trimester} trimester."
+      npcReaction: "Exactly. Build the habits now and the rest follows."
+      nextNodeId: end
+  - id: end
+    npcLine: "Take care of yourself, {name}. See you around."
+    choices: []

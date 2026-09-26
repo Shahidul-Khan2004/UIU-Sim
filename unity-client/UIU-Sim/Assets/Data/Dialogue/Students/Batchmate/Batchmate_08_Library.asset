@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_08_Library
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_library
+  topic: "Library discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Have you been to the library yet?"
+    choices:
+    - playerLine: "Yes, it's really quiet."
+      npcReaction: "Too quiet. I'm scared to open a chip packet in there."
+      nextNodeId: style
+    - playerLine: "Not yet. Is it worth it?"
+      npcReaction: "Definitely. Best place to actually focus."
+      nextNodeId: style
+    - playerLine: "Once, just to charge my phone."
+      npcReaction: "Ha, honestly valid."
+      nextNodeId: style
+  - id: style
+    npcLine: "Do you study better alone or in a group?"
+    choices:
+    - playerLine: "Alone, fewer distractions."
+      npcReaction: "Same. Groups turn into chatting sessions for me."
+      nextNodeId: when
+    - playerLine: "In a group, we explain things to each other."
+      npcReaction: "That works if the group actually studies."
+      nextNodeId: when
+    - playerLine: "Depends on the subject."
+      npcReaction: "Fair. Some things need a second brain."
+      nextNodeId: when
+  - id: when
+    npcLine: "When do you usually study?"
+    choices:
+    - playerLine: "Right after class."
+      npcReaction: "That's the smart way. Everything's still fresh."
+      nextNodeId: subject
+    - playerLine: "Late at night."
+      npcReaction: "Night owl. Just don't sleep through the 8:30 class."
+      nextNodeId: subject
+    - playerLine: "Only before quizzes."
+      npcReaction: "Ha, the emergency method. Risky."
+      nextNodeId: subject
+  - id: subject
+    npcLine: "What are you planning to study there first?"
+    choices:
+    - playerLine: "Probably {course}. I need to put the most time there."
+      npcReaction: "Good choice. Start with the hardest thing while you're fresh."
+      nextNodeId: rules
+  - id: rules
+    npcLine: "Did you know you have to keep your phone silent in there?"
+    choices:
+    - playerLine: "Yes, I already got a look from the librarian."
+      npcReaction: "Ha! Everyone gets that look once."
+      nextNodeId: end
+    - playerLine: "Makes sense, I'll remember."
+      npcReaction: "Good. The librarian doesn't forget faces."
+      nextNodeId: end
+    - playerLine: "I'll just use headphones."
+      npcReaction: "Smart. Just make sure they're actually connected."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, maybe I'll see you there sometime. Good luck, {name}!"
+    choices: []
