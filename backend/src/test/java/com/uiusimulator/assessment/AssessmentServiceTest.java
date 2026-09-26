@@ -101,7 +101,7 @@ class AssessmentServiceTest {
     @Test void serverDoesNotExposeAnswerKeyOrFutureQuestions() throws Exception {
         var a = service.start(jwt,"ICS",AssessmentType.QUIZ_1);
         String json = new ObjectMapper().writeValueAsString(a);
-        assertThat(json).doesNotContain("correctAnswer", "attemptSnapshot", "visibleOptions");
+        assertThat(json).doesNotContain("correctAnswer", "attemptSnapshot", "visibleOptions", "\"tier\"");
         assertThat(a.question().options()).hasSize(4);
     }
     @Test void resume_preservesSelectionDifficultyMarksAndDeadline() throws Exception {

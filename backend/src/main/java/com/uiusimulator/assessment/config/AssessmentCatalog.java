@@ -70,6 +70,11 @@ public class AssessmentCatalog {
     public Band band(int reputation) {
         return configuration.bands().stream().filter(b -> reputation >= b.minimum()).reduce((a,b) -> b).orElseThrow();
     }
+    public List<Question> bank(String courseId) {
+        var bank = banks.get(courseId);
+        if (bank == null) throw new IllegalArgumentException("Unknown assessment course.");
+        return List.copyOf(bank);
+    }
     public Snapshot select(String course, AssessmentType type, int reputation, AssessmentRandom random) {
         var band = band(reputation);
         var pool = new ArrayList<>(banks.get(course));
