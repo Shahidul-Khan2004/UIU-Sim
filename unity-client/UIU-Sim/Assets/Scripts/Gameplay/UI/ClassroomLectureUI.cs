@@ -6,6 +6,7 @@ using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.UI;
@@ -585,6 +586,8 @@ namespace UIU.Simulator.Gameplay.UI
                 || DailySummaryUI.IsOpen
                 || ElevatorUI.IsOpen
                 || AdvisorUI.IsOpen
+                || FacultyPortalUI.IsOpen
+                || ClassRoutineUI.IsOpen
                 || (GameMenuManager.Instance != null && GameMenuManager.IsOpen);
         }
 

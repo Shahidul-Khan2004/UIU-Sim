@@ -28,6 +28,8 @@ public class PlayerCourseEnrollment {
         status = CourseStatus.DROPPED_CHEATING; dropReason = "ACADEMIC_MISCONDUCT";
         droppedAt = now; updatedAt = now;
     }
+    public UUID getPlayerId() { return playerId; }
+    public int getSemester() { return semester; }
     public CourseStatus getStatus() { return status; }
     public String getCourseId() { return courseId; }
 }

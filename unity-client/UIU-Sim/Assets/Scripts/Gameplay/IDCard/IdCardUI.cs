@@ -17,12 +17,21 @@ namespace UIU.Simulator.Gameplay.IDCard
         public static bool IsOpen { get; private set; }
 
         private const int CanvasSortOrder = 250;
+        private const float PanelWidth = 480f;
+        private const float StudentPanelHeight = 420f;
+        private const float FacultyPanelHeight = 548f;
 
         private GameObject overlayRoot;
+        private RectTransform panelRect;
         private TextMeshProUGUI nameValue;
         private TextMeshProUGUI roleValue;
         private TextMeshProUGUI departmentValue;
         private TextMeshProUGUI universityIdValue;
+        private TextMeshProUGUI designationValue;
+        private TextMeshProUGUI officeValue;
+        private TextMeshProUGUI idKey;
+        private TextMeshProUGUI designationKey;
+        private TextMeshProUGUI officeKey;
         private TextMeshProUGUI statusLabel;
 
         public static IdCardUI EnsureExists()
@@ -100,7 +109,7 @@ namespace UIU.Simulator.Gameplay.IDCard
 
             if (saveState == null || !saveState.IsHydrated)
             {
-                SetCardFields("—", "—", "—", "—");
+                ApplyEmptyCard();
                 SetStatus("Loading ID card…", UiTheme.Grey);
                 saveState ??= PlayerSaveState.EnsureExists();
                 saveState.RefreshFromServer();
@@ -109,16 +118,35 @@ namespace UIU.Simulator.Gameplay.IDCard
 
             if (!saveState.HasSave || !saveState.IdCardIssued)
             {
-                SetCardFields("—", "—", "—", "—");
+                ApplyEmptyCard();
                 SetStatus("No ID card issued yet. Visit the receptionist.", UiTheme.Red);
                 return;
             }
 
+            bool isFaculty = FacultyIdentity.Matches(saveState.Role);
+            ApplyLayout(isFaculty);
             SetCardFields(
                 string.IsNullOrWhiteSpace(saveState.PlayerName) ? "—" : saveState.PlayerName,
                 FormatRole(saveState.Role),
                 string.IsNullOrWhiteSpace(saveState.Department) ? "—" : saveState.Department,
                 string.IsNullOrWhiteSpace(saveState.UniversityId) ? "—" : saveState.UniversityId);
+
+            if (isFaculty)
+            {
+                if (designationValue != null)
+                {
+                    designationValue.text = FacultyIdentity.Designation;
+                }
+
+                if (officeValue != null)
+                {
+                    officeValue.text = FacultyIdentity.FormatOffice();
+                }
+
+                SetStatus("Faculty ID Card", UiTheme.BrightOrange);
+                return;
+            }
+
             SetStatus("ID Card", UiTheme.BrightOrange);
         }
 
@@ -134,12 +162,58 @@ namespace UIU.Simulator.Gameplay.IDCard
                 return "Student";
             }
 
-            if (role.Equals("FACULTY", System.StringComparison.OrdinalIgnoreCase))
+            if (FacultyIdentity.Matches(role))
             {
                 return "Faculty";
             }
 
             return role;
+        }
+
+        private void ApplyEmptyCard()
+        {
+            ApplyLayout(showFacultyFields: false);
+            SetCardFields("—", "—", "—", "—");
+        }
+
+        private void ApplyLayout(bool showFacultyFields)
+        {
+            if (panelRect != null)
+            {
+                panelRect.sizeDelta = new Vector2(
+                    PanelWidth,
+                    showFacultyFields ? FacultyPanelHeight : StudentPanelHeight);
+            }
+
+            if (idKey != null)
+            {
+                idKey.text = showFacultyFields ? "Faculty ID" : "Student ID";
+            }
+
+            SetFacultyRowsVisible(showFacultyFields);
+        }
+
+        private void SetFacultyRowsVisible(bool visible)
+        {
+            if (designationKey != null)
+            {
+                designationKey.gameObject.SetActive(visible);
+            }
+
+            if (designationValue != null)
+            {
+                designationValue.gameObject.SetActive(visible);
+            }
+
+            if (officeKey != null)
+            {
+                officeKey.gameObject.SetActive(visible);
+            }
+
+            if (officeValue != null)
+            {
+                officeValue.gameObject.SetActive(visible);
+            }
         }
 
         private void SetCardFields(string name, string role, string department, string universityId)
@@ -186,10 +260,10 @@ namespace UIU.Simulator.Gameplay.IDCard
 
             GameObject panel = new GameObject("IdCardPanel");
             panel.transform.SetParent(overlayRoot.transform, false);
-            RectTransform panelRect = panel.AddComponent<RectTransform>();
+            panelRect = panel.AddComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(480f, 420f);
+            panelRect.sizeDelta = new Vector2(PanelWidth, StudentPanelHeight);
             panel.AddComponent<Image>().color = UiTheme.Black;
 
             // Orange accent bar at top
@@ -221,10 +295,21 @@ namespace UIU.Simulator.Gameplay.IDCard
             departmentValue = CreateLabel(panel.transform, "DeptValue", "—", 20f, FontStyles.Bold, UiTheme.White,
                 new Vector2(0f, -232f), 28f);
 
-            CreateLabel(panel.transform, "IdKey", "University ID", 14f, FontStyles.Normal, UiTheme.Grey,
+            idKey = CreateLabel(panel.transform, "IdKey", "Student ID", 14f, FontStyles.Normal, UiTheme.Grey,
                 new Vector2(0f, -270f), 22f);
             universityIdValue = CreateLabel(panel.transform, "IdValue", "—", 20f, FontStyles.Bold, UiTheme.White,
                 new Vector2(0f, -296f), 28f);
+
+            designationKey = CreateLabel(panel.transform, "DesignationKey", "Designation", 14f, FontStyles.Normal, UiTheme.Grey,
+                new Vector2(0f, -334f), 22f);
+            designationValue = CreateLabel(panel.transform, "DesignationValue", "—", 20f, FontStyles.Bold, UiTheme.White,
+                new Vector2(0f, -360f), 28f);
+
+            officeKey = CreateLabel(panel.transform, "OfficeKey", "Office", 14f, FontStyles.Normal, UiTheme.Grey,
+                new Vector2(0f, -398f), 22f);
+            officeValue = CreateLabel(panel.transform, "OfficeValue", "—", 20f, FontStyles.Bold, UiTheme.White,
+                new Vector2(0f, -424f), 28f);
+            SetFacultyRowsVisible(false);
 
             GameObject closeGo = new GameObject("Button_CloseIdCard");
             closeGo.transform.SetParent(panel.transform, false);

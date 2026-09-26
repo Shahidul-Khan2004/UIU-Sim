@@ -1,5 +1,6 @@
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -95,6 +96,7 @@ public class FirstPersonLook : MonoBehaviour
             !UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay &&
             !ElevatorUI.IsOpen &&
             !AdvisorUI.IsOpen &&
+            !FacultyPortalUI.IsOpen &&
             !GameMenuManager.IsOpen &&
             !ClassroomChoiceUI.IsOpen &&
             !ClassroomLectureUI.IsOpen)
