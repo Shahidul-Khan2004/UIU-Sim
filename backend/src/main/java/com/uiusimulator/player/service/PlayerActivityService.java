@@ -7,8 +7,10 @@ import com.uiusimulator.player.dto.ActivityStateResponse;
 import com.uiusimulator.player.entity.ActivityOutcomeDefinition;
 import com.uiusimulator.player.entity.BreakfastOutcome;
 import com.uiusimulator.player.entity.GetIdCardOutcome;
+import com.uiusimulator.player.entity.NpcConversationDefinition;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
+import com.uiusimulator.player.entity.PlayerRole;
 import com.uiusimulator.player.entity.PlayerSave;
 import com.uiusimulator.player.entity.PlayerStats;
 import com.uiusimulator.player.exception.PlayerSaveNotFoundException;
@@ -89,7 +91,7 @@ public class PlayerActivityService {
             return ActivityResolveResponse.of(existing.get(), lockedStats, true);
         }
 
-        ActivityOutcomeDefinition outcome = resolveOutcome(activityId, outcomeRaw);
+        ActivityOutcomeDefinition outcome = resolveOutcome(activityId, outcomeRaw, save.getRole());
 
         int appliedAura = 0;
         int appliedReputation = 0;
@@ -129,7 +131,7 @@ public class PlayerActivityService {
         return ActivityResolveResponse.of(created, lockedStats, false);
     }
 
-    private static ActivityOutcomeDefinition resolveOutcome(String activityId, String outcomeRaw) {
+    private static ActivityOutcomeDefinition resolveOutcome(String activityId, String outcomeRaw, PlayerRole role) {
         if (BreakfastOutcome.ACTIVITY_ID.equals(activityId)) {
             try {
                 BreakfastOutcome breakfastOutcome = BreakfastOutcome.valueOf(outcomeRaw);
@@ -156,6 +158,10 @@ public class PlayerActivityService {
             } catch (IllegalArgumentException ex) {
                 throw new IllegalArgumentException("Unsupported GET_ID_CARD outcome: " + outcomeRaw);
             }
+        }
+
+        if (NpcConversationDefinition.isNpcConversation(activityId)) {
+            return NpcConversationDefinition.outcomeFor(activityId, outcomeRaw, role);
         }
 
         throw new IllegalArgumentException("Unsupported activityId: " + activityId);
