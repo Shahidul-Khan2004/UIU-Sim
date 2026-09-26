@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using UIU.Simulator.Authentication;
 using UnityEngine;
@@ -141,6 +142,133 @@ namespace UIU.Simulator.Networking
         {
             public bool hasSave;
             public PlayerSaveDto save;
+        }
+
+        [Serializable]
+        public class FacultyProfileDto
+        {
+            public string name;
+            public string facultyId;
+            public string department;
+            public string designation;
+            public string office;
+        }
+
+        [Serializable]
+        public class FacultyRoutineItemDto
+        {
+            public string courseId;
+            public string courseName;
+            public string classroomNumber;
+            public int floor;
+        }
+
+        [Serializable]
+        public class FacultyRoutineResponseDto
+        {
+            public FacultyProfileDto profile;
+            public FacultyRoutineItemDto[] routine;
+        }
+
+        [Serializable]
+        public class FacultyCourseDto
+        {
+            public string courseCode;
+            public string courseName;
+            public string classroom;
+            public int floor;
+        }
+
+        [Serializable]
+        public class FacultyCoursesResponseDto
+        {
+            public string facultyId;
+            public FacultyCourseDto[] courses;
+        }
+
+        [Serializable]
+        public class FacultyStudentDto
+        {
+            public string studentName;
+            public string studentId;
+        }
+
+        [Serializable]
+        public class FacultyStudentListDto
+        {
+            public FacultyStudentDto[] items;
+        }
+
+        [Serializable]
+        public class FacultyMaterialDto
+        {
+            public string id;
+            public string courseId;
+            public string title;
+            public string url;
+            public string uploadedBy;
+            public string createdAt;
+        }
+
+        [Serializable]
+        public class FacultyMaterialListDto
+        {
+            public FacultyMaterialDto[] items;
+        }
+
+        [Serializable]
+        public class FacultyMaterialOpenDto
+        {
+            public string url;
+        }
+
+        [Serializable]
+        public class CreateCourseMaterialRequestDto
+        {
+            public string title;
+            public string url;
+
+            public CreateCourseMaterialRequestDto(string title, string url)
+            {
+                this.title = title;
+                this.url = url;
+            }
+        }
+
+        public static FacultyStudentDto[] ParseFacultyStudents(string json)
+        {
+            return ParseJsonArray<FacultyStudentListDto, FacultyStudentDto>(json, wrapper => wrapper.items);
+        }
+
+        public static FacultyMaterialDto[] ParseFacultyMaterials(string json)
+        {
+            return ParseJsonArray<FacultyMaterialListDto, FacultyMaterialDto>(json, wrapper => wrapper.items);
+        }
+
+        public static FacultyMaterialOpenDto ParseFacultyMaterialOpen(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
+
+            return JsonUtility.FromJson<FacultyMaterialOpenDto>(json);
+        }
+
+        private static TItem[] ParseJsonArray<TWrapper, TItem>(string json, Func<TWrapper, TItem[]> selector)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return Array.Empty<TItem>();
+            }
+
+            string trimmed = json.Trim();
+            string wrapped = trimmed.StartsWith("[", StringComparison.Ordinal)
+                ? "{\"items\":" + trimmed + "}"
+                : trimmed;
+            TWrapper parsed = JsonUtility.FromJson<TWrapper>(wrapped);
+            TItem[] items = parsed != null ? selector(parsed) : null;
+            return items ?? Array.Empty<TItem>();
         }
 
         [Serializable]
@@ -576,6 +704,36 @@ namespace UIU.Simulator.Networking
                     {
                         req.SetRequestHeader("Authorization", $"Bearer {token}");
                     }
+                    return req;
+                },
+                jwtToken,
+                $"POST {relativePath}",
+                onSuccess,
+                onError
+            );
+        }
+
+        public IEnumerator PostMultipart(
+            string relativePath,
+            List<IMultipartFormSection> sections,
+            string jwtToken,
+            Action<string> onSuccess,
+            Action<string, long> onError)
+        {
+            string url = $"{BackendBaseUrl}/{relativePath.TrimStart('/')}";
+            List<IMultipartFormSection> formSections = sections ?? new List<IMultipartFormSection>();
+
+            yield return ExecuteRequestWithAuthRetry(
+                token =>
+                {
+                    UnityWebRequest req = UnityWebRequest.Post(url, formSections);
+                    req.downloadHandler = new DownloadHandlerBuffer();
+                    req.SetRequestHeader("Accept", "application/json");
+                    if (!string.IsNullOrWhiteSpace(token))
+                    {
+                        req.SetRequestHeader("Authorization", $"Bearer {token}");
+                    }
+
                     return req;
                 },
                 jwtToken,

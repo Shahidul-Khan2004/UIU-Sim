@@ -1,7 +1,10 @@
 package com.uiusimulator.player.repository;
 
+import com.uiusimulator.player.entity.PlayerRole;
 import com.uiusimulator.player.entity.PlayerSave;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +24,17 @@ public interface PlayerSaveRepository extends JpaRepository<PlayerSave, UUID> {
     boolean existsByPlayer_Id(UUID playerId);
 
     void deleteByPlayer_Id(UUID playerId);
+
+    @Query("SELECT ps FROM PlayerSave ps JOIN FETCH ps.department WHERE ps.player.id IN :playerIds")
+    List<PlayerSave> findByPlayerIds(@Param("playerIds") Collection<UUID> playerIds);
+
+    @Query("""
+            SELECT ps FROM PlayerSave ps
+            JOIN FETCH ps.department d
+            WHERE ps.role = :role AND UPPER(d.code) = UPPER(:departmentCode)
+            """)
+    List<PlayerSave> findByRoleAndDepartmentCode(
+            @Param("role") PlayerRole role,
+            @Param("departmentCode") String departmentCode
+    );
 }

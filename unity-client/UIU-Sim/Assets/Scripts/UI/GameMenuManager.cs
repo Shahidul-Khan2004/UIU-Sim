@@ -7,6 +7,7 @@ using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
@@ -318,6 +319,8 @@ namespace UIU.Simulator.UI
             return AcademicModal.BlocksGameplay
                 || ElevatorUI.IsOpen
                 || AdvisorUI.IsOpen
+                || FacultyPortalUI.IsOpen
+                || ClassRoutineUI.IsOpen
                 || DialogueUI.IsOpen
                 || CanteenQueueUI.IsOpen
                 || AdmissionUI.IsOpen

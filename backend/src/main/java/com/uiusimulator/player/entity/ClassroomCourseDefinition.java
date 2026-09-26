@@ -24,21 +24,24 @@ public final class ClassroomCourseDefinition {
             "ATTEND_ICS",
             "ICS",
             "Introduction to Computer Science",
-            1
+            1,
+            "CSE"
     );
 
     public static final ClassroomCourseDefinition ENGLISH = new ClassroomCourseDefinition(
             "ATTEND_ENGLISH",
             "ENGLISH",
             "English",
-            1
+            1,
+            "CSE"
     );
 
     public static final ClassroomCourseDefinition DISCRETE_MATHEMATICS = new ClassroomCourseDefinition(
             "ATTEND_DM",
             "DM",
             "Discrete Mathematics",
-            1
+            1,
+            "CSE"
     );
 
     private static final List<ClassroomCourseDefinition> ALL = List.of(ICS, ENGLISH, DISCRETE_MATHEMATICS);
@@ -47,12 +50,20 @@ public final class ClassroomCourseDefinition {
     private final String courseId;
     private final String courseName;
     private final int scheduledDay;
+    private final String departmentCode;
 
-    private ClassroomCourseDefinition(String activityId, String courseId, String courseName, int scheduledDay) {
+    private ClassroomCourseDefinition(
+            String activityId,
+            String courseId,
+            String courseName,
+            int scheduledDay,
+            String departmentCode
+    ) {
         this.activityId = activityId;
         this.courseId = courseId;
         this.courseName = courseName;
         this.scheduledDay = scheduledDay;
+        this.departmentCode = departmentCode;
     }
 
     public static List<ClassroomCourseDefinition> all() {
@@ -71,6 +82,19 @@ public final class ClassroomCourseDefinition {
         throw new IllegalArgumentException("Unknown classroom activity.");
     }
 
+    public static ClassroomCourseDefinition byCourseId(String courseId) {
+        if (courseId == null || courseId.isBlank()) {
+            throw new IllegalArgumentException("Unknown course.");
+        }
+        String normalized = courseId.trim();
+        for (ClassroomCourseDefinition course : ALL) {
+            if (course.courseId.equals(normalized)) {
+                return course;
+            }
+        }
+        throw new IllegalArgumentException("Unknown course.");
+    }
+
     public String activityId() {
         return activityId;
     }
@@ -87,6 +111,10 @@ public final class ClassroomCourseDefinition {
         return scheduledDay;
     }
 
+    public String departmentCode() {
+        return departmentCode;
+    }
+
     public static boolean isNormalClassDay(int semester, int day) {
         return semester == 1 && (day == 1 || day == 4);
     }
@@ -97,7 +125,7 @@ public final class ClassroomCourseDefinition {
         }
         Department department = save.getDepartment();
         return department != null
-                && "CSE".equalsIgnoreCase(department.getCode())
+                && departmentCode.equalsIgnoreCase(department.getCode())
                 && isNormalClassDay(save.getSemester(), save.getCurrentDay());
     }
 
