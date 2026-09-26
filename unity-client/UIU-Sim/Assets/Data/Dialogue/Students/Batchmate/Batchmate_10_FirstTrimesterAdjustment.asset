@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_10_FirstTrimesterAdjustment
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_first_trimester_adjustment
+  topic: "First semester adjustment"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Be honest, how's university life treating you so far?"
+    choices:
+    - playerLine: "I'm enjoying it."
+      npcReaction: "Love that. Keep that energy."
+      nextNodeId: sleep
+    - playerLine: "Still adjusting."
+      npcReaction: "Yeah, it takes a while. Everything's so different from college."
+      nextNodeId: sleep
+    - playerLine: "It's a lot to handle."
+      npcReaction: "It really is. You're not the only one feeling that."
+      nextNodeId: sleep
+  - id: sleep
+    npcLine: "How's your sleep schedule?"
+    choices:
+    - playerLine: "Surprisingly normal."
+      npcReaction: "Protect it. It won't last."
+      nextNodeId: commute
+    - playerLine: "What sleep schedule?"
+      npcReaction: "Ha, same. Morning classes are rough."
+      nextNodeId: commute
+    - playerLine: "I nap between classes."
+      npcReaction: "The campus nap. An art form."
+      nextNodeId: commute
+  - id: commute
+    npcLine: "How long does it take you to get here?"
+    choices:
+    - playerLine: "Not long, I live nearby."
+      npcReaction: "Lucky. That's a superpower in Dhaka."
+      nextNodeId: trimester
+    - playerLine: "More than an hour with traffic."
+      npcReaction: "Brutal. Podcasts help, trust me."
+      nextNodeId: trimester
+    - playerLine: "Depends entirely on traffic."
+      npcReaction: "So anywhere from twenty minutes to forever."
+      nextNodeId: trimester
+  - id: trimester
+    npcLine: "It's only our {trimester} trimester. Imagine how settled we'll be by the end."
+    choices:
+    - playerLine: "Yeah, {trimester} trimester. We'll figure it out."
+      npcReaction: "Exactly. Future us will laugh at this week."
+      nextNodeId: clubs
+  - id: clubs
+    npcLine: "Are you planning to join any clubs?"
+    choices:
+    - playerLine: "Yes, I want to try a few."
+      npcReaction: "Nice! Clubs are a great way to meet people."
+      nextNodeId: end
+    - playerLine: "Maybe after I settle into classes."
+      npcReaction: "Sensible. Classes first."
+      nextNodeId: end
+    - playerLine: "Probably not, I want to focus on studies."
+      npcReaction: "Fair. You can always join later."
+      nextNodeId: end
+  - id: end
+    npcLine: "Alright, I've got to run. Hang in there, {name}. It gets easier."
+    choices: []

@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_10_SeniorExperience
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_experience
+  topic: "Senior experience"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "You know, I was exactly where you are a few years ago."
+    choices:
+    - playerLine: "What was it like for you?"
+      npcReaction: "Honestly? Confusing and exciting at the same time."
+      nextNodeId: time
+    - playerLine: "Does it get easier?"
+      npcReaction: "It does. You just get better at handling the chaos."
+      nextNodeId: time
+    - playerLine: "Any regrets?"
+      npcReaction: "A few. That's why I like talking to freshers."
+      nextNodeId: time
+  - id: time
+    npcLine: "The biggest change for me was managing my own time. How's that going for you?"
+    choices:
+    - playerLine: "Getting there."
+      npcReaction: "That's all you need right now."
+      nextNodeId: memory
+    - playerLine: "It's harder than I thought."
+      npcReaction: "It's hard for everyone. It's a skill, not a talent."
+      nextNodeId: memory
+    - playerLine: "I have a planner now."
+      npcReaction: "Nice. Actually using it is the next level."
+      nextNodeId: memory
+  - id: memory
+    npcLine: "Want to hear my favorite memory from my first trimester?"
+    choices:
+    - playerLine: "Sure!"
+      npcReaction: "Our whole section studied together in the canteen the night before a quiz. We all passed."
+      nextNodeId: dept
+    - playerLine: "Only if it's a good one."
+      npcReaction: "It is. Our section crammed together in the canteen before a quiz, and we all passed."
+      nextNodeId: dept
+    - playerLine: "Was it about food?"
+      npcReaction: "Kind of! Our section studied in the canteen before a quiz, with lots of tea. We all passed."
+      nextNodeId: dept
+  - id: dept
+    npcLine: "You're {department}, right? There are some great people in that department."
+    choices:
+    - playerLine: "Yes, {department}. I'm starting to meet some of them."
+      npcReaction: "Good. Those are the people you'll graduate with."
+      nextNodeId: future
+  - id: future
+    npcLine: "If you could ask future you one thing, what would it be?"
+    choices:
+    - playerLine: "Did I make the right choices?"
+      npcReaction: "Deep. I think future you will say yes."
+      nextNodeId: end
+    - playerLine: "What's my CGPA?"
+      npcReaction: "Ha! Practical. Work for it and the answer will be good."
+      nextNodeId: end
+    - playerLine: "Did I have fun?"
+      npcReaction: "Great question. Make sure the answer is yes."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, enjoy this time. It goes by faster than you think."
+    choices: []

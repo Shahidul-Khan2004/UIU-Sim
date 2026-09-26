@@ -1,8 +1,8 @@
 [
   {
-    "id": "SAMPLE-ICS-01",
+    "id": "ICS-01",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] Which component executes program instructions?",
+    "text": "What component of a computer performs arithmetic and logical operations?",
     "answers": [
       "CPU",
       "Monitor",
@@ -13,9 +13,9 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ICS-02",
+    "id": "ICS-02",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] Which is an input device?",
+    "text": "Which of the following is an input device?",
     "answers": [
       "Speaker",
       "Keyboard",
@@ -26,22 +26,217 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ICS-03",
+    "id": "ICS-03",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] What is binary 101 in decimal?",
+    "text": "How many bits are in one byte?",
     "answers": [
-      "3",
       "4",
-      "5",
-      "6"
+      "8",
+      "16",
+      "32"
     ],
-    "correctAnswer": 2,
-    "tier": "NORMAL"
+    "correctAnswer": 1,
+    "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ICS-04",
+    "id": "ICS-04",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] Which memory normally loses its contents when power is removed?",
+    "text": "What does RAM stand for?",
+    "answers": [
+      "Readily Available Memory",
+      "Random Access Memory",
+      "Read Always Memory",
+      "Rapid Application Memory"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-05",
+    "courseId": "ICS",
+    "text": "Which device is primarily used to display visual output?",
+    "answers": [
+      "Printer",
+      "Keyboard",
+      "Monitor",
+      "Microphone"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-06",
+    "courseId": "ICS",
+    "text": "What does CPU stand for?",
+    "answers": [
+      "Central Processing Unit",
+      "Computer Primary Utility",
+      "Central Program Utility",
+      "Control Peripheral Unit"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-07",
+    "courseId": "ICS",
+    "text": "Which of the following is software rather than hardware?",
+    "answers": [
+      "Keyboard",
+      "Operating system",
+      "Hard disk",
+      "Monitor"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-08",
+    "courseId": "ICS",
+    "text": "Which storage device typically keeps files after the computer is turned off?",
+    "answers": [
+      "RAM",
+      "Cache",
+      "CPU register",
+      "Hard disk"
+    ],
+    "correctAnswer": 3,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-09",
+    "courseId": "ICS",
+    "text": "What is a computer program?",
+    "answers": [
+      "A physical chip",
+      "A set of instructions",
+      "A power supply",
+      "A network cable"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-10",
+    "courseId": "ICS",
+    "text": "Which number system uses only the digits 0 and 1?",
+    "answers": [
+      "Decimal",
+      "Binary",
+      "Octal",
+      "Hexadecimal"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-11",
+    "courseId": "ICS",
+    "text": "What is the smallest unit of data in a computer?",
+    "answers": [
+      "Byte",
+      "Nibble",
+      "Bit",
+      "Word"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-12",
+    "courseId": "ICS",
+    "text": "Which of the following is an output device?",
+    "answers": [
+      "Mouse",
+      "Keyboard",
+      "Scanner",
+      "Printer"
+    ],
+    "correctAnswer": 3,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-13",
+    "courseId": "ICS",
+    "text": "What does OS commonly stand for in computing?",
+    "answers": [
+      "Output System",
+      "Operating System",
+      "Open Software",
+      "Optical Storage"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-14",
+    "courseId": "ICS",
+    "text": "What is computer hardware?",
+    "answers": [
+      "Programs stored on disk",
+      "The physical parts of a computer",
+      "User passwords",
+      "Internet protocols"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-15",
+    "courseId": "ICS",
+    "text": "Which type of memory is typically volatile?",
+    "answers": [
+      "ROM",
+      "RAM",
+      "SSD",
+      "Optical disc"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-16",
+    "courseId": "ICS",
+    "text": "What is a file on a computer?",
+    "answers": [
+      "A named collection of stored data",
+      "A single CPU instruction",
+      "A network cable",
+      "A type of printer"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-17",
+    "courseId": "ICS",
+    "text": "Which of these is commonly used to store files for backup?",
+    "answers": [
+      "Monitor",
+      "Keyboard",
+      "External hard drive",
+      "CPU fan"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-18",
+    "courseId": "ICS",
+    "text": "In programming, what is a comment used for?",
+    "answers": [
+      "To execute extra code",
+      "To explain code to human readers",
+      "To increase RAM",
+      "To connect to a network"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ICS-19",
+    "courseId": "ICS",
+    "text": "Which memory normally loses its contents when power is removed?",
     "answers": [
       "ROM",
       "SSD",
@@ -52,9 +247,230 @@
     "tier": "NORMAL"
   },
   {
-    "id": "SAMPLE-ICS-05",
+    "id": "ICS-20",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] How many distinct values can 3 bits represent?",
+    "text": "What is the decimal value of binary 101?",
+    "answers": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-21",
+    "courseId": "ICS",
+    "text": "Which data structure removes the most recently added item first?",
+    "answers": [
+      "Queue",
+      "Stack",
+      "Set",
+      "Graph"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-22",
+    "courseId": "ICS",
+    "text": "Which data structure follows the first-in, first-out rule?",
+    "answers": [
+      "Stack",
+      "Queue",
+      "Tree",
+      "Hash table"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-23",
+    "courseId": "ICS",
+    "text": "What does an algorithm describe?",
+    "answers": [
+      "A computer brand",
+      "A step-by-step method for solving a problem",
+      "A type of memory",
+      "A network cable"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-24",
+    "courseId": "ICS",
+    "text": "In programming, a variable is used to",
+    "answers": [
+      "Draw graphics",
+      "Store a value that can change",
+      "Replace the operating system",
+      "Heat the CPU"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-25",
+    "courseId": "ICS",
+    "text": "Which construct is used to repeat a block of code?",
+    "answers": [
+      "Condition",
+      "Loop",
+      "Variable",
+      "Comment"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-26",
+    "courseId": "ICS",
+    "text": "What does a compiler typically do?",
+    "answers": [
+      "Deletes unused files",
+      "Translates source code into machine code",
+      "Connects to the internet",
+      "Increases screen brightness"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-27",
+    "courseId": "ICS",
+    "text": "In a relational database, a primary key is used to",
+    "answers": [
+      "Sort files on disk",
+      "Uniquely identify each record",
+      "Encrypt passwords",
+      "Draw charts"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-28",
+    "courseId": "ICS",
+    "text": "An IP address is commonly used to",
+    "answers": [
+      "Identify a device on a network",
+      "Store images",
+      "Cool the CPU",
+      "Compile programs"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-29",
+    "courseId": "ICS",
+    "text": "Which software manages hardware resources and running programs?",
+    "answers": [
+      "Spreadsheet",
+      "Operating system",
+      "Web browser",
+      "Text editor"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-30",
+    "courseId": "ICS",
+    "text": "An array is best described as",
+    "answers": [
+      "A collection of elements stored in a sequence",
+      "A type of printer",
+      "A network protocol",
+      "A power supply"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-31",
+    "courseId": "ICS",
+    "text": "What is the main purpose of a function or method?",
+    "answers": [
+      "To group reusable instructions",
+      "To replace RAM",
+      "To format a hard disk",
+      "To assign an IP address"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-32",
+    "courseId": "ICS",
+    "text": "Which protocol is commonly used to request web pages?",
+    "answers": [
+      "FTP",
+      "SMTP",
+      "HTTP",
+      "SSH"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-33",
+    "courseId": "ICS",
+    "text": "What is the binary representation of decimal 4?",
+    "answers": [
+      "11",
+      "100",
+      "101",
+      "111"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-34",
+    "courseId": "ICS",
+    "text": "Which of these is a non-volatile storage device?",
+    "answers": [
+      "CPU register",
+      "RAM",
+      "Cache",
+      "SSD"
+    ],
+    "correctAnswer": 3,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-35",
+    "courseId": "ICS",
+    "text": "In a relational database, a table row is also called a",
+    "answers": [
+      "Field",
+      "Record",
+      "Schema",
+      "Index"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-36",
+    "courseId": "ICS",
+    "text": "A process in an operating system is",
+    "answers": [
+      "A running instance of a program",
+      "A type of hard disk",
+      "A keyboard shortcut",
+      "A compiler error"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ICS-37",
+    "courseId": "ICS",
+    "text": "How many distinct values can 3 bits represent?",
     "answers": [
       "3",
       "6",
@@ -65,9 +481,9 @@
     "tier": "HARD"
   },
   {
-    "id": "SAMPLE-ICS-06",
+    "id": "ICS-38",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] What is the worst-case search cost in an unsorted list of n items?",
+    "text": "What is the worst-case number of comparisons needed to find an item in an unsorted list of n items?",
     "answers": [
       "Constant",
       "Logarithmic",
@@ -78,29 +494,211 @@
     "tier": "HARD"
   },
   {
-    "id": "SAMPLE-ICS-07",
+    "id": "ICS-39",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] Which unit contains eight bits?",
+    "text": "Which of these time complexities grows most slowly as n becomes large?",
     "answers": [
-      "Byte",
-      "Kilobyte",
-      "Nibble",
-      "Megabyte"
+      "O(n^2)",
+      "O(n)",
+      "O(log n)",
+      "O(2^n)"
     ],
-    "correctAnswer": 0,
-    "tier": "EASY"
+    "correctAnswer": 2,
+    "tier": "HARD"
   },
   {
-    "id": "SAMPLE-ICS-08",
+    "id": "ICS-40",
     "courseId": "ICS",
-    "text": "[SAMPLE / TEST] Which data structure removes the most recently added item first?",
+    "text": "In a stack, which operation adds an item to the top?",
     "answers": [
-      "Queue",
-      "Stack",
-      "Set",
-      "Graph"
+      "Pop",
+      "Push",
+      "Peek",
+      "Enqueue"
     ],
     "correctAnswer": 1,
-    "tier": "NORMAL"
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-41",
+    "courseId": "ICS",
+    "text": "What is the result of the bitwise AND of 1100 and 1010?",
+    "answers": [
+      "1000",
+      "1110",
+      "0110",
+      "0010"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-42",
+    "courseId": "ICS",
+    "text": "Which data structure is typically used to implement breadth-first search?",
+    "answers": [
+      "Stack",
+      "Queue",
+      "Binary search tree only",
+      "Priority queue only"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-43",
+    "courseId": "ICS",
+    "text": "A deadlock can occur when processes",
+    "answers": [
+      "Finish at the same time",
+      "Wait forever for resources held by each other",
+      "Share the same printer name",
+      "Use extra RAM"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-44",
+    "courseId": "ICS",
+    "text": "What does SQL stand for?",
+    "answers": [
+      "Simple Query List",
+      "Structured Query Language",
+      "Sequential Queue Logic",
+      "System Quality Language"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-45",
+    "courseId": "ICS",
+    "text": "In computer networks, TCP is best described as",
+    "answers": [
+      "A connection-oriented transport protocol",
+      "A type of monitor",
+      "An image format",
+      "A programming language"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-46",
+    "courseId": "ICS",
+    "text": "What is the main purpose of virtual memory?",
+    "answers": [
+      "To replace the CPU",
+      "To allow programs to use more memory than physical RAM",
+      "To increase screen resolution",
+      "To assign MAC addresses"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-47",
+    "courseId": "ICS",
+    "text": "Which sorting algorithm repeatedly compares and swaps adjacent out-of-order items?",
+    "answers": [
+      "Merge sort",
+      "Bubble sort",
+      "Binary search",
+      "Hashing"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-48",
+    "courseId": "ICS",
+    "text": "In a singly linked list, each node typically stores",
+    "answers": [
+      "Only an array index",
+      "A value and a reference to the next node",
+      "A complete database",
+      "A MAC address"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-49",
+    "courseId": "ICS",
+    "text": "What is the decimal value of hexadecimal A?",
+    "answers": [
+      "8",
+      "9",
+      "10",
+      "16"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-50",
+    "courseId": "ICS",
+    "text": "Which statement about ROM is typically true?",
+    "answers": [
+      "It loses data when power is removed",
+      "It usually stores firmware that remains after power-off",
+      "It is used only for temporary calculations",
+      "It cannot be read by the CPU"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-51",
+    "courseId": "ICS",
+    "text": "An infinite loop is",
+    "answers": [
+      "A loop that never reaches a terminating condition",
+      "A loop that runs exactly once",
+      "A type of array",
+      "A network timeout"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-52",
+    "courseId": "ICS",
+    "text": "What does a router primarily do?",
+    "answers": [
+      "Prints documents",
+      "Forwards packets between networks",
+      "Compiles source code",
+      "Stores passwords in RAM"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-53",
+    "courseId": "ICS",
+    "text": "A database index is mainly used to",
+    "answers": [
+      "Slow down every write only",
+      "Speed up lookups on selected columns",
+      "Replace the operating system",
+      "Assign IP addresses"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ICS-54",
+    "courseId": "ICS",
+    "text": "Which of the following best describes cache memory?",
+    "answers": [
+      "Slow storage on an external drive",
+      "Fast memory close to the CPU that stores recently used data",
+      "A type of printer",
+      "A programming language"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
   }
 ]

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_01_FirstMeeting
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_first_meeting
+  topic: "First meeting"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 1
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "Good meeting you too!"
+  nodes:
+  - id: start
+    npcLine: "Hey! You look new too. First day?"
+    choices:
+    - playerLine: "Yeah, first day. Still finding my way."
+      npcReaction: "Same here. I almost walked into the wrong building this morning."
+      nextNodeId: dept
+    - playerLine: "Yep. Kind of excited, honestly."
+      npcReaction: "Good energy. I'm trying to feel the same way."
+      nextNodeId: dept
+    - playerLine: "First day, and I'm a bit nervous."
+      npcReaction: "Honestly, me too. Everyone looks like they know exactly where they're going."
+      nextNodeId: dept
+  - id: dept
+    npcLine: "I think I saw you at orientation. You're {department}, right?"
+    choices:
+    - playerLine: "Yeah, {department}. {departmentName}."
+      npcReaction: "Nice! Then we'll definitely keep bumping into each other."
+      nextNodeId: names
+  - id: names
+    npcLine: "I didn't even introduce myself properly. Everyone here just uses nicknames. What should I call you?"
+    choices:
+    - playerLine: "Just call me {name}."
+      npcReaction: "{name}, got it. I'm terrible with names, so remind me if I forget."
+      nextNodeId: friends
+  - id: friends
+    npcLine: "Have you made any friends yet, or is it still awkward?"
+    choices:
+    - playerLine: "A couple of people from my section."
+      npcReaction: "That's a good start. Your section kind of becomes your family here."
+      nextNodeId: plans
+    - playerLine: "Not really, you're the first person I've talked to."
+      npcReaction: "Well, now you know one person. That counts."
+      nextNodeId: plans
+    - playerLine: "I'm more of a slow warm-up person."
+      npcReaction: "Fair. The section group chat will drag you in soon anyway."
+      nextNodeId: plans
+  - id: plans
+    npcLine: "So what's your plan after classes today?"
+    choices:
+    - playerLine: "Probably the canteen, I'm starving."
+      npcReaction: "Good call. The line gets long after noon."
+      nextNodeId: end
+    - playerLine: "The library, to see how it works."
+      npcReaction: "Smart. I should do that instead of scrolling my phone."
+      nextNodeId: end
+    - playerLine: "Going home and sleeping."
+      npcReaction: "Honestly, that's the most relatable answer."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, I should find my next room before I get lost again. Good meeting you, {name}!"
+    choices: []

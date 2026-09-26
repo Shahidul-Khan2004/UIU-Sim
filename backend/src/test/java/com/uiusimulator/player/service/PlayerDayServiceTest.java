@@ -300,6 +300,37 @@ class PlayerDayServiceTest {
     }
 
     @Test
+    void npcConversation_rewardIncludedInSummary_andAvailableAgainAfterDayAdvance() {
+        Jwt jwt = jwtWith("user_day_npc_talk");
+        createSave(jwt);
+
+        var day1 = playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("NPC_TALK_SENIOR_01", "COMPLETED"));
+        var day1Repeat = playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("NPC_TALK_SENIOR_01", "COMPLETED"));
+        assertThat(day1.auraDelta()).isEqualTo(2);
+        assertThat(day1Repeat.alreadyResolved()).isTrue();
+        assertThat(day1Repeat.aura()).isEqualTo(day1.aura());
+
+        DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(jwt);
+        assertThat(summary.activities())
+                .filteredOn(a -> "NPC_TALK_SENIOR_01".equals(a.activityId()))
+                .singleElement()
+                .satisfies(a -> assertThat(a.auraDelta()).isEqualTo(2));
+
+        playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1));
+        int auraAtDay2Start = playerStatsRepository
+                .findByPlayerId(playerRepository.findByClerkUserId("user_day_npc_talk").orElseThrow().getId())
+                .orElseThrow()
+                .getAura();
+
+        var day2 = playerActivityService.resolveActivity(jwt, new ActivityResolveRequest("NPC_TALK_SENIOR_01", "COMPLETED"));
+
+        assertThat(day2.alreadyResolved()).isFalse();
+        assertThat(day2.dayNumber()).isEqualTo(2);
+        assertThat(day2.auraDelta()).isEqualTo(2);
+        assertThat(day2.aura()).isEqualTo(auraAtDay2Start + 2);
+    }
+
+    @Test
     void advance_withoutSave_throwsNotFound() {
         Jwt jwt = jwtWith("user_day_nosave");
         playerService.getOrProvisionPlayer(jwt);

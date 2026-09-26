@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_06_BbaCourses
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_bba_courses
+  topic: "BBA course discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 2
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "You're BBA too, right? I think I saw you at orientation."
+    choices:
+    - playerLine: "Yeah, {department}. {departmentName}."
+      npcReaction: "Same department! Good to see a familiar face."
+      nextNodeId: going
+  - id: going
+    npcLine: "How are your business courses going?"
+    choices:
+    - playerLine: "Better than I expected."
+      npcReaction: "Nice. Some of them are more practical than I thought."
+      nextNodeId: presentation
+    - playerLine: "There's a lot of reading."
+      npcReaction: "Right? The case studies are long."
+      nextNodeId: presentation
+    - playerLine: "Still figuring out what's expected."
+      npcReaction: "Same. The first assignment will tell us a lot."
+      nextNodeId: presentation
+  - id: presentation
+    npcLine: "Have you done any presentations yet?"
+    choices:
+    - playerLine: "Not yet, and I'm dreading it."
+      npcReaction: "Public speaking is scary at first, but it gets easier."
+      nextNodeId: group
+    - playerLine: "One, and it went okay."
+      npcReaction: "Already? You're ahead of me."
+      nextNodeId: group
+    - playerLine: "I'd rather write an assignment."
+      npcReaction: "Same, but BBA loves presentations."
+      nextNodeId: group
+  - id: group
+    npcLine: "How do you feel about group work?"
+    choices:
+    - playerLine: "I like it if everyone contributes."
+      npcReaction: "That 'if' is doing a lot of work."
+      nextNodeId: future
+    - playerLine: "I usually end up doing everything."
+      npcReaction: "Ha, the classic group project experience."
+      nextNodeId: future
+    - playerLine: "It's a good way to meet people."
+      npcReaction: "True. My group is basically my friend circle now."
+      nextNodeId: future
+  - id: future
+    npcLine: "Any idea what you want to major in later? Marketing, Finance, HR?"
+    choices:
+    - playerLine: "Marketing sounds fun."
+      npcReaction: "Creative choice. I can see that."
+      nextNodeId: end
+    - playerLine: "Finance, probably."
+      npcReaction: "A numbers person. Respect."
+      nextNodeId: end
+    - playerLine: "No idea yet."
+      npcReaction: "Totally fine. We have time."
+      nextNodeId: end
+  - id: end
+    npcLine: "Alright, I need to print something before class. See you around!"
+    choices: []

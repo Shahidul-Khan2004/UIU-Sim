@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Faculty_Senior_01_Welcome
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: faculty_senior_welcome
+  topic: "Senior welcomes a new faculty member"
+  npcType: 1
+  requirements:
+    playerRole: 1
+    department: 0
+    semester: 0
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "Nice meeting you too."
+  nodes:
+  - id: start
+    npcLine: "Good morning, {honorific}! Are you new here?"
+    choices:
+    - playerLine: "Yes, I've joined the {department} department."
+      npcReaction: "Welcome, {honorific}! I'm a senior here. Glad to have you with us."
+      nextNodeId: day
+  - id: day
+    npcLine: "How has your first day been, {honorific}?"
+    choices:
+    - playerLine: "Busy, but good."
+      npcReaction: "That's how most days feel here, {honorific}."
+      nextNodeId: students
+    - playerLine: "A little overwhelming."
+      npcReaction: "It gets easier, {honorific}. The campus is friendly."
+      nextNodeId: students
+    - playerLine: "Very productive."
+      npcReaction: "That's great to hear, {honorific}."
+      nextNodeId: students
+  - id: students
+    npcLine: "What do you think of the students so far, {honorific}?"
+    choices:
+    - playerLine: "Energetic and curious."
+      npcReaction: "We try, {honorific}! Especially before lunch."
+      nextNodeId: teacher
+    - playerLine: "Too early to say."
+      npcReaction: "Fair, {honorific}. Give us a trimester."
+      nextNodeId: teacher
+    - playerLine: "A bit quiet in class."
+      npcReaction: "Freshers are shy at first, {honorific}. They open up."
+      nextNodeId: teacher
+  - id: teacher
+    npcLine: "If you don't mind, {honorific}, can I share what students appreciate most in a teacher?"
+    choices:
+    - playerLine: "Please do."
+      npcReaction: "Clear examples, {honorific}, and sharing the course outline early."
+      nextNodeId: help
+    - playerLine: "Keep it short."
+      npcReaction: "Clear examples, {honorific}. That's it."
+      nextNodeId: help
+    - playerLine: "Let me guess, easy quizzes?"
+      npcReaction: "Ha! That too, {honorific}, but mostly clear examples."
+      nextNodeId: help
+  - id: help
+    npcLine: "Do you need help finding anything, {honorific}?"
+    choices:
+    - playerLine: "Where's the faculty lounge?"
+      npcReaction: "Reception can guide you, {honorific}. They know every room."
+      nextNodeId: end
+    - playerLine: "I'm fine, thank you."
+      npcReaction: "Of course, {honorific}."
+      nextNodeId: end
+    - playerLine: "Which way to the canteen?"
+      npcReaction: "Just follow the crowd around lunchtime, {honorific}. Go a bit early to skip the rush."
+      nextNodeId: end
+  - id: end
+    npcLine: "It was nice meeting you, {honorific}. Have a great day!"
+    choices: []

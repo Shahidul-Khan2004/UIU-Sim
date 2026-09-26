@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_06_UsingLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_using_library
+  topic: "Using library"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Have you figured out the library yet?"
+    choices:
+    - playerLine: "Yes, I've been once."
+      npcReaction: "Good. Most freshers don't go until exam week."
+      nextNodeId: books
+    - playerLine: "Not yet."
+      npcReaction: "Go this week, before it gets crowded."
+      nextNodeId: books
+    - playerLine: "Is it worth it?"
+      npcReaction: "Absolutely. Best place to focus on campus."
+      nextNodeId: books
+  - id: books
+    npcLine: "They keep reference books for most first trimester courses. Did you know that?"
+    choices:
+    - playerLine: "No, that's really useful."
+      npcReaction: "Right? It saves you buying expensive books."
+      nextNodeId: session
+    - playerLine: "Yes, I already borrowed one."
+      npcReaction: "Look at you, ahead of the game."
+      nextNodeId: session
+    - playerLine: "I prefer PDFs."
+      npcReaction: "Fair, but a physical copy comes with fewer distractions."
+      nextNodeId: session
+  - id: session
+    npcLine: "Even thirty focused minutes there helps. Do you study in long or short sessions?"
+    choices:
+    - playerLine: "Short, with breaks."
+      npcReaction: "That's the Pomodoro way. It works."
+      nextNodeId: section
+    - playerLine: "Long, once I get going."
+      npcReaction: "Just remember to take breaks."
+      nextNodeId: section
+    - playerLine: "Whatever my attention span allows."
+      npcReaction: "Honest answer. Short and frequent is fine."
+      nextNodeId: section
+  - id: section
+    npcLine: "There's a shelf for {department} books too. You're {department}, right?"
+    choices:
+    - playerLine: "Yeah, {department}. I'll check that shelf."
+      npcReaction: "Do. The older editions are basically the same and easier to find."
+      nextNodeId: etiquette
+  - id: etiquette
+    npcLine: "One rule: don't leave your bag on a seat for hours to hold it. People hate that. Would you?"
+    choices:
+    - playerLine: "No, that's not fair."
+      npcReaction: "Good. Library karma is real."
+      nextNodeId: end
+    - playerLine: "Maybe for a quick lunch break."
+      npcReaction: "Quick is fine. Hours is not."
+      nextNodeId: end
+    - playerLine: "Everyone does it, though."
+      npcReaction: "Doesn't make it right. Be better than everyone."
+      nextNodeId: end
+  - id: end
+    npcLine: "Anyway, I'm off to the library myself. Maybe I'll see you there."
+    choices: []

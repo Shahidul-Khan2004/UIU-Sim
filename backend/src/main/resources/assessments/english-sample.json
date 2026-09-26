@@ -1,8 +1,8 @@
 [
   {
-    "id": "SAMPLE-ENGLISH-01",
+    "id": "ENGLISH-01",
     "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the plural of child.",
+    "text": "Choose the plural of child.",
     "answers": [
       "Childs",
       "Children",
@@ -13,9 +13,9 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ENGLISH-02",
+    "id": "ENGLISH-02",
     "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the correct article: ___ apple.",
+    "text": "Choose the correct article: ___ apple.",
     "answers": [
       "A",
       "An",
@@ -26,61 +26,9 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ENGLISH-03",
+    "id": "ENGLISH-03",
     "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the grammatically correct sentence.",
-    "answers": [
-      "She go home.",
-      "She going home.",
-      "She goes home.",
-      "She gone home."
-    ],
-    "correctAnswer": 2,
-    "tier": "NORMAL"
-  },
-  {
-    "id": "SAMPLE-ENGLISH-04",
-    "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Which word is an adverb?",
-    "answers": [
-      "Quick",
-      "Quickness",
-      "Quickly",
-      "Quicken"
-    ],
-    "correctAnswer": 2,
-    "tier": "NORMAL"
-  },
-  {
-    "id": "SAMPLE-ENGLISH-05",
-    "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the correct sentence.",
-    "answers": [
-      "If I was you, I would wait.",
-      "If I were you, I would wait.",
-      "If I am you, I would wait.",
-      "If I be you, I would wait."
-    ],
-    "correctAnswer": 1,
-    "tier": "HARD"
-  },
-  {
-    "id": "SAMPLE-ENGLISH-06",
-    "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Which sentence uses the passive voice?",
-    "answers": [
-      "The student wrote a note.",
-      "The student is writing.",
-      "A note was written by the student.",
-      "The student writes notes."
-    ],
-    "correctAnswer": 2,
-    "tier": "HARD"
-  },
-  {
-    "id": "SAMPLE-ENGLISH-07",
-    "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the past tense of go.",
+    "text": "Choose the past tense of go.",
     "answers": [
       "Goes",
       "Going",
@@ -91,9 +39,464 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-ENGLISH-08",
+    "id": "ENGLISH-04",
     "courseId": "ENGLISH",
-    "text": "[SAMPLE / TEST] Choose the correct verb: Neither of the answers ___ correct.",
+    "text": "Which word is a noun?",
+    "answers": [
+      "Quickly",
+      "Run",
+      "Happiness",
+      "Beautiful"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-05",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "He are a student.",
+      "He is a student.",
+      "He be a student.",
+      "He am a student."
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-06",
+    "courseId": "ENGLISH",
+    "text": "Which word is an adjective?",
+    "answers": [
+      "Slow",
+      "Slowly",
+      "Slowness",
+      "Slowed"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-07",
+    "courseId": "ENGLISH",
+    "text": "Choose the synonym of begin.",
+    "answers": [
+      "End",
+      "Start",
+      "Stop",
+      "Finish"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-08",
+    "courseId": "ENGLISH",
+    "text": "Which sentence is a question?",
+    "answers": [
+      "She is late.",
+      "Is she late?",
+      "She late.",
+      "Being late."
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-09",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct pronoun: ___ is my classmate.",
+    "answers": [
+      "Him",
+      "He",
+      "His",
+      "Himself"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-10",
+    "courseId": "ENGLISH",
+    "text": "Which word is a verb?",
+    "answers": [
+      "Table",
+      "Quickly",
+      "Write",
+      "Blue"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-11",
+    "courseId": "ENGLISH",
+    "text": "Choose the antonym of difficult.",
+    "answers": [
+      "Hard",
+      "Easy",
+      "Complex",
+      "Tough"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-12",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct preposition: The book is ___ the table.",
+    "answers": [
+      "on",
+      "of",
+      "at",
+      "from"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-13",
+    "courseId": "ENGLISH",
+    "text": "Which word is spelled correctly?",
+    "answers": [
+      "Recieve",
+      "Receive",
+      "Receve",
+      "Recive"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-14",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "There is many books.",
+      "There are many books.",
+      "There be many books.",
+      "There is much books."
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-15",
+    "courseId": "ENGLISH",
+    "text": "What is the comparative form of tall?",
+    "answers": [
+      "Taller",
+      "Tallest",
+      "More tallest",
+      "Tall"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-16",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct word: I have ___ homework tonight.",
+    "answers": [
+      "many",
+      "much",
+      "a few",
+      "several"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-17",
+    "courseId": "ENGLISH",
+    "text": "Which sentence uses a capital letter correctly?",
+    "answers": [
+      "i live in dhaka.",
+      "I live in Dhaka.",
+      "i Live In dhaka.",
+      "I live in dhaka."
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-18",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct contraction of do not.",
+    "answers": [
+      "dont",
+      "do'nt",
+      "don't",
+      "doesnt"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "ENGLISH-19",
+    "courseId": "ENGLISH",
+    "text": "Choose the grammatically correct sentence.",
+    "answers": [
+      "She go home.",
+      "She going home.",
+      "She goes home.",
+      "She gone home."
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-20",
+    "courseId": "ENGLISH",
+    "text": "Which word is an adverb?",
+    "answers": [
+      "Quick",
+      "Quickness",
+      "Quickly",
+      "Quicken"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-21",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct verb: The students ___ in the library.",
+    "answers": [
+      "is",
+      "are",
+      "be",
+      "was"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-22",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "Me and him went.",
+      "He and I went.",
+      "Him and I went.",
+      "He and me went."
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-23",
+    "courseId": "ENGLISH",
+    "text": "Which sentence is in the present continuous tense?",
+    "answers": [
+      "She writes essays.",
+      "She wrote an essay.",
+      "She is writing an essay.",
+      "She has written an essay."
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-24",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct relative pronoun: The student ___ won the prize is here.",
+    "answers": [
+      "which",
+      "who",
+      "where",
+      "when"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-25",
+    "courseId": "ENGLISH",
+    "text": "Identify the grammatical error in \"She don't like tea.\"",
+    "answers": [
+      "She",
+      "don't",
+      "like",
+      "tea"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-26",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct word: The lecture was too ___ to follow.",
+    "answers": [
+      "bored",
+      "boring",
+      "bore",
+      "boredom"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-27",
+    "courseId": "ENGLISH",
+    "text": "Which sentence is a compound sentence?",
+    "answers": [
+      "Although it rained, we stayed.",
+      "We stayed.",
+      "It rained, and we stayed.",
+      "When it rained."
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-28",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct form: I look forward to ___ you.",
+    "answers": [
+      "meet",
+      "meeting",
+      "met",
+      "meets"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-29",
+    "courseId": "ENGLISH",
+    "text": "Which word is a conjunction?",
+    "answers": [
+      "Quickly",
+      "Because",
+      "Under",
+      "Beautiful"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-30",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "Each of the students have a book.",
+      "Each of the students has a book.",
+      "Each of the students having a book.",
+      "Each of the students are a book."
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-31",
+    "courseId": "ENGLISH",
+    "text": "What is a topic sentence usually used for?",
+    "answers": [
+      "To end a conversation",
+      "To state the main idea of a paragraph",
+      "To list references",
+      "To ask a question only"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-32",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct word: She has lived here ___ 2020.",
+    "answers": [
+      "for",
+      "since",
+      "during",
+      "while"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-33",
+    "courseId": "ENGLISH",
+    "text": "Which sentence uses the correct possessive?",
+    "answers": [
+      "The students books are here.",
+      "The students' books are here.",
+      "The students books' are here.",
+      "The student books's are here."
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-34",
+    "courseId": "ENGLISH",
+    "text": "Choose the synonym of sufficient.",
+    "answers": [
+      "Extra",
+      "Enough",
+      "Empty",
+      "Rare"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-35",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "He suggested me to wait.",
+      "He suggested that I wait.",
+      "He suggested I waiting.",
+      "He suggested to I wait."
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-36",
+    "courseId": "ENGLISH",
+    "text": "In academic writing, a thesis statement usually",
+    "answers": [
+      "Lists every source",
+      "States the main argument of an essay",
+      "Replaces the conclusion",
+      "Must be a question"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "ENGLISH-37",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "If I was you, I would wait.",
+      "If I were you, I would wait.",
+      "If I am you, I would wait.",
+      "If I be you, I would wait."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-38",
+    "courseId": "ENGLISH",
+    "text": "Which sentence uses the passive voice?",
+    "answers": [
+      "The student wrote a note.",
+      "The student is writing.",
+      "A note was written by the student.",
+      "The student writes notes."
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-39",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct verb: Neither of the answers ___ correct.",
     "answers": [
       "are",
       "were",
@@ -101,6 +504,201 @@
       "is"
     ],
     "correctAnswer": 3,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-40",
+    "courseId": "ENGLISH",
+    "text": "Choose the sentence that is correctly punctuated.",
+    "answers": [
+      "However she left early.",
+      "However, she left early.",
+      "However she, left early.",
+      "However she left, early."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-41",
+    "courseId": "ENGLISH",
+    "text": "Why is \"Walking to class, the rain started\" incorrect?",
+    "answers": [
+      "The rain cannot be the one walking",
+      "Walking is never a verb",
+      "Class must be plural",
+      "The sentence is too short"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-42",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct word: The committee has reached ___ decision.",
+    "answers": [
+      "it's",
+      "its",
+      "its'",
+      "it"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-43",
+    "courseId": "ENGLISH",
+    "text": "Which sentence uses parallel structure?",
+    "answers": [
+      "She likes reading, to swim, and jog.",
+      "She likes reading, swimming, and jogging.",
+      "She likes to read, swimming, and jog.",
+      "She likes read, swim, and jogging."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-44",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct reported speech for: He said, \"I am busy.\"",
+    "answers": [
+      "He said that he is busy yesterday.",
+      "He said that he was busy.",
+      "He said that I am busy.",
+      "He said that he were busy."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-45",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct sentence.",
+    "answers": [
+      "Between you and I, this is hard.",
+      "Between you and me, this is hard.",
+      "Between I and you, this is hard.",
+      "Between you and myself, this is hard."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-46",
+    "courseId": "ENGLISH",
+    "text": "Which word best completes the sentence: The professor asked us to ___ the article before class.",
+    "answers": [
+      "site",
+      "cite",
+      "sight",
+      "sigh"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-47",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct conditional: If she had studied, she ___ the quiz.",
+    "answers": [
+      "will pass",
+      "would pass",
+      "would have passed",
+      "passes"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-48",
+    "courseId": "ENGLISH",
+    "text": "Identify the sentence with correct subject-verb agreement.",
+    "answers": [
+      "The list of items are long.",
+      "The list of items is long.",
+      "The list of items were long.",
+      "The list of items be long."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-49",
+    "courseId": "ENGLISH",
+    "text": "In academic writing, plagiarism means",
+    "answers": [
+      "Citing a source correctly",
+      "Using someone else's work without proper acknowledgment",
+      "Paraphrasing with a citation",
+      "Listing references"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-50",
+    "courseId": "ENGLISH",
+    "text": "Choose the most formal academic sentence.",
+    "answers": [
+      "The results were kinda good.",
+      "The results were pretty nice.",
+      "The results were satisfactory.",
+      "The results were totally awesome."
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-51",
+    "courseId": "ENGLISH",
+    "text": "Which sentence is correctly punctuated?",
+    "answers": [
+      "The students who arrived late, missed the quiz.",
+      "The students, who arrived late missed the quiz.",
+      "The students who arrived late missed the quiz.",
+      "The students who, arrived late missed the quiz."
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-52",
+    "courseId": "ENGLISH",
+    "text": "Choose the correct word: The lecture had a strong ___ on the audience.",
+    "answers": [
+      "affect",
+      "effect",
+      "effective",
+      "affecting"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-53",
+    "courseId": "ENGLISH",
+    "text": "Which sentence uses the present perfect correctly?",
+    "answers": [
+      "I have seen that film last year.",
+      "I have seen that film before.",
+      "I have see that film.",
+      "I seen that film."
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "ENGLISH-54",
+    "courseId": "ENGLISH",
+    "text": "Choose the least wordy academic sentence.",
+    "answers": [
+      "Due to the fact that it rained, class was canceled.",
+      "Because it rained, class was canceled.",
+      "In the event that it rained, class was canceled.",
+      "On account of the rain that occurred, class was canceled."
+    ],
+    "correctAnswer": 1,
     "tier": "HARD"
   }
 ]

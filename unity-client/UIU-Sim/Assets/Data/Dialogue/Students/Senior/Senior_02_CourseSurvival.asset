@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_02_CourseSurvival
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_course_survival
+  topic: "Course survival tips"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "So, what are you taking this trimester?"
+    choices:
+    - playerLine: "Mostly {course}, plus the other {trimester} trimester courses."
+      npcReaction: "Ah, I remember those days. Don't fall behind in {course}, it snowballs."
+      nextNodeId: plan
+  - id: plan
+    npcLine: "What's your study plan so far?"
+    choices:
+    - playerLine: "Review after every class."
+      npcReaction: "That's exactly what worked for me."
+      nextNodeId: material
+    - playerLine: "Study hard before quizzes."
+      npcReaction: "That works until it suddenly doesn't. Start earlier."
+      nextNodeId: material
+    - playerLine: "I don't really have one yet."
+      npcReaction: "Make one this week. Even a simple one."
+      nextNodeId: material
+  - id: material
+    npcLine: "Are you using the lecture slides or reading the book?"
+    choices:
+    - playerLine: "Slides, mostly."
+      npcReaction: "Slides are a summary. Your own notes fill the gaps."
+      nextNodeId: questions
+    - playerLine: "The book, when I can."
+      npcReaction: "Rare and admirable. Your future self thanks you."
+      nextNodeId: questions
+    - playerLine: "Whatever my friends share."
+      npcReaction: "Careful. Shared notes always miss something."
+      nextNodeId: questions
+  - id: questions
+    npcLine: "Do you ask questions in class?"
+    choices:
+    - playerLine: "Sometimes."
+      npcReaction: "Do it more. Nobody remembers the questions, just the grades."
+      nextNodeId: fear
+    - playerLine: "Never, I'm too shy."
+      npcReaction: "Ask after class then. Same benefit, no audience."
+      nextNodeId: fear
+    - playerLine: "All the time."
+      npcReaction: "Good. Teachers notice who's engaged."
+      nextNodeId: fear
+  - id: fear
+    npcLine: "Which kind of course scares you the most?"
+    choices:
+    - playerLine: "Anything with math."
+      npcReaction: "Practice problems daily. Math is repetition."
+      nextNodeId: end
+    - playerLine: "Courses with lots of theory."
+      npcReaction: "Write summaries in your own words. It sticks better."
+      nextNodeId: end
+    - playerLine: "Honestly, all of them a little."
+      npcReaction: "That's healthy fear. It keeps you studying."
+      nextNodeId: end
+  - id: end
+    npcLine: "You'll be fine. Just don't let things pile up. See you around!"
+    choices: []

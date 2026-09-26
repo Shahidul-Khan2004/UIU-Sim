@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_07_Canteen
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_canteen
+  topic: "Canteen discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Have you tried the canteen yet?"
+    choices:
+    - playerLine: "Yes, the food's actually good."
+      npcReaction: "Right? Better than I expected for the price."
+      nextNodeId: favorite
+    - playerLine: "Only once, the line was huge."
+      npcReaction: "The lunch rush is brutal. Go a bit early."
+      nextNodeId: favorite
+    - playerLine: "Not yet, I bring food from home."
+      npcReaction: "Home food wins, honestly. But try it once."
+      nextNodeId: favorite
+  - id: favorite
+    npcLine: "What's your go-to order?"
+    choices:
+    - playerLine: "Rice and whatever curry they have."
+      npcReaction: "Safe and filling. Can't go wrong."
+      nextNodeId: line
+    - playerLine: "Porotta and egg, every time."
+      npcReaction: "Classic combo. You have taste."
+      nextNodeId: line
+    - playerLine: "Just tea and snacks."
+      npcReaction: "Tea keeps this whole campus running."
+      nextNodeId: line
+  - id: line
+    npcLine: "Would you ever skip the line if you had the chance?"
+    choices:
+    - playerLine: "No way, that's just rude."
+      npcReaction: "Good. People definitely notice who skips."
+      nextNodeId: schedule
+    - playerLine: "Only if I'm really late for class."
+      npcReaction: "Ha, I've been tempted too."
+      nextNodeId: schedule
+    - playerLine: "I'd just wait and complain quietly."
+      npcReaction: "The most common student strategy."
+      nextNodeId: schedule
+  - id: schedule
+    npcLine: "You're {department}, right? Does your routine leave time for lunch?"
+    choices:
+    - playerLine: "Yeah, I'm {department}. I squeeze lunch in between classes."
+      npcReaction: "Smart. Going to class hungry is the worst."
+      nextNodeId: budget
+  - id: budget
+    npcLine: "How are you managing your food budget?"
+    choices:
+    - playerLine: "Pretty well, the canteen is cheap."
+      npcReaction: "It really is. My wallet thanks it."
+      nextNodeId: end
+    - playerLine: "Badly. Snacks add up fast."
+      npcReaction: "The tea-and-singara tax is real."
+      nextNodeId: end
+    - playerLine: "I'm trying to bring food from home more."
+      npcReaction: "Good plan. Saves money and time in line."
+      nextNodeId: end
+  - id: end
+    npcLine: "Now I'm hungry. I'm heading down to the canteen. See you!"
+    choices: []

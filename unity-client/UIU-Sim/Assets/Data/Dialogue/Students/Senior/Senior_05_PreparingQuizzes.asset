@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_05_PreparingQuizzes
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_preparing_quizzes
+  topic: "Preparing for quizzes"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 1
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Have you started preparing for your next quiz?"
+    choices:
+    - playerLine: "A little."
+      npcReaction: "Good. A little every day beats a lot at once."
+      nextNodeId: timed
+    - playerLine: "Not yet."
+      npcReaction: "Start tonight. Quizzes come faster than you think."
+      nextNodeId: timed
+    - playerLine: "When is it even?"
+      npcReaction: "Check the outline. It's usually earlier than people expect."
+      nextNodeId: timed
+  - id: timed
+    npcLine: "Quizzes here are short and timed. Have you practiced under time pressure?"
+    choices:
+    - playerLine: "Not yet, but I should."
+      npcReaction: "Try timing yourself on practice questions."
+      nextNodeId: course
+    - playerLine: "Yes, I time myself."
+      npcReaction: "Nice. That's a serious advantage."
+      nextNodeId: course
+    - playerLine: "I panic under time pressure."
+      npcReaction: "Everyone does at first. Practice makes it calmer."
+      nextNodeId: course
+  - id: course
+    npcLine: "Which one are you most worried about?"
+    choices:
+    - playerLine: "Probably {course}."
+      npcReaction: "Ah, {course}. Focus on the basics there; quizzes love fundamentals."
+      nextNodeId: cheating
+  - id: cheating
+    npcLine: "Some people try to cheat on quizzes. What do you think?"
+    choices:
+    - playerLine: "Not worth the risk."
+      npcReaction: "Correct. Getting caught can get you dropped from the course."
+      nextNodeId: sleep
+    - playerLine: "Tempting, but no."
+      npcReaction: "Good. The consequences are brutal."
+      nextNodeId: sleep
+    - playerLine: "People actually get away with it?"
+      npcReaction: "Some do, until they don't. Don't be that story."
+      nextNodeId: sleep
+  - id: sleep
+    npcLine: "Last tip: sleep before a quiz. Do you pull all-nighters?"
+    choices:
+    - playerLine: "Never, I need my sleep."
+      npcReaction: "Perfect. Your brain works better rested."
+      nextNodeId: end
+    - playerLine: "Sometimes."
+      npcReaction: "Try not to before quizzes. Sleep beats cramming."
+      nextNodeId: end
+    - playerLine: "All the time."
+      npcReaction: "Please stop. Trust me on this one."
+      nextNodeId: end
+  - id: end
+    npcLine: "You've got this. Start early and you'll be fine."
+    choices: []

@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Faculty_Batchmate_02_StudentQuestions
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: faculty_batchmate_student_questions
+  topic: "Student asks a faculty member for study advice"
+  npcType: 0
+  requirements:
+    playerRole: 1
+    department: 0
+    semester: 0
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "Good luck with your studies."
+  nodes:
+  - id: start
+    npcLine: "Excuse me, {honorific}, are you faculty? Sorry, I wasn't sure."
+    choices:
+    - playerLine: "Yes, I'm faculty in the {department} department."
+      npcReaction: "Oh, that's great, {honorific}! Sorry for not recognizing you."
+      nextNodeId: study
+  - id: study
+    npcLine: "Can I ask you something, {honorific}? What's the best way to study in the first trimester?"
+    choices:
+    - playerLine: "Review your notes every day."
+      npcReaction: "Every day... I'll try, {honorific}."
+      nextNodeId: quiz
+    - playerLine: "Ask questions in class."
+      npcReaction: "I'm a bit shy, but I'll try, {honorific}."
+      nextNodeId: quiz
+    - playerLine: "Practice more than you read."
+      npcReaction: "That makes sense, {honorific}. Thank you."
+      nextNodeId: quiz
+  - id: quiz
+    npcLine: "Are quizzes usually hard here, {honorific}?"
+    choices:
+    - playerLine: "Not if you keep up with classes."
+      npcReaction: "That's reassuring, {honorific}."
+      nextNodeId: consult
+    - playerLine: "They're fair, but they need preparation."
+      npcReaction: "Understood, {honorific}. No last-minute studying."
+      nextNodeId: consult
+    - playerLine: "You'll find out soon."
+      npcReaction: "That sounds a little scary, {honorific}."
+      nextNodeId: consult
+  - id: consult
+    npcLine: "Is it okay if students visit during consultation hours, {honorific}?"
+    choices:
+    - playerLine: "Of course, that's what they're for."
+      npcReaction: "Thank you, {honorific}. I'll remember that."
+      nextNodeId: laptop
+    - playerLine: "Yes, just come with specific questions."
+      npcReaction: "I will, {honorific}. Thank you."
+      nextNodeId: laptop
+    - playerLine: "Send an email first, then drop by."
+      npcReaction: "Got it, {honorific}. Email first."
+      nextNodeId: laptop
+  - id: laptop
+    npcLine: "Last question, {honorific}. Do teachers mind laptops in class?"
+    choices:
+    - playerLine: "Not if it's for notes."
+      npcReaction: "Only notes, I promise, {honorific}."
+      nextNodeId: end
+    - playerLine: "It depends on the teacher."
+      npcReaction: "I'll ask each one then, {honorific}."
+      nextNodeId: end
+    - playerLine: "Paper is better for learning."
+      npcReaction: "I'll try paper then, {honorific}."
+      nextNodeId: end
+  - id: end
+    npcLine: "Thank you for your time, {honorific}. Have a nice day!"
+    choices: []

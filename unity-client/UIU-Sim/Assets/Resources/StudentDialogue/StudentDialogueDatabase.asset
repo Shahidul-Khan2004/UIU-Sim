@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d0f38676f8a5b26b8b7788da9f36141, type: 3}
+  m_Name: StudentDialogueDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueDatabase
+  trees:
+  - {fileID: 11400000, guid: 8fd276a0a6ba5773999fe88514102e68, type: 2}
+  - {fileID: 11400000, guid: cfb9e79de0565903828c5fbceeb6e328, type: 2}
+  - {fileID: 11400000, guid: 77bee3ab938355e3b97cd8f718f18be8, type: 2}
+  - {fileID: 11400000, guid: 566dd31ab8485f13a388516e11814a25, type: 2}
+  - {fileID: 11400000, guid: c48d185171d855a7b1b0ac6c9017afa8, type: 2}
+  - {fileID: 11400000, guid: a14c13697ca55941ab4019f54fba395a, type: 2}
+  - {fileID: 11400000, guid: e83013891d055107af66b52f73947f2a, type: 2}
+  - {fileID: 11400000, guid: 30a6c5de1f185644ae3e2c9ec0c6548b, type: 2}
+  - {fileID: 11400000, guid: ae0481415ef05a7392fbefda970841ef, type: 2}
+  - {fileID: 11400000, guid: c87180c52d1e58da8c978f576ce59211, type: 2}
+  - {fileID: 11400000, guid: 5622a67af0465bee883f390bb0f00388, type: 2}
+  - {fileID: 11400000, guid: 2d9ea151dc04582688dcb9fa183e0ca9, type: 2}
+  - {fileID: 11400000, guid: 9b215b32fc2b5a7daa20a3ac1a6c9dc2, type: 2}
+  - {fileID: 11400000, guid: 3f76603b08b35204944b43bcb422cf3e, type: 2}
+  - {fileID: 11400000, guid: 88ebf241a50851468fbd11098013cf4d, type: 2}
+  - {fileID: 11400000, guid: 4f4e714855c05fc3a95cc45da23a2e07, type: 2}
+  - {fileID: 11400000, guid: 33ac5e82e3a05bfd90f71d2530f94380, type: 2}
+  - {fileID: 11400000, guid: 59785727b7b25d43bcf91150af7ecd61, type: 2}
+  - {fileID: 11400000, guid: 9dcb3a492de75db0bb4fd2e28e33eda0, type: 2}
+  - {fileID: 11400000, guid: 819a421d21505004bb7ef139c21d0f79, type: 2}
+  - {fileID: 11400000, guid: 3df78c23bdc650e4a5abf7fc24da2945, type: 2}
+  - {fileID: 11400000, guid: d467ba648c015e19abe27c7d555fd762, type: 2}
+  - {fileID: 11400000, guid: f3748915a76657d5b77d6b7c8b6741f1, type: 2}
+  - {fileID: 11400000, guid: bb8bfcabf9b858e6ac2a095070b33e43, type: 2}
+  facultyHonorific: sir
+  defaultClosingPlayerLine: "See you around!"
+  leaveChoiceLine: "(Leave) Sorry, I have to go."
+  noConversationLine: "Hey! Catch you later, I'm heading somewhere."

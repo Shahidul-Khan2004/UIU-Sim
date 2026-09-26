@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Senior_04_ManagingCgpa
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: senior_managing_cgpa
+  topic: "Managing CGPA"
+  npcType: 1
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "Has anyone scared you about CGPA yet?"
+    choices:
+    - playerLine: "Everyone keeps talking about it."
+      npcReaction: "Yeah, it gets hyped a lot. It matters, but don't panic."
+      nextNodeId: base
+    - playerLine: "Not really."
+      npcReaction: "Good. Let me be the first, then. Just kidding, mostly."
+      nextNodeId: base
+    - playerLine: "I'm already worried about it."
+      npcReaction: "Worry is fine. Just turn it into a routine."
+      nextNodeId: base
+  - id: base
+    npcLine: "Your {trimester} trimester is where you build your base. It's easier to keep a good CGPA than to fix a bad one."
+    choices:
+    - playerLine: "Makes sense. I'd rather start strong in my {trimester} trimester."
+      npcReaction: "Exactly. Future you will thank you."
+      nextNodeId: components
+  - id: components
+    npcLine: "Do you know what counts toward your grade?"
+    choices:
+    - playerLine: "Quizzes, the midterm, and the final."
+      npcReaction: "Right. And attendance. People forget attendance."
+      nextNodeId: target
+    - playerLine: "Mostly the final, I think."
+      npcReaction: "Nope. Quizzes and the midterm add up fast."
+      nextNodeId: target
+    - playerLine: "Not really."
+      npcReaction: "Check the outline. Every mark has a home."
+      nextNodeId: target
+  - id: target
+    npcLine: "Do you have a target CGPA in mind?"
+    choices:
+    - playerLine: "As high as possible."
+      npcReaction: "Ambitious. Just stay consistent."
+      nextNodeId: stress
+    - playerLine: "Something respectable."
+      npcReaction: "Realistic goals are good goals."
+      nextNodeId: stress
+    - playerLine: "I'll be happy just passing everything."
+      npcReaction: "That's a start. Aim a little higher once you settle in."
+      nextNodeId: stress
+  - id: stress
+    npcLine: "How do you handle it when marks come out?"
+    choices:
+    - playerLine: "I talk to friends."
+      npcReaction: "Good. Everyone's in the same boat."
+      nextNodeId: end
+    - playerLine: "I study harder next time."
+      npcReaction: "The best possible response."
+      nextNodeId: end
+    - playerLine: "I try not to look at them."
+      npcReaction: "Look at them. That's how you know what to fix."
+      nextNodeId: end
+  - id: end
+    npcLine: "CGPA isn't everything, but it opens doors. Good luck!"
+    choices: []

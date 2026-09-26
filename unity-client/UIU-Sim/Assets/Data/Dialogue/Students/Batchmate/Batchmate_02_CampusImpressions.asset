@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_02_CampusImpressions
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_campus_impressions
+  topic: "First impressions of campus"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 0
+    semester: 1
+    minDay: 1
+    maxDay: 1
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "So, what do you think of the campus so far?"
+    choices:
+    - playerLine: "It's bigger than I expected."
+      npcReaction: "Right? I thought I'd memorize it in a day. Not happening."
+      nextNodeId: floor
+    - playerLine: "It looks really modern."
+      npcReaction: "The glass and the lighting make it feel like an office tower sometimes."
+      nextNodeId: floor
+    - playerLine: "Honestly, I'm still overwhelmed."
+      npcReaction: "Totally normal. Give it a week and it'll feel small."
+      nextNodeId: floor
+  - id: floor
+    npcLine: "Which part has confused you the most?"
+    choices:
+    - playerLine: "The upper floors, they all look the same."
+      npcReaction: "Same! I check the room numbers twice every time."
+      nextNodeId: elevator
+    - playerLine: "The ground floor, there are so many people."
+      npcReaction: "The rush between classes is wild down there."
+      nextNodeId: elevator
+    - playerLine: "I've mostly stayed near the entrance."
+      npcReaction: "Safe strategy. Explore a little at a time."
+      nextNodeId: elevator
+  - id: elevator
+    npcLine: "Elevator or stairs? Be honest."
+    choices:
+    - playerLine: "Elevator, always."
+      npcReaction: "Until you see the queue at 8:30. Then it's the stairs."
+      nextNodeId: trimester
+    - playerLine: "Stairs, the elevator line is too long."
+      npcReaction: "Leg day every day. Respect."
+      nextNodeId: trimester
+    - playerLine: "Whichever one shows up first."
+      npcReaction: "Very practical. I like it."
+      nextNodeId: trimester
+  - id: trimester
+    npcLine: "This is your {trimester} trimester too, right?"
+    choices:
+    - playerLine: "Yeah, my {trimester} trimester. Everything's new."
+      npcReaction: "Same boat, then. At least we're confused together."
+      nextNodeId: spot
+  - id: spot
+    npcLine: "Found a favorite spot on campus yet?"
+    choices:
+    - playerLine: "The canteen, obviously."
+      npcReaction: "Food first. Good priorities."
+      nextNodeId: end
+    - playerLine: "Somewhere quiet near the library."
+      npcReaction: "Nice. A peaceful corner is gold during exams."
+      nextNodeId: end
+    - playerLine: "Not yet, still looking."
+      npcReaction: "You'll find one. Everyone ends up with a spot."
+      nextNodeId: end
+  - id: end
+    npcLine: "I've got to catch my friend before class. See you around campus!"
+    choices: []
