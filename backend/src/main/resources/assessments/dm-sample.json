@@ -1,8 +1,8 @@
 [
   {
-    "id": "SAMPLE-DM-01",
+    "id": "DM-01",
     "courseId": "DM",
-    "text": "[SAMPLE / TEST] How many elements are in the set {1, 2, 3}?",
+    "text": "How many elements are in the set {1, 2, 3}?",
     "answers": [
       "1",
       "2",
@@ -13,9 +13,9 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-DM-02",
+    "id": "DM-02",
     "courseId": "DM",
-    "text": "[SAMPLE / TEST] What is the intersection of {1, 2} and {2, 3}?",
+    "text": "What is the intersection of {1, 2} and {2, 3}?",
     "answers": [
       "{1}",
       "{2}",
@@ -26,61 +26,9 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-DM-03",
+    "id": "DM-03",
     "courseId": "DM",
-    "text": "[SAMPLE / TEST] If p is true and q is false, what is p AND q?",
-    "answers": [
-      "True",
-      "False",
-      "Both",
-      "Undefined"
-    ],
-    "correctAnswer": 1,
-    "tier": "NORMAL"
-  },
-  {
-    "id": "SAMPLE-DM-04",
-    "courseId": "DM",
-    "text": "[SAMPLE / TEST] How many subsets does a set with 2 elements have?",
-    "answers": [
-      "1",
-      "2",
-      "3",
-      "4"
-    ],
-    "correctAnswer": 3,
-    "tier": "NORMAL"
-  },
-  {
-    "id": "SAMPLE-DM-05",
-    "courseId": "DM",
-    "text": "[SAMPLE / TEST] When is the implication p implies q false?",
-    "answers": [
-      "p true, q false",
-      "p false, q true",
-      "Both true",
-      "Both false"
-    ],
-    "correctAnswer": 0,
-    "tier": "HARD"
-  },
-  {
-    "id": "SAMPLE-DM-06",
-    "courseId": "DM",
-    "text": "[SAMPLE / TEST] What is the sum of vertex degrees in an undirected graph with 5 edges?",
-    "answers": [
-      "5",
-      "10",
-      "15",
-      "25"
-    ],
-    "correctAnswer": 1,
-    "tier": "HARD"
-  },
-  {
-    "id": "SAMPLE-DM-07",
-    "courseId": "DM",
-    "text": "[SAMPLE / TEST] What is the union of {1, 2} and {2, 3}?",
+    "text": "What is the union of {1, 2} and {2, 3}?",
     "answers": [
       "{2}",
       "{1, 3}",
@@ -91,9 +39,230 @@
     "tier": "EASY"
   },
   {
-    "id": "SAMPLE-DM-08",
+    "id": "DM-04",
     "courseId": "DM",
-    "text": "[SAMPLE / TEST] How many ways can three distinct books be arranged in a row?",
+    "text": "The empty set contains how many elements?",
+    "answers": [
+      "0",
+      "1",
+      "2",
+      "Infinity"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-05",
+    "courseId": "DM",
+    "text": "If p is true, what is NOT p?",
+    "answers": [
+      "True",
+      "False",
+      "Both",
+      "Undefined"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-06",
+    "courseId": "DM",
+    "text": "Which symbol commonly denotes the empty set?",
+    "answers": [
+      "∪",
+      "∩",
+      "∅",
+      "∈"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-07",
+    "courseId": "DM",
+    "text": "If A = {a, b}, which statement is true?",
+    "answers": [
+      "a ∈ A",
+      "a ⊂ A",
+      "A ∈ a",
+      "{A} ∈ a"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-08",
+    "courseId": "DM",
+    "text": "Which of the following is a proposition?",
+    "answers": [
+      "Close the door.",
+      "2 + 2 = 4",
+      "What time is it?",
+      "Hello!"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-09",
+    "courseId": "DM",
+    "text": "True OR false equals",
+    "answers": [
+      "True",
+      "False",
+      "Undefined",
+      "Neither"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-10",
+    "courseId": "DM",
+    "text": "True AND false equals",
+    "answers": [
+      "True",
+      "False",
+      "Undefined",
+      "Neither"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-11",
+    "courseId": "DM",
+    "text": "How many subsets does the empty set have?",
+    "answers": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-12",
+    "courseId": "DM",
+    "text": "If A has 3 elements, what is |A|?",
+    "answers": [
+      "0",
+      "2",
+      "3",
+      "6"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-13",
+    "courseId": "DM",
+    "text": "Which of these is a function from {1, 2} to {a, b}?",
+    "answers": [
+      "{(1, a), (2, a)}",
+      "{(1, a)}",
+      "{(1, a), (1, b)}",
+      "{(1, a), (2, a), (2, b)}"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-14",
+    "courseId": "DM",
+    "text": "A graph with vertices but no edges has degree sum",
+    "answers": [
+      "0",
+      "1",
+      "2",
+      "Equal to the number of vertices"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-15",
+    "courseId": "DM",
+    "text": "0! equals",
+    "answers": [
+      "0",
+      "1",
+      "Undefined",
+      "2"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-16",
+    "courseId": "DM",
+    "text": "The probability of an impossible event is",
+    "answers": [
+      "0",
+      "1",
+      "0.5",
+      "-1"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-17",
+    "courseId": "DM",
+    "text": "Which connective is logical AND?",
+    "answers": [
+      "∨",
+      "∧",
+      "→",
+      "¬"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-18",
+    "courseId": "DM",
+    "text": "If A ⊆ B, then every element of A is",
+    "answers": [
+      "Outside B",
+      "Also in B",
+      "Larger than B",
+      "Unique to A"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "DM-19",
+    "courseId": "DM",
+    "text": "If p is true and q is false, what is p AND q?",
+    "answers": [
+      "True",
+      "False",
+      "Both",
+      "Undefined"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-20",
+    "courseId": "DM",
+    "text": "How many subsets does a set with 2 elements have?",
+    "answers": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": 3,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-21",
+    "courseId": "DM",
+    "text": "How many ways can three distinct books be arranged in a row?",
     "answers": [
       "3",
       "6",
@@ -102,5 +271,434 @@
     ],
     "correctAnswer": 1,
     "tier": "NORMAL"
+  },
+  {
+    "id": "DM-22",
+    "courseId": "DM",
+    "text": "The complement of A relative to universe U contains",
+    "answers": [
+      "Elements in A",
+      "Elements in U but not in A",
+      "All ordered pairs",
+      "Only the empty set"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-23",
+    "courseId": "DM",
+    "text": "A relation R on a set is reflexive if",
+    "answers": [
+      "Every element is related to itself",
+      "No element is related to itself",
+      "R is empty",
+      "R is symmetric"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-24",
+    "courseId": "DM",
+    "text": "A function f is one-to-one (injective) if",
+    "answers": [
+      "Every output has at least two inputs",
+      "Different inputs map to different outputs",
+      "It is onto",
+      "It is constant"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-25",
+    "courseId": "DM",
+    "text": "How many edges does K3, the complete graph on 3 vertices, have?",
+    "answers": [
+      "2",
+      "3",
+      "4",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-26",
+    "courseId": "DM",
+    "text": "P(5, 2) equals",
+    "answers": [
+      "10",
+      "20",
+      "25",
+      "5"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-27",
+    "courseId": "DM",
+    "text": "C(5, 1) equals",
+    "answers": [
+      "1",
+      "4",
+      "5",
+      "10"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-28",
+    "courseId": "DM",
+    "text": "A fair coin is flipped once. The probability of heads is",
+    "answers": [
+      "0",
+      "1/4",
+      "1/2",
+      "1"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-29",
+    "courseId": "DM",
+    "text": "In Boolean algebra, 1 AND 0 equals",
+    "answers": [
+      "1",
+      "0",
+      "2",
+      "Undefined"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-30",
+    "courseId": "DM",
+    "text": "The converse of p → q is",
+    "answers": [
+      "q → p",
+      "¬p → ¬q",
+      "¬q → ¬p",
+      "p ∧ q"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-31",
+    "courseId": "DM",
+    "text": "If |A| = 3 and |B| = 2 and A and B are disjoint, |A ∪ B| is",
+    "answers": [
+      "1",
+      "5",
+      "6",
+      "3"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-32",
+    "courseId": "DM",
+    "text": "A binary relation that is reflexive, symmetric, and transitive is",
+    "answers": [
+      "A function",
+      "An equivalence relation",
+      "A partial order only",
+      "A directed graph"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-33",
+    "courseId": "DM",
+    "text": "The degree of a vertex is",
+    "answers": [
+      "The number of incident edges",
+      "The number of vertices",
+      "The number of components",
+      "The graph order"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-34",
+    "courseId": "DM",
+    "text": "How many functions are there from a 2-element set to a 3-element set?",
+    "answers": [
+      "5",
+      "6",
+      "8",
+      "9"
+    ],
+    "correctAnswer": 3,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-35",
+    "courseId": "DM",
+    "text": "If 7 people shake hands and each pair shakes hands once, how many handshakes occur?",
+    "answers": [
+      "14",
+      "21",
+      "42",
+      "49"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-36",
+    "courseId": "DM",
+    "text": "The statement \"for all x, P(x)\" is false when",
+    "answers": [
+      "P holds for all x",
+      "There exists an x for which P fails",
+      "P is a function",
+      "x is even"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "DM-37",
+    "courseId": "DM",
+    "text": "When is the implication p → q false?",
+    "answers": [
+      "p true, q false",
+      "p false, q true",
+      "Both true",
+      "Both false"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-38",
+    "courseId": "DM",
+    "text": "What is the sum of vertex degrees in an undirected graph with 5 edges?",
+    "answers": [
+      "5",
+      "10",
+      "15",
+      "25"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-39",
+    "courseId": "DM",
+    "text": "The contrapositive of p → q is",
+    "answers": [
+      "q → p",
+      "¬p → ¬q",
+      "¬q → ¬p",
+      "p ∧ ¬q"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-40",
+    "courseId": "DM",
+    "text": "How many subsets does a set with 4 elements have?",
+    "answers": [
+      "8",
+      "12",
+      "16",
+      "24"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-41",
+    "courseId": "DM",
+    "text": "A relation is a partial order if it is",
+    "answers": [
+      "Reflexive, antisymmetric, and transitive",
+      "Symmetric only",
+      "A function",
+      "Empty"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-42",
+    "courseId": "DM",
+    "text": "The handshaking lemma says that the sum of vertex degrees is",
+    "answers": [
+      "Equal to the number of vertices",
+      "Twice the number of edges",
+      "Always odd",
+      "Equal to the number of components"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-43",
+    "courseId": "DM",
+    "text": "In Boolean algebra, x OR x simplifies to",
+    "answers": [
+      "0",
+      "1",
+      "x",
+      "NOT x"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-44",
+    "courseId": "DM",
+    "text": "How many permutations of 4 distinct objects are there?",
+    "answers": [
+      "16",
+      "24",
+      "12",
+      "8"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-45",
+    "courseId": "DM",
+    "text": "If P(A) = 0.3 and P(B) = 0.4 and A and B are disjoint, P(A ∪ B) is",
+    "answers": [
+      "0.12",
+      "0.7",
+      "0.1",
+      "1.0"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-46",
+    "courseId": "DM",
+    "text": "A tree with 6 vertices has how many edges?",
+    "answers": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-47",
+    "courseId": "DM",
+    "text": "The pigeonhole principle says that if 6 pigeons go into 5 holes, then",
+    "answers": [
+      "Some hole is empty",
+      "Some hole has at least 2 pigeons",
+      "Every hole has exactly 1 pigeon",
+      "No hole has 2 pigeons"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-48",
+    "courseId": "DM",
+    "text": "De Morgan's law states that ¬(p ∧ q) equals",
+    "answers": [
+      "¬p ∧ ¬q",
+      "¬p ∨ ¬q",
+      "p ∨ q",
+      "p ∧ q"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-49",
+    "courseId": "DM",
+    "text": "A simple undirected graph typically does not contain",
+    "answers": [
+      "Vertices",
+      "Edges",
+      "Loops or multiple edges between the same pair",
+      "Connected components"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-50",
+    "courseId": "DM",
+    "text": "If f: A → B is bijective, then",
+    "answers": [
+      "|A| = |B|",
+      "|A| > |B|",
+      "f is not invertible",
+      "A must be empty"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-51",
+    "courseId": "DM",
+    "text": "The number of injective functions from a 2-element set to a 4-element set is",
+    "answers": [
+      "8",
+      "12",
+      "16",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-52",
+    "courseId": "DM",
+    "text": "In propositional logic, p ∨ ¬p is",
+    "answers": [
+      "A contradiction",
+      "A tautology",
+      "Contingent only",
+      "Undefined"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-53",
+    "courseId": "DM",
+    "text": "How many edges does a complete graph K4 have?",
+    "answers": [
+      "4",
+      "5",
+      "6",
+      "8"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "DM-54",
+    "courseId": "DM",
+    "text": "If two fair dice are rolled, the number of outcomes in the sample space is",
+    "answers": [
+      "6",
+      "12",
+      "36",
+      "18"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
   }
 ]
