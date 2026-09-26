@@ -10,9 +10,17 @@ namespace UIU.Simulator.Gameplay.Activities
         public const string AttendDm = "ATTEND_DM";
         public const string LibraryStudy = "LIBRARY_STUDY";
 
+        /// <summary>Per-NPC daily conversation activity: <c>NPC_TALK_&lt;NPC ID&gt;</c>.</summary>
+        public const string NpcConversationPrefix = "NPC_TALK_";
+
         public static bool IsClassroomActivity(string activityId)
         {
             return activityId == AttendIcs || activityId == AttendEnglish || activityId == AttendDm;
+        }
+
+        public static bool IsNpcConversation(string activityId)
+        {
+            return activityId != null && activityId.StartsWith(NpcConversationPrefix, System.StringComparison.Ordinal);
         }
     }
 }

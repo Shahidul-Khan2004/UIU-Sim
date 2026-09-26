@@ -520,6 +520,11 @@ namespace UIU.Simulator.Gameplay.UI
                 return AttendIcsOutcomeApi.SummaryLabel(outcome, courseName);
             }
 
+            if (ActivityIds.IsNpcConversation(activityId))
+            {
+                return "Chatted with a fellow student";
+            }
+
             return activityId;
         }
 
