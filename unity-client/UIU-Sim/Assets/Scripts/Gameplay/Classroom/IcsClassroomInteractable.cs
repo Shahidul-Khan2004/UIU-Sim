@@ -1,6 +1,8 @@
 using System;
 using UIU.Simulator.Gameplay.Assessment;
 using UIU.Simulator.Gameplay.Activities;
+using UIU.Simulator.Gameplay.Faculty;
+using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
@@ -109,7 +111,7 @@ namespace UIU.Simulator.Gameplay.Classroom
 
         public string Interact()
         {
-            if (AcademicModal.BlocksGameplay || isBusy || DialogueUI.IsOpen || ClassroomLectureUI.IsOpen || ClassroomChoiceUI.IsOpen)
+            if (AcademicModal.BlocksGameplay || isBusy || DialogueUI.IsOpen || ClassroomLectureUI.IsOpen || ClassroomChoiceUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen)
             {
                 return null;
             }
@@ -121,6 +123,11 @@ namespace UIU.Simulator.Gameplay.Classroom
 
             PlayerSaveState save = PlayerSaveState.Instance ?? FindFirstObjectByType<PlayerSaveState>();
             DailyActivityState activities = ActiveDailyActivityState();
+
+            if (save != null && FacultyIdentity.Matches(save.Role))
+            {
+                return InteractAsFaculty(save);
+            }
 
             if (save == null || !save.HasActiveUniversityDay)
             {
@@ -178,6 +185,70 @@ namespace UIU.Simulator.Gameplay.Classroom
                 onBackChoice: () => { });
 
             return null;
+        }
+
+        private string InteractAsFaculty(PlayerSaveState save)
+        {
+            if (!HasClassroomConfigured)
+            {
+                return missingSetupMessage;
+            }
+
+            if (save == null || !save.HasSave || !save.IdCardIssued)
+            {
+                return "You need a faculty ID card to teach this class.";
+            }
+
+            string course = CourseId;
+            if (!string.Equals(course, "ICS", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(course, "DM", StringComparison.OrdinalIgnoreCase))
+            {
+                return "You are not assigned to teach this course.";
+            }
+
+            FacultyClassroomChoiceUI.EnsureExists().Show(
+                CourseName.ToUpperInvariant(),
+                $"Room: {ClassroomNumber.Trim()}",
+                onScanId: BeginFacultyTeach,
+                onBackChoice: () => { });
+
+            return null;
+        }
+
+        private void BeginFacultyTeach()
+        {
+            if (isBusy)
+            {
+                return;
+            }
+
+            IFacultyTeachProgressSync teachSync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FacultyProgressSync.EnsureExists();
+            if (teachSync == null)
+            {
+                SystemNotificationUI.Show("Faculty progress sync is not available.");
+                FacultyClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
+                return;
+            }
+
+            isBusy = true;
+            teachSync.RequestScan(
+                CourseId,
+                onSuccess: () =>
+                {
+                    isBusy = false;
+                    FacultyLectureUI.EnsureExists().BeginTeaching(
+                        CourseName,
+                        teachSync,
+                        LectureDurationSeconds,
+                        onClosedCallback: () => { });
+                },
+                onFailure: () =>
+                {
+                    isBusy = false;
+                    FacultyClassroomChoiceUI.Instance?.RestoreGameplayControlsIfOwned();
+                });
         }
 
         public bool IsEligible(PlayerSaveState save)

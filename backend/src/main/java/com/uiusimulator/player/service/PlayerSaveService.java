@@ -7,6 +7,7 @@ import com.uiusimulator.player.entity.Department;
 import com.uiusimulator.player.entity.GetIdCardOutcome;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
+import com.uiusimulator.player.entity.PlayerRole;
 import com.uiusimulator.player.entity.PlayerSave;
 import com.uiusimulator.player.entity.PlayerStats;
 import com.uiusimulator.player.exception.PlayerSaveAlreadyExistsException;
@@ -34,6 +35,7 @@ public class PlayerSaveService {
     private final DepartmentRepository departmentRepository;
     private final PlayerStatsRepository playerStatsRepository;
     private final PlayerDayActivityRepository playerDayActivityRepository;
+    private final FacultyProgressService facultyProgressService;
 
     public PlayerSaveService(
             PlayerService playerService,
@@ -42,7 +44,8 @@ public class PlayerSaveService {
             PlayerStatsRepository playerStatsRepository,
             PlayerDayActivityRepository playerDayActivityRepository,
             com.uiusimulator.assessment.repository.PlayerAssessmentResultRepository assessments,
-            com.uiusimulator.assessment.repository.PlayerCourseEnrollmentRepository enrollments
+            com.uiusimulator.assessment.repository.PlayerCourseEnrollmentRepository enrollments,
+            FacultyProgressService facultyProgressService
     ) {
         this.playerService = playerService;
         this.assessments = assessments;
@@ -51,6 +54,7 @@ public class PlayerSaveService {
         this.departmentRepository = departmentRepository;
         this.playerStatsRepository = playerStatsRepository;
         this.playerDayActivityRepository = playerDayActivityRepository;
+        this.facultyProgressService = facultyProgressService;
     }
 
     @Transactional(readOnly = true)
@@ -95,6 +99,9 @@ public class PlayerSaveService {
 
         try {
             PlayerSave saved = playerSaveRepository.saveAndFlush(created);
+            if (saved.getRole() == PlayerRole.FACULTY) {
+                facultyProgressService.initializeNewFacultyJourney(player);
+            }
             // One-time ID card objective uses the shared activity table (not a separate objective store).
             // Unity still POSTs /activities/resolve after admission; that call is idempotent.
             GetIdCardOutcome issued = GetIdCardOutcome.COMPLETED;
@@ -133,6 +140,7 @@ public class PlayerSaveService {
         playerSaveRepository.findByPlayerIdWithLock(player.getId());
         assessments.deleteByPlayerId(player.getId());
         enrollments.deleteByPlayerId(player.getId());
+        facultyProgressService.clearFacultyJourney(player.getId());
         playerDayActivityRepository.deleteByPlayer_Id(player.getId());
         playerDayActivityRepository.flush();
 

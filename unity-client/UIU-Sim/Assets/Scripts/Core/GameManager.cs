@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.Player;
 using UnityEngine;
 
@@ -58,6 +59,9 @@ namespace UIU.Simulator.Core
 
             // Cache admission / ID-card save state for scanner + receptionist gating.
             PlayerSaveState.EnsureExists();
+            FacultyProgress.EnsureExists();
+            FacultyProgressSync.EnsureExists();
+            FacultyHUD.EnsureExists();
         }
 
         private void OnDestroy()

@@ -723,6 +723,10 @@ namespace UIU.Simulator.UI
 
             DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
             activityState?.ResetForNewGame();
+            FacultyProgressSync facultySync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FindFirstObjectByType<FacultyProgressSync>();
+            facultySync?.ResetForNewGame();
 
             isNavigating = true;
             AuthUiUtility.ShowUiCursor();

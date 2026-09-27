@@ -235,6 +235,47 @@ namespace UIU.Simulator.Networking
             }
         }
 
+        [Serializable]
+        public class FacultyProgressResponseDto
+        {
+            public int reputation;
+            public bool facultyIdIssued;
+            public bool computerUsed;
+            public bool officeEntered;
+            public bool classroomScanned;
+            public bool lectureCompleted;
+            public bool lectureLeft;
+            public bool icsMaterialPrepared;
+            public bool dmMaterialPrepared;
+            public bool icsCompleted;
+            public bool dmCompleted;
+            public bool officeSetup;
+            public bool materialsPrepared;
+            public string nextCourseCode;
+            public string activeCourseCode;
+            public string teachBlockedReason;
+            public FacultyCourseProgressDto[] courses;
+        }
+
+        [Serializable]
+        public class FacultyCourseProgressDto
+        {
+            public string courseCode;
+            public bool completed;
+            public string completedAt;
+        }
+
+        [Serializable]
+        public class FacultyTeachScanRequestDto
+        {
+            public string courseId;
+
+            public FacultyTeachScanRequestDto(string courseId)
+            {
+                this.courseId = courseId;
+            }
+        }
+
         public static FacultyStudentDto[] ParseFacultyStudents(string json)
         {
             return ParseJsonArray<FacultyStudentListDto, FacultyStudentDto>(json, wrapper => wrapper.items);

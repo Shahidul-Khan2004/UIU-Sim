@@ -11,4 +11,8 @@ public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, 
     List<CourseMaterial> findByCourseIdOrderByCreatedAtAsc(String courseId);
 
     Optional<CourseMaterial> findByIdAndCourseId(UUID id, String courseId);
+
+    long countByCourseIdAndUploadedBy(String courseId, UUID uploadedBy);
+
+    void deleteByUploadedBy(UUID uploadedBy);
 }
