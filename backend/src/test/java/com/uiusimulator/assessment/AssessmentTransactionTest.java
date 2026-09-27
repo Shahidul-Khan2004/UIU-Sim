@@ -27,7 +27,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** Real independent transactions exercise serialization and atomic rollback, not only entity methods. */
 @DataJpaTest(showSql=false)
 @ActiveProfiles("test")
-@Import({PlayerService.class,PlayerSaveService.class,PlayerActivityService.class,PlayerDayService.class,
+@Import({PlayerService.class,PlayerSaveService.class,FacultyProgressService.class,PlayerActivityService.class,PlayerDayService.class,
     AttendIcsService.class,AssessmentService.class,CourseEnrollmentService.class,CheatPolicy.class,
     AssessmentServiceTest.Config.class})
 @Transactional(propagation=Propagation.NOT_SUPPORTED)

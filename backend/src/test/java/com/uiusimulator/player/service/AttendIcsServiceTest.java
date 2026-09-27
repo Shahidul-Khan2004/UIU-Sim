@@ -41,6 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
         com.uiusimulator.assessment.config.CheatPolicy.class,
         PlayerService.class,
         PlayerSaveService.class,
+        FacultyProgressService.class,
         PlayerActivityService.class,
         PlayerDayService.class,
         AttendIcsService.class,

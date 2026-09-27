@@ -43,6 +43,14 @@ namespace UIU.Simulator.Gameplay.Faculty
                 portal.Show();
             }
 
+            FacultyProgressSync sync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FacultyProgressSync.EnsureExists();
+            if (sync != null && Application.isPlaying)
+            {
+                sync.RequestComputerUse();
+            }
+
             return null;
         }
     }

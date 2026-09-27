@@ -479,6 +479,10 @@ namespace UIU.Simulator.Gameplay.Faculty
             SetAddStatus(SaveSuccessMessage, UiTheme.Success);
             HideAddForm();
             SetListStatus("Loading materials…", UiTheme.Grey);
+            FacultyProgressSync progressSync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FindFirstObjectByType<FacultyProgressSync>();
+            progressSync?.RefreshAfterMaterialSaved();
             BeginMaterialsLoad();
             saveMaterial = null;
         }

@@ -1,3 +1,7 @@
+using UIU.Simulator.Gameplay.Admission;
+using UIU.Simulator.Gameplay.Faculty;
+using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -64,10 +68,21 @@ public sealed class CameraSwitcher : MonoBehaviour
         }
 
         // New Input System only — never UnityEngine.Input.
-        if (keyboard.pKey.wasPressedThisFrame)
+        // Registration and other modal UIs type into text fields; P must not switch cameras.
+        if (keyboard.pKey.wasPressedThisFrame && !IsCameraToggleBlocked())
         {
             ToggleMode();
         }
+    }
+
+    private static bool IsCameraToggleBlocked()
+    {
+        return AdmissionUI.IsOpen
+            || FacultyPortalUI.IsOpen
+            || FacultyClassroomChoiceUI.IsOpen
+            || FacultyLectureUI.IsOpen
+            || IdCardUI.IsOpen
+            || GameMenuManager.IsOpen;
     }
 
     /// <summary>Switches to the other camera mode.</summary>

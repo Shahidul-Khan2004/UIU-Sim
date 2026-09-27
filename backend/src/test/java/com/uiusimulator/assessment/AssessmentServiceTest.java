@@ -26,7 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @DataJpaTest(showSql = false)
 @ActiveProfiles("test")
-@Import({PlayerService.class, PlayerSaveService.class, PlayerActivityService.class, PlayerDayService.class,
+@Import({PlayerService.class, PlayerSaveService.class, FacultyProgressService.class, PlayerActivityService.class, PlayerDayService.class,
     AttendIcsService.class, AssessmentService.class, CourseEnrollmentService.class, CheatPolicy.class,
     AssessmentServiceTest.Config.class})
 class AssessmentServiceTest {

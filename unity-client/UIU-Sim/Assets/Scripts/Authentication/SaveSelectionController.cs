@@ -1,5 +1,6 @@
 using System.Collections;
 using UIU.Simulator.Gameplay.Activities;
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
@@ -414,6 +415,10 @@ namespace UIU.Simulator.Authentication
 
             DailyActivityState activityState = FindFirstObjectByType<DailyActivityState>();
             activityState?.ResetForNewGame();
+            FacultyProgressSync sync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FindFirstObjectByType<FacultyProgressSync>();
+            sync?.ResetForNewGame();
 
             Debug.Log("[SaveSelection] New Game reset complete — loading Main as unregistered visitor.");
             SceneManager.LoadScene(AuthSceneNames.Main);

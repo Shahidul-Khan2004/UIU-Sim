@@ -25,7 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@Import({PlayerService.class, PlayerSaveService.class})
+@Import({PlayerService.class, PlayerSaveService.class, FacultyProgressService.class})
 class PlayerSaveServiceTest {
 
     @Autowired

@@ -45,6 +45,8 @@ namespace UIU.Simulator.Gameplay.Admission
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
+        private CameraSwitcher cachedCameraSwitcher;
+        private bool wasCameraSwitcherEnabled = true;
         private ApiClient apiClient;
         private UserSession userSession;
 
@@ -436,6 +438,13 @@ namespace UIU.Simulator.Gameplay.Admission
                 cachedFirstPersonLook.enabled = false;
             }
 
+            cachedCameraSwitcher = FindFirstObjectByType<CameraSwitcher>();
+            if (cachedCameraSwitcher != null)
+            {
+                wasCameraSwitcherEnabled = cachedCameraSwitcher.enabled;
+                cachedCameraSwitcher.enabled = false;
+            }
+
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
@@ -461,6 +470,16 @@ namespace UIU.Simulator.Gameplay.Admission
             {
                 cachedFirstPersonLook.SuppressEscapeThisFrame();
                 cachedFirstPersonLook.enabled = true;
+            }
+
+            if (cachedCameraSwitcher == null)
+            {
+                cachedCameraSwitcher = FindFirstObjectByType<CameraSwitcher>();
+            }
+
+            if (cachedCameraSwitcher != null)
+            {
+                cachedCameraSwitcher.enabled = wasCameraSwitcherEnabled;
             }
 
             Cursor.lockState = CursorLockMode.Locked;

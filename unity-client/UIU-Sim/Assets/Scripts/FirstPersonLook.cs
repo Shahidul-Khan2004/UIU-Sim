@@ -99,7 +99,9 @@ public class FirstPersonLook : MonoBehaviour
             !FacultyPortalUI.IsOpen &&
             !GameMenuManager.IsOpen &&
             !ClassroomChoiceUI.IsOpen &&
-            !ClassroomLectureUI.IsOpen)
+            !ClassroomLectureUI.IsOpen &&
+            !FacultyClassroomChoiceUI.IsOpen &&
+            !FacultyLectureUI.IsOpen)
         {
             LockCursor();
         }

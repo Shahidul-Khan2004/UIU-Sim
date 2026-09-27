@@ -39,17 +39,20 @@ public class FacultyCourseService {
     private final PlayerSaveRepository playerSaveRepository;
     private final FacultyCourseAssignmentRepository assignmentRepository;
     private final CourseMaterialRepository materialRepository;
+    private final FacultyProgressService facultyProgressService;
 
     public FacultyCourseService(
             PlayerService playerService,
             PlayerSaveRepository playerSaveRepository,
             FacultyCourseAssignmentRepository assignmentRepository,
-            CourseMaterialRepository materialRepository
+            CourseMaterialRepository materialRepository,
+            FacultyProgressService facultyProgressService
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
         this.assignmentRepository = assignmentRepository;
         this.materialRepository = materialRepository;
+        this.facultyProgressService = facultyProgressService;
     }
 
     @Transactional
@@ -100,6 +103,16 @@ public class FacultyCourseService {
         FacultyContext context = requireAssignedFaculty(jwt, courseId);
         String normalizedCourseId = normalizeCourseId(courseId);
         ClassroomCourseDefinition.byCourseId(normalizedCourseId);
+
+        long existingCount = materialRepository.countByCourseIdAndUploadedBy(
+                normalizedCourseId,
+                context.player().getId()
+        );
+        facultyProgressService.rewardFirstCourseMaterialIfNeeded(
+                context.player(),
+                normalizedCourseId,
+                existingCount
+        );
 
         CourseMaterial material = CourseMaterial.create(
                 normalizedCourseId,

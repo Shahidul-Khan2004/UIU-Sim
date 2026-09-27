@@ -22,6 +22,17 @@ public sealed class StatsHUD : MonoBehaviour
 
     public static StatsHUD Instance { get; private set; }
 
+    /// <summary>Smallest visibility hook so FacultyHUD can hide the student HUD without rewriting it.</summary>
+    public void SetVisible(bool visible)
+    {
+        if (canvasRoot != null)
+        {
+            canvasRoot.SetActive(visible);
+        }
+    }
+
+    public bool IsVisible => canvasRoot != null && canvasRoot.activeSelf;
+
     [Header("Appearance")]
     [SerializeField] private float fontSize = 20f;
     [SerializeField] private float feedbackFontSize = 18f;

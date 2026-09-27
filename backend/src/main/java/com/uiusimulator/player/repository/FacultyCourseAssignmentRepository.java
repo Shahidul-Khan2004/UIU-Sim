@@ -15,4 +15,6 @@ public interface FacultyCourseAssignmentRepository extends JpaRepository<Faculty
     boolean existsByPlayerIdAndCourseId(UUID playerId, String courseId);
 
     void deleteByPlayerIdAndCourseId(UUID playerId, String courseId);
+
+    void deleteByPlayerId(UUID playerId);
 }
