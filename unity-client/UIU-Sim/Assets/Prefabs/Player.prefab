@@ -235,6 +235,9 @@ MonoBehaviour:
   idCardObjectiveDescription: Talk to the receptionist to take your ID card.
   breakfastObjectiveTitle: Have Breakfast
   breakfastObjectiveDescription: Go to Neptune in the canteen to get your breakfast.
+  icsObjectiveTitle: Attend Introduction to Computer Science
+  icsObjectiveDescriptionFallback: ICS classroom is not configured. Assign floor,
+    room number, and classroom interaction in the Inspector.
   screenOffset: {x: 24, y: -24}
   feedbackHoldDuration: 1.4
   feedbackFadeDuration: 0.6
@@ -263,6 +266,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d81b274c3e8c43a89c2c4b2e8091c352, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UIU.Simulator.Gameplay.Activities::DailyActivityState
+  getIdCardTitle: Get Your ID Card
+  getIdCardDescription: Visit the receptionist to receive your university ID card.
   breakfastTitle: Have Breakfast
   breakfastDescription: Go to Neptune in the canteen to get your breakfast.
   breakfastStallDisplayName: Neptune
@@ -481,7 +486,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 200
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -618,7 +623,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 200
   field of view: 60
   orthographic: 0
   orthographic size: 5
