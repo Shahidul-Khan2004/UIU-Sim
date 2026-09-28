@@ -4,6 +4,7 @@ using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -29,6 +30,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             DestroyExisting(FacultyHUD.Instance != null ? FacultyHUD.Instance.gameObject : null);
             DestroyExisting(FacultyAssignedSchedule.Instance != null ? FacultyAssignedSchedule.Instance.gameObject : null);
             DestroyExisting(FacultyProgressSync.Instance != null ? FacultyProgressSync.Instance.gameObject : null);
+            if (WelcomeCardUI.Instance != null)
+            {
+                Object.DestroyImmediate(WelcomeCardUI.Instance.gameObject);
+            }
+
             DestroyExisting(StatsHUD.Instance != null ? StatsHUD.Instance.gameObject : null);
             DestroyExisting(FacultyClassroomChoiceUI.Instance != null ? FacultyClassroomChoiceUI.Instance.gameObject : null);
             DestroyExisting(FacultyLectureUI.Instance != null ? FacultyLectureUI.Instance.gameObject : null);
@@ -60,6 +66,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             DestroyExisting(classroomObject);
             DestroyExisting(playerObject);
+            DestroyExisting(WelcomeCardUI.Instance != null ? WelcomeCardUI.Instance.gameObject : null);
             DestroyExisting(FacultyClassroomChoiceUI.Instance != null ? FacultyClassroomChoiceUI.Instance.gameObject : null);
             DestroyExisting(FacultyLectureUI.Instance != null ? FacultyLectureUI.Instance.gameObject : null);
         }
@@ -147,6 +154,16 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             AssertObjective(facultyHud, "Course0", complete: true);
             AssertObjective(facultyHud, "Course1", complete: false);
+        }
+
+        [Test]
+        public void VisitorWithoutIdCard_HidesStudentAndFacultyHuds()
+        {
+            saveState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(facultyHud.IsVisible, Is.False);
+            Assert.That(statsHud.IsVisible, Is.False);
         }
 
         [Test]

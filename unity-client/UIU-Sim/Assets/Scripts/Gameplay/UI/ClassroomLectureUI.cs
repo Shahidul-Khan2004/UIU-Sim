@@ -582,6 +582,7 @@ namespace UIU.Simulator.Gameplay.UI
                 || DialogueUI.IsOpen
                 || CanteenQueueUI.IsOpen
                 || AdmissionUI.IsOpen
+                || WelcomeCardUI.IsOpen
                 || IdCardUI.IsOpen
                 || DailySummaryUI.IsOpen
                 || ElevatorUI.IsOpen

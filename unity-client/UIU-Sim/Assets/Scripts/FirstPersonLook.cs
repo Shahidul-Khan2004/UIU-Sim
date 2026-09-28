@@ -97,6 +97,7 @@ public class FirstPersonLook : MonoBehaviour
             !ElevatorUI.IsOpen &&
             !AdvisorUI.IsOpen &&
             !FacultyPortalUI.IsOpen &&
+            !WelcomeCardUI.IsOpen &&
             !GameMenuManager.IsOpen &&
             !ClassroomChoiceUI.IsOpen &&
             !ClassroomLectureUI.IsOpen &&

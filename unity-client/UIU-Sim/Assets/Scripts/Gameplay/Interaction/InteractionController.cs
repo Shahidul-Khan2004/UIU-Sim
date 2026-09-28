@@ -105,7 +105,7 @@ public sealed class InteractionController : MonoBehaviour
         currentTarget = null;
 
         // Block interaction targeting while a dialogue panel, queue UI, advisor panel, elevator UI, admission UI, or game menu is open.
-        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen)
+        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen)
         {
             if (previousTarget != null)
             {
@@ -160,7 +160,7 @@ public sealed class InteractionController : MonoBehaviour
         }
 
         // Block interaction input while a dialogue panel, queue UI, advisor panel, elevator UI, or game menu is open.
-        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen)
+        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen)
         {
             return;
         }

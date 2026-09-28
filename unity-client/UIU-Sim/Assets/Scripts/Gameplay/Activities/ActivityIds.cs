@@ -9,6 +9,7 @@ namespace UIU.Simulator.Gameplay.Activities
         public const string AttendEnglish = "ATTEND_ENGLISH";
         public const string AttendDm = "ATTEND_DM";
         public const string LibraryStudy = "LIBRARY_STUDY";
+        public const string LibrarySelfStudy = "LIBRARY_SELF_STUDY";
 
         /// <summary>Per-NPC daily conversation activity: <c>NPC_TALK_&lt;NPC ID&gt;</c>.</summary>
         public const string NpcConversationPrefix = "NPC_TALK_";

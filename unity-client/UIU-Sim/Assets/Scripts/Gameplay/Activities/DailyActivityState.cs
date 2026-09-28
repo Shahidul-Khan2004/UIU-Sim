@@ -69,6 +69,12 @@ namespace UIU.Simulator.Gameplay.Activities
         private int libraryStudyAuraDelta;
         private int libraryStudyReputationDelta;
 
+        private ActivityStatus librarySelfStudyStatus = ActivityStatus.Pending;
+        private string librarySelfStudyOutcome = string.Empty;
+        private int librarySelfStudyAuraDelta;
+        private int librarySelfStudyReputationDelta;
+        private int librarySelfStudyMilestoneSeconds;
+
         private readonly Dictionary<string, ClassroomRuntime> extraClassrooms = new Dictionary<string, ClassroomRuntime>();
 
         private int dayNumber = 1;
@@ -136,6 +142,15 @@ namespace UIU.Simulator.Gameplay.Activities
         public int LibraryStudyReputationDelta => libraryStudyReputationDelta;
         public bool IsLibraryStudyCompleted => libraryStudyStatus == ActivityStatus.Completed;
 
+        public ActivityStatus LibrarySelfStudyStatus => librarySelfStudyStatus;
+        public string LibrarySelfStudyOutcome => librarySelfStudyOutcome;
+        public int LibrarySelfStudyReputationDelta => librarySelfStudyReputationDelta;
+        public int LibrarySelfStudyMilestoneSeconds => librarySelfStudyMilestoneSeconds;
+        public bool IsLibrarySelfStudyCompleted => librarySelfStudyStatus == ActivityStatus.Completed;
+        public bool IsLibrarySelfStudyUsedToday =>
+            librarySelfStudyStatus == ActivityStatus.InProgress
+            || librarySelfStudyStatus == ActivityStatus.Completed;
+
         public IcsClassroomInteractable IcsClassroom
         {
             get
@@ -170,6 +185,7 @@ namespace UIU.Simulator.Gameplay.Activities
         public event Action OnBreakfastStatusChanged;
         public event Action OnAttendIcsStatusChanged;
         public event Action OnLibraryStudyStatusChanged;
+        public event Action OnLibrarySelfStudyStatusChanged;
         public event Action OnActivitiesReset;
 
         public ActivityRecord GetIdCardRecord()
@@ -308,6 +324,34 @@ namespace UIU.Simulator.Gameplay.Activities
             }
 
             return GetExtra(activityId).Outcome;
+        }
+
+        /// <summary>
+        /// ICS plus additional classroom location assets, in HUD order.
+        /// Used by the student class-routine menu; does not change attendance rules.
+        /// </summary>
+        public IcsClassroomLocationConfig[] SnapshotClassroomLocations()
+        {
+            int extra = additionalClassroomLocations != null ? additionalClassroomLocations.Length : 0;
+            var locations = new List<IcsClassroomLocationConfig>(1 + extra);
+            if (icsLocationConfig != null)
+            {
+                locations.Add(icsLocationConfig);
+            }
+
+            if (additionalClassroomLocations != null)
+            {
+                for (int i = 0; i < additionalClassroomLocations.Length; i++)
+                {
+                    IcsClassroomLocationConfig config = additionalClassroomLocations[i];
+                    if (config != null)
+                    {
+                        locations.Add(config);
+                    }
+                }
+            }
+
+            return locations.ToArray();
         }
 
         public string CourseNameForActivity(string activityId)
@@ -532,10 +576,12 @@ namespace UIU.Simulator.Gameplay.Activities
             attendIcsMilestoneSeconds = 0;
             extraClassrooms.Clear();
             ClearLibraryStudyFields();
+            ClearLibrarySelfStudyFields();
             OnActivitiesReset?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
             OnAttendIcsStatusChanged?.Invoke();
             OnLibraryStudyStatusChanged?.Invoke();
+            OnLibrarySelfStudyStatusChanged?.Invoke();
             Debug.Log($"[DailyActivityState] Reset for day {dayNumber} — breakfast and classrooms PENDING (GET_ID_CARD preserved).");
         }
 
@@ -558,11 +604,13 @@ namespace UIU.Simulator.Gameplay.Activities
             attendIcsMilestoneSeconds = 0;
             extraClassrooms.Clear();
             ClearLibraryStudyFields();
+            ClearLibrarySelfStudyFields();
             OnActivitiesReset?.Invoke();
             OnGetIdCardStatusChanged?.Invoke();
             OnBreakfastStatusChanged?.Invoke();
             OnAttendIcsStatusChanged?.Invoke();
             OnLibraryStudyStatusChanged?.Invoke();
+            OnLibrarySelfStudyStatusChanged?.Invoke();
             Debug.Log("[DailyActivityState] New Game reset — GET_ID_CARD, breakfast, and classrooms PENDING.");
         }
 
@@ -623,6 +671,22 @@ namespace UIU.Simulator.Gameplay.Activities
                 return;
             }
 
+            if (record.ActivityId == ActivityIds.LibrarySelfStudy)
+            {
+                dayNumber = Mathf.Max(1, record.DayNumber);
+                librarySelfStudyStatus = record.Status == ActivityStatus.Completed
+                    ? ActivityStatus.Completed
+                    : record.Status == ActivityStatus.InProgress
+                        ? ActivityStatus.InProgress
+                        : ActivityStatus.Pending;
+                librarySelfStudyOutcome = record.Outcome ?? string.Empty;
+                librarySelfStudyAuraDelta = record.AuraDelta;
+                librarySelfStudyReputationDelta = record.ReputationDelta;
+                librarySelfStudyMilestoneSeconds = record.MilestoneSeconds;
+                OnLibrarySelfStudyStatusChanged?.Invoke();
+                return;
+            }
+
             if (record.ActivityId != BreakfastActivityId)
             {
                 return;
@@ -648,6 +712,20 @@ namespace UIU.Simulator.Gameplay.Activities
             OnLibraryStudyStatusChanged?.Invoke();
         }
 
+        public void SetLibrarySelfStudyStatusForTesting(
+            ActivityStatus status,
+            string outcome = null,
+            int reputationDelta = 0,
+            int milestoneSeconds = 0)
+        {
+            librarySelfStudyStatus = status;
+            librarySelfStudyOutcome = outcome ?? string.Empty;
+            librarySelfStudyAuraDelta = 0;
+            librarySelfStudyReputationDelta = reputationDelta;
+            librarySelfStudyMilestoneSeconds = milestoneSeconds;
+            OnLibrarySelfStudyStatusChanged?.Invoke();
+        }
+
         /// <summary>
         /// Current-day payload omitted Library Study, so today's attempt is available again.
         /// </summary>
@@ -664,12 +742,35 @@ namespace UIU.Simulator.Gameplay.Activities
             OnLibraryStudyStatusChanged?.Invoke();
         }
 
+        public void ClearLibrarySelfStudy()
+        {
+            if (librarySelfStudyStatus == ActivityStatus.Pending
+                && string.IsNullOrEmpty(librarySelfStudyOutcome)
+                && librarySelfStudyReputationDelta == 0
+                && librarySelfStudyMilestoneSeconds == 0)
+            {
+                return;
+            }
+
+            ClearLibrarySelfStudyFields();
+            OnLibrarySelfStudyStatusChanged?.Invoke();
+        }
+
         private void ClearLibraryStudyFields()
         {
             libraryStudyStatus = ActivityStatus.Pending;
             libraryStudyOutcome = string.Empty;
             libraryStudyAuraDelta = 0;
             libraryStudyReputationDelta = 0;
+        }
+
+        private void ClearLibrarySelfStudyFields()
+        {
+            librarySelfStudyStatus = ActivityStatus.Pending;
+            librarySelfStudyOutcome = string.Empty;
+            librarySelfStudyAuraDelta = 0;
+            librarySelfStudyReputationDelta = 0;
+            librarySelfStudyMilestoneSeconds = 0;
         }
 
         public void SetGetIdCardStatusForTesting(ActivityStatus status, string outcome = null, int auraDelta = 0)

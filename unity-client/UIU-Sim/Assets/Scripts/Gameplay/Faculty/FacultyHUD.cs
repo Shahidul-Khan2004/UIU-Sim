@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
@@ -143,7 +142,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 playerSaveState.OnHydrated += ApplyRoleVisibility;
                 playerSaveState.OnAdmissionCompleted += ApplyRoleVisibility;
-                playerSaveState.OnDayProgressChanged += RefreshObjectiveDisplay;
+                playerSaveState.OnDayProgressChanged += ApplyRoleVisibility;
             }
 
             ApplyRoleVisibility();
@@ -166,7 +165,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 playerSaveState.OnHydrated -= ApplyRoleVisibility;
                 playerSaveState.OnAdmissionCompleted -= ApplyRoleVisibility;
-                playerSaveState.OnDayProgressChanged -= RefreshObjectiveDisplay;
+                playerSaveState.OnDayProgressChanged -= ApplyRoleVisibility;
             }
 
             StopFeedback();
@@ -192,17 +191,23 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         public void ApplyRoleVisibility()
         {
-            bool isFaculty = playerSaveState != null
-                && playerSaveState.IsHydrated
-                && FacultyIdentity.Matches(playerSaveState.Role);
-
-            SetVisible(isFaculty);
-            if (StatsHUD.Instance != null)
+            if (playerSaveState == null)
             {
-                StatsHUD.Instance.SetVisible(!isFaculty);
+                playerSaveState = PlayerSaveState.Instance != null
+                    ? PlayerSaveState.Instance
+                    : FindFirstObjectByType<PlayerSaveState>();
             }
 
-            if (isFaculty)
+            bool showFaculty = playerSaveState != null && playerSaveState.ShouldShowFacultyHud;
+            bool showStudent = playerSaveState != null && playerSaveState.ShouldShowStudentHud;
+
+            SetVisible(showFaculty);
+            if (StatsHUD.Instance != null)
+            {
+                StatsHUD.Instance.SetVisible(showStudent);
+            }
+
+            if (showFaculty)
             {
                 if (assignedSchedule != null)
                 {

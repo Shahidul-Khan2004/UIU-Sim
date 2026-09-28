@@ -20,12 +20,15 @@ namespace UIU.Simulator.Gameplay.Faculty
         public static ClassRoutineUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
 
-        private const int CanvasSortOrder = 240;
+        public const string DefaultTitle = "CLASS ROUTINE";
+
+        private const int CanvasSortOrder = 245;
         private const float PanelWidth = 620f;
         private const float PanelHeight = 640f;
 
         private GameObject overlayRoot;
         private Transform routineContainer;
+        private TextMeshProUGUI titleLabel;
         private TextMeshProUGUI statusLabel;
 
         private PlayerMovement cachedPlayerMovement;
@@ -94,9 +97,19 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         public void Show(ApiClient.FacultyRoutineItemDto[] routine)
         {
+            Show(routine, DefaultTitle);
+        }
+
+        public void Show(ApiClient.FacultyRoutineItemDto[] routine, string title)
+        {
             if (overlayRoot == null)
             {
                 BuildUI();
+            }
+
+            if (titleLabel != null)
+            {
+                titleLabel.text = string.IsNullOrWhiteSpace(title) ? DefaultTitle : title.Trim();
             }
 
             RebuildRoutine(routine);
@@ -244,13 +257,13 @@ namespace UIU.Simulator.Gameplay.Faculty
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            ownsGameplayLock = !FacultyPortalUI.IsOpen;
+            ownsGameplayLock = !FacultyPortalUI.IsOpen && !GameMenuManager.IsOpen;
         }
 
         private void RestoreGameplayInput()
         {
-            // Faculty Portal keeps the gameplay lock when this UI was opened from it.
-            if (!ownsGameplayLock || FacultyPortalUI.IsOpen)
+            // Faculty Portal and the game menu keep the gameplay lock when this UI was opened from them.
+            if (!ownsGameplayLock || FacultyPortalUI.IsOpen || GameMenuManager.IsOpen)
             {
                 return;
             }
@@ -332,7 +345,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             accentLayout.preferredHeight = 8f;
             accent.AddComponent<Image>().color = UiTheme.BrightOrange;
 
-            CreateFlowLabel(panel.transform, "Title", "CLASS ROUTINE", 26f, FontStyles.Bold, UiTheme.BrightOrange);
+            titleLabel = CreateFlowLabel(panel.transform, "Title", DefaultTitle, 26f, FontStyles.Bold, UiTheme.BrightOrange);
             statusLabel = CreateFlowLabel(panel.transform, "StatusLabel", string.Empty, 14f, FontStyles.Italic, UiTheme.Grey);
             statusLabel.gameObject.SetActive(false);
 

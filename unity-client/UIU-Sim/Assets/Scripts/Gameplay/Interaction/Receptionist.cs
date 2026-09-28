@@ -52,7 +52,7 @@ public sealed class Receptionist : MonoBehaviour, IInteractable
     public string Interact()
     {
         // Guard: dialogue / admission panel already open.
-        if (DialogueUI.IsOpen || AdmissionUI.IsOpen)
+        if (DialogueUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen)
         {
             return null;
         }

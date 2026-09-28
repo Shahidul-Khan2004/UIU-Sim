@@ -104,6 +104,7 @@ public sealed class StatsHUD : MonoBehaviour
     private Coroutine auraFeedbackRoutine;
     private Coroutine academicFeedbackRoutine;
     private PlayerSaveState playerSaveState;
+    private bool saveEventsBound;
 
     private void Awake()
     {
@@ -121,6 +122,8 @@ public sealed class StatsHUD : MonoBehaviour
         playerStats = GetComponent<PlayerStats>();
         dailyActivityState = GetComponent<DailyActivityState>();
         BuildUI();
+        SetVisible(false);
+        ApplyHudVisibility();
     }
 
     private void OnDestroy()
@@ -153,12 +156,7 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState = FindFirstObjectByType<DailyActivityState>();
         }
 
-        if (playerSaveState == null)
-        {
-            playerSaveState = PlayerSaveState.Instance != null
-                ? PlayerSaveState.Instance
-                : FindFirstObjectByType<PlayerSaveState>();
-        }
+        BindSaveEvents();
 
         if (playerStats != null)
         {
@@ -180,14 +178,8 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState.OnActivitiesReset += RefreshObjectiveDisplay;
         }
 
-        if (playerSaveState != null)
-        {
-            playerSaveState.OnHydrated += RefreshObjectiveDisplay;
-            playerSaveState.OnAdmissionCompleted += RefreshObjectiveDisplay;
-            playerSaveState.OnDayProgressChanged += RefreshObjectiveDisplay;
-        }
-
         RefreshObjectiveDisplay();
+        ApplyHudVisibility();
     }
 
     private void OnDisable()
@@ -206,12 +198,7 @@ public sealed class StatsHUD : MonoBehaviour
             dailyActivityState.OnActivitiesReset -= RefreshObjectiveDisplay;
         }
 
-        if (playerSaveState != null)
-        {
-            playerSaveState.OnHydrated -= RefreshObjectiveDisplay;
-            playerSaveState.OnAdmissionCompleted -= RefreshObjectiveDisplay;
-            playerSaveState.OnDayProgressChanged -= RefreshObjectiveDisplay;
-        }
+        UnbindSaveEvents();
 
         StopAllFeedback();
     }
@@ -256,8 +243,57 @@ public sealed class StatsHUD : MonoBehaviour
         }
     }
 
+    private void BindSaveEvents()
+    {
+        if (playerSaveState == null)
+        {
+            playerSaveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+        }
+
+        if (playerSaveState == null || saveEventsBound)
+        {
+            return;
+        }
+
+        playerSaveState.OnHydrated += HandleSaveChanged;
+        playerSaveState.OnAdmissionCompleted += HandleSaveChanged;
+        playerSaveState.OnDayProgressChanged += HandleSaveChanged;
+        saveEventsBound = true;
+    }
+
+    private void UnbindSaveEvents()
+    {
+        if (playerSaveState == null || !saveEventsBound)
+        {
+            return;
+        }
+
+        playerSaveState.OnHydrated -= HandleSaveChanged;
+        playerSaveState.OnAdmissionCompleted -= HandleSaveChanged;
+        playerSaveState.OnDayProgressChanged -= HandleSaveChanged;
+        saveEventsBound = false;
+    }
+
+    private void HandleSaveChanged()
+    {
+        RefreshObjectiveDisplay();
+        ApplyHudVisibility();
+    }
+
+    private void ApplyHudVisibility()
+    {
+        BindSaveEvents();
+        bool showStudent = playerSaveState != null && playerSaveState.ShouldShowStudentHud;
+        SetVisible(showStudent);
+    }
+
     private void RefreshObjectiveDisplay()
     {
+        BindSaveEvents();
+        ApplyHudVisibility();
+
         if (dayHeaderText == null || todayHeaderText == null || panelRoot == null)
         {
             return;

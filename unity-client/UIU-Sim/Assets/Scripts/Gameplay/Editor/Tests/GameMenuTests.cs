@@ -1,8 +1,10 @@
 using NUnit.Framework;
 using TMPro;
 using UIU.Simulator.Gameplay.Elevator;
+using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -32,6 +34,26 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 Object.DestroyImmediate(GameMenuManager.Instance.gameObject);
             }
 
+            if (WelcomeCardUI.Instance != null)
+            {
+                Object.DestroyImmediate(WelcomeCardUI.Instance.gameObject);
+            }
+
+            if (ClassRoutineUI.Instance != null)
+            {
+                Object.DestroyImmediate(ClassRoutineUI.Instance.gameObject);
+            }
+
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            if (FacultyProgress.Instance != null)
+            {
+                Object.DestroyImmediate(FacultyProgress.Instance.gameObject);
+            }
+
             playerObject = new GameObject("TestPlayer");
             playerObject.AddComponent<CharacterController>();
             playerMovement = playerObject.AddComponent<PlayerMovement>();
@@ -49,12 +71,52 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         [TearDown]
         public void TearDown()
         {
+            if (ClassRoutineUI.IsOpen && ClassRoutineUI.Instance != null)
+            {
+                ClassRoutineUI.Instance.Hide();
+            }
+
+            if (IdCardUI.IsOpen && IdCardUI.Instance != null)
+            {
+                IdCardUI.Instance.Hide();
+            }
+
             if (GameMenuManager.IsOpen && menu != null)
             {
                 menu.Close(restoreGameplayControls: true);
             }
 
             Time.timeScale = 1f;
+
+            if (ClassRoutineUI.Instance != null)
+            {
+                Object.DestroyImmediate(ClassRoutineUI.Instance.gameObject);
+            }
+
+            if (FacultyProgress.Instance != null)
+            {
+                Object.DestroyImmediate(FacultyProgress.Instance.gameObject);
+            }
+
+            if (IdCardUI.Instance != null)
+            {
+                Object.DestroyImmediate(IdCardUI.Instance.gameObject);
+            }
+
+            if (WelcomeCardUI.Instance != null)
+            {
+                if (WelcomeCardUI.IsOpen)
+                {
+                    WelcomeCardUI.Instance.Hide();
+                }
+
+                Object.DestroyImmediate(WelcomeCardUI.Instance.gameObject);
+            }
+
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
 
             if (menuObject != null)
             {
@@ -126,27 +188,73 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         [Test]
         public void Test04_MenuOptions_ExistWithExpectedLabels()
         {
-            menu.Open();
+            GameObject saveObject = CreateStudentSave();
+            try
+            {
+                menu.Open();
 
-            Assert.That(FindButton("Button_Resume"), Is.Not.Null);
-            Assert.That(FindButton("Button_SaveGame"), Is.Not.Null);
-            Assert.That(FindButton("Button_NextDay"), Is.Not.Null);
-            Assert.That(FindButton("Button_NewGame"), Is.Not.Null);
-            Assert.That(FindButton("Button_IdCard"), Is.Not.Null);
-            Assert.That(FindButton("Button_ClassRoutine"), Is.Not.Null);
-            Assert.That(FindButton("Button_Settings"), Is.Not.Null);
-            Assert.That(FindButton("Button_Logout"), Is.Not.Null);
-            Assert.That(FindButton("Button_QuitGame"), Is.Not.Null);
+                Assert.That(FindButton("Button_Resume"), Is.Not.Null);
+                Assert.That(FindButton("Button_SaveGame"), Is.Not.Null);
+                Assert.That(FindButton("Button_NextDay"), Is.Not.Null);
+                Assert.That(FindButton("Button_NewGame"), Is.Not.Null);
+                Assert.That(FindButton("Button_ReportCard"), Is.Not.Null);
+                Assert.That(FindButton("Button_IdCard"), Is.Not.Null);
+                Assert.That(FindButton("Button_ClassRoutine"), Is.Not.Null);
+                Assert.That(FindButton("Button_Settings"), Is.Not.Null);
+                Assert.That(FindButton("Button_Logout"), Is.Not.Null);
+                Assert.That(FindButton("Button_QuitGame"), Is.Not.Null);
 
-            Assert.That(FindButtonLabel("Button_Resume"), Is.EqualTo("Resume"));
-            Assert.That(FindButtonLabel("Button_SaveGame"), Is.EqualTo("Save Game"));
-            Assert.That(FindButtonLabel("Button_NextDay"), Is.EqualTo("Next Day"));
-            Assert.That(FindButtonLabel("Button_NewGame"), Is.EqualTo("New Game"));
-            Assert.That(FindButtonLabel("Button_IdCard"), Is.EqualTo("ID Card"));
-            Assert.That(FindButtonLabel("Button_ClassRoutine"), Is.EqualTo("Class Routine"));
-            Assert.That(FindButtonLabel("Button_Settings"), Is.EqualTo("Settings"));
-            Assert.That(FindButtonLabel("Button_Logout"), Is.EqualTo("Logout"));
-            Assert.That(FindButtonLabel("Button_QuitGame"), Is.EqualTo("Quit Game"));
+                Assert.That(FindNamedTmp("Title").text, Is.EqualTo("GAME MENU"));
+                Assert.That(FindButton("Button_NextDay").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_ReportCard").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_IdCard").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_ClassRoutine").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_FacultyAttendance"), Is.Null);
+                Assert.That(FindButton("Button_CourseManagement"), Is.Null);
+                Assert.That(FindButton("Button_MaterialsManagement"), Is.Null);
+
+                Assert.That(FindButtonLabel("Button_Resume"), Is.EqualTo("Resume"));
+                Assert.That(FindButtonLabel("Button_SaveGame"), Is.EqualTo("Save Game"));
+                Assert.That(FindButtonLabel("Button_NextDay"), Is.EqualTo("Next Day"));
+                Assert.That(FindButtonLabel("Button_NewGame"), Is.EqualTo("New Game"));
+                Assert.That(FindButtonLabel("Button_ReportCard"), Is.EqualTo("Report Card"));
+                Assert.That(FindButtonLabel("Button_IdCard"), Is.EqualTo("ID Card"));
+                Assert.That(FindButtonLabel("Button_ClassRoutine"), Is.EqualTo("Class Routine"));
+                Assert.That(FindButtonLabel("Button_Settings"), Is.EqualTo("Settings"));
+                Assert.That(FindButtonLabel("Button_Logout"), Is.EqualTo("Logout"));
+                Assert.That(FindButtonLabel("Button_QuitGame"), Is.EqualTo("Quit Game"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test04b_VisitorMenu_HidesRoleSpecificOptions()
+        {
+            GameObject saveObject = CreateVisitorSave();
+            try
+            {
+                menu.Open();
+
+                Assert.That(FindNamedTmp("Title").text, Is.EqualTo("GAME MENU"));
+                Assert.That(FindButton("Button_Resume").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_SaveGame").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_NewGame").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_Settings").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_Logout").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_QuitGame").gameObject.activeSelf, Is.True);
+
+                Assert.That(FindButton("Button_NextDay").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_ReportCard").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_IdCard").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_ClassRoutine").gameObject.activeSelf, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
         }
 
         [Test]
@@ -199,37 +307,59 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             menu.Open();
 
-            FindButton("Button_ClassRoutine").onClick.Invoke();
             FindButton("Button_Settings").onClick.Invoke();
 
             Assert.That(GameMenuManager.IsOpen, Is.True);
             Assert.That(playerMovement.enabled, Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
+            Assert.That(FindNamedTmp("StatusLabel").text, Does.Contain("coming soon").IgnoreCase);
         }
 
         [Test]
-        public void Test08b_IdCard_WithoutAdmission_ShowsStatusAndKeepsMenuOpen()
+        public void Test08d_StudentClassRoutine_OpensExistingRoutineUi()
         {
-            if (PlayerSaveState.Instance != null)
-            {
-                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
-            }
-
-            GameObject saveObject = new GameObject("TestPlayerSaveState");
-            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
-            saveState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false);
-
+            GameObject saveObject = CreateStudentSave();
             try
             {
                 menu.Open();
-                FindButton("Button_IdCard").onClick.Invoke();
+                FindButton("Button_ClassRoutine").onClick.Invoke();
 
                 Assert.That(GameMenuManager.IsOpen, Is.True);
-                Assert.That(IdCardUI.IsOpen, Is.False);
+                Assert.That(ClassRoutineUI.IsOpen, Is.True);
+                Assert.That(FindRoutineLabel("Title").text, Is.EqualTo(StudentClassRoutineUI.Title));
+                Assert.That(FindRoutineCourse("ICS", "CourseValue").text, Is.EqualTo("Introduction to Computer Science"));
+                Assert.That(FindRoutineCourse("ICS", "ClassroomValue").text, Is.EqualTo("Room 427"));
+                Assert.That(FindRoutineCourse("ICS", "FloorValue").text, Is.EqualTo("4"));
+                Assert.That(FindRoutineCourse("ENGLISH", "CourseValue").text, Is.EqualTo("English"));
+                Assert.That(FindRoutineCourse("ENGLISH", "ClassroomValue").text, Is.EqualTo("Room 702"));
+                Assert.That(FindRoutineCourse("ENGLISH", "FloorValue").text, Is.EqualTo("7"));
+                Assert.That(FindRoutineCourse("DM", "CourseValue").text, Is.EqualTo("Discrete Mathematics"));
+                Assert.That(FindRoutineCourse("DM", "ClassroomValue").text, Is.EqualTo("Room 423"));
+                Assert.That(FindRoutineCourse("DM", "FloorValue").text, Is.EqualTo("4"));
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_PHY"), Is.Null);
 
-                TextMeshProUGUI status = FindNamedTmp("StatusLabel");
-                Assert.That(status, Is.Not.Null);
-                Assert.That(status.text, Does.Contain("receptionist").IgnoreCase);
+                menu.HandleEscape();
+                Assert.That(ClassRoutineUI.IsOpen, Is.False);
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test08b_IdCard_WithoutAdmission_IsHiddenFromVisitorMenu()
+        {
+            GameObject saveObject = CreateVisitorSave();
+            try
+            {
+                menu.Open();
+
+                Assert.That(FindButton("Button_IdCard").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_ReportCard").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_ClassRoutine").gameObject.activeSelf, Is.False);
+                Assert.That(IdCardUI.IsOpen, Is.False);
             }
             finally
             {
@@ -328,6 +458,166 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(Time.timeScale, Is.EqualTo(1f));
         }
 
+        [Test]
+        public void Test11_FacultyMenu_IsIndependentAndHidesReportCard()
+        {
+            GameObject saveObject = CreateFacultySave();
+            try
+            {
+                menu.Open();
+
+                Assert.That(FindNamedTmp("Title").text, Is.EqualTo("FACULTY MENU"));
+                Assert.That(FindButton("Button_ReportCard").gameObject.activeSelf, Is.False);
+                Assert.That(FindButton("Button_NextDay").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_IdCard").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_ClassRoutine").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_Resume").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_Settings").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_Logout").gameObject.activeSelf, Is.True);
+                Assert.That(FindButton("Button_FacultyAttendance"), Is.Null);
+                Assert.That(FindButton("Button_CourseManagement"), Is.Null);
+                Assert.That(FindButton("Button_MaterialsManagement"), Is.Null);
+
+                FindButton("Button_NextDay").onClick.Invoke();
+                Assert.That(FindNamedTmp("StatusLabel").text, Is.EqualTo("Coming Soon"));
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+
+                FindButton("Button_Settings").onClick.Invoke();
+                Assert.That(FindNamedTmp("StatusLabel").text, Does.Contain("coming soon").IgnoreCase);
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+
+                FindButton("Button_Resume").onClick.Invoke();
+                Assert.That(GameMenuManager.IsOpen, Is.False);
+                Assert.That(playerMovement.enabled, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test12_FacultyClassRoutine_OpensExistingFacultyRoutine()
+        {
+            GameObject saveObject = CreateFacultySave();
+            try
+            {
+                menu.Open();
+                FindButton("Button_ClassRoutine").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(ClassRoutineUI.IsOpen, Is.True);
+                Assert.That(FindRoutineLabel("Title").text, Is.EqualTo(ClassRoutineUI.DefaultTitle));
+                Assert.That(FindRoutineCourse("ICS", "CourseValue").text, Is.EqualTo("Introduction to Computer Science"));
+                Assert.That(FindRoutineCourse("ICS", "ClassroomValue").text, Is.EqualTo("Room 427"));
+                Assert.That(FindRoutineCourse("ICS", "FloorValue").text, Is.EqualTo("4"));
+                Assert.That(FindRoutineCourse("DM", "CourseValue").text, Is.EqualTo("Discrete Mathematics"));
+                Assert.That(FindRoutineCourse("DM", "ClassroomValue").text, Is.EqualTo("Room 423"));
+                Assert.That(FindRoutineCourse("DM", "FloorValue").text, Is.EqualTo("4"));
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_ENGLISH"), Is.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test13_FacultyIdCard_OpensExistingFacultyIdentityCard()
+        {
+            GameObject saveObject = CreateFacultySave();
+            try
+            {
+                menu.Open();
+                FindButton("Button_IdCard").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(IdCardUI.IsOpen, Is.True);
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "NameValue").text, Is.EqualTo("Lail"));
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "IdKey").text, Is.EqualTo("Faculty ID"));
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "IdValue").text, Is.EqualTo("F-001"));
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "DeptValue").text, Is.EqualTo("CSE"));
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "DesignationValue").text, Is.EqualTo(FacultyIdentity.Designation));
+                Assert.That(FindLabel(IdCardUI.Instance.transform, "OfficeValue").text, Is.EqualTo(FacultyIdentity.FormatOffice()));
+            }
+            finally
+            {
+                if (IdCardUI.IsOpen && IdCardUI.Instance != null)
+                {
+                    IdCardUI.Instance.Hide();
+                }
+
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        private GameObject CreateVisitorSave()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestVisitorSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false);
+            return saveObject;
+        }
+
+        private GameObject CreateStudentSave()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestStudentSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.ApplyCreatedSave(new ApiClient.PlayerSaveStatusDto
+            {
+                hasSave = true,
+                save = new ApiClient.PlayerSaveDto
+                {
+                    playerName = "Alex Student",
+                    role = "STUDENT",
+                    department = "CSE",
+                    universityId = "22112345",
+                    admissionCompleted = true,
+                    idCardIssued = true,
+                    semester = 1,
+                    currentDay = 1
+                }
+            });
+            return saveObject;
+        }
+
+        private GameObject CreateFacultySave()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestFacultySaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.ApplyCreatedSave(new ApiClient.PlayerSaveStatusDto
+            {
+                hasSave = true,
+                save = new ApiClient.PlayerSaveDto
+                {
+                    playerName = "Lail",
+                    role = FacultyIdentity.Role,
+                    department = "CSE",
+                    universityId = "F-001",
+                    admissionCompleted = true,
+                    idCardIssued = true,
+                    semester = 1,
+                    currentDay = 1
+                }
+            });
+            return saveObject;
+        }
+
         private Button FindButton(string objectName)
         {
             Button[] buttons = menu.GetComponentsInChildren<Button>(true);
@@ -376,6 +666,70 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 if (labels[i] != null && labels[i].text == text)
                 {
                     return labels[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static TextMeshProUGUI FindRoutineLabel(string objectName)
+        {
+            if (ClassRoutineUI.Instance == null)
+            {
+                return null;
+            }
+
+            return FindLabel(ClassRoutineUI.Instance.transform, objectName);
+        }
+
+        private static TextMeshProUGUI FindRoutineCourse(string courseId, string objectName)
+        {
+            if (ClassRoutineUI.Instance == null)
+            {
+                return null;
+            }
+
+            Transform card = FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_" + courseId);
+            return card != null ? FindLabel(card, objectName) : null;
+        }
+
+        private static TextMeshProUGUI FindLabel(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            TextMeshProUGUI[] labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (labels[i] != null && labels[i].gameObject.name == objectName)
+                {
+                    return labels[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindNamedChild(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            if (root.name == objectName)
+            {
+                return root;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform match = FindNamedChild(root.GetChild(i), objectName);
+                if (match != null)
+                {
+                    return match;
                 }
             }
 

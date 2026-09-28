@@ -6,6 +6,7 @@ import com.uiusimulator.player.dto.DayFinalizeResponse;
 import com.uiusimulator.player.dto.DaySummaryActivityResponse;
 import com.uiusimulator.player.entity.ActivityStatus;
 import com.uiusimulator.player.entity.BreakfastOutcome;
+import com.uiusimulator.player.entity.LibrarySelfStudyDefinition;
 import com.uiusimulator.player.entity.LibraryStudyDefinition;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
@@ -175,11 +176,16 @@ public class PlayerDayService {
     }
 
     /**
-     * Library Study is optional. An unused or unfinished attempt is omitted from the
-     * summary and is never auto-marked MISSED. A completed attempt stays as a bonus row.
+     * Library Study and Library Self Study are optional. Unused or unfinished attempts
+     * are omitted from the summary and are never auto-marked MISSED.
+     * Completed attempts stay as bonus rows.
      */
     private static boolean includeInDailySummary(PlayerDayActivity activity) {
         if (LibraryStudyDefinition.ACTIVITY_ID.equals(activity.getActivityId())
+                && activity.getStatus() != ActivityStatus.COMPLETED) {
+            return false;
+        }
+        if (LibrarySelfStudyDefinition.ACTIVITY_ID.equals(activity.getActivityId())
                 && activity.getStatus() != ActivityStatus.COMPLETED) {
             return false;
         }

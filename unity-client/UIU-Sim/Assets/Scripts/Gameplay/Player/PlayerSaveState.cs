@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UIU.Simulator.Authentication;
+using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Networking;
 using UnityEngine;
 
@@ -46,6 +47,23 @@ namespace UIU.Simulator.Gameplay.Player
 
         /// <summary>True when the player still needs receptionist admission / ID issuance.</summary>
         public bool NeedsAdmission => isHydrated && (!hasSave || !idCardIssued);
+
+        /// <summary>True once the receptionist has issued an ID card on a hydrated save.</summary>
+        public bool HasIssuedIdCard => isHydrated && hasSave && idCardIssued;
+
+        /// <summary>True when save identity is a student. Role comes from player data, not UI.</summary>
+        public bool IsStudentRole =>
+            !string.IsNullOrWhiteSpace(role)
+            && role.Equals("STUDENT", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>True when save identity is faculty. Role comes from player data, not UI.</summary>
+        public bool IsFacultyRole => FacultyIdentity.Matches(role);
+
+        /// <summary>Student HUD is shown only after a student ID card has been issued.</summary>
+        public bool ShouldShowStudentHud => HasIssuedIdCard && IsStudentRole;
+
+        /// <summary>Faculty HUD is shown only after a faculty ID card has been issued.</summary>
+        public bool ShouldShowFacultyHud => HasIssuedIdCard && IsFacultyRole;
 
         /// <summary>True once admission created an active university journey day.</summary>
         public bool HasActiveUniversityDay => isHydrated && hasSave && admissionCompleted;

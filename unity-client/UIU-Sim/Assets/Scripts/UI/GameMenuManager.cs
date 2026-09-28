@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UIU.Simulator.Gameplay.Assessment;
 using TMPro;
 using UIU.Simulator.Authentication;
@@ -33,8 +34,13 @@ namespace UIU.Simulator.UI
         public static bool IsOpen { get; private set; }
 
         private const string SavePath = "api/players/me/save";
+        private const string GeneralMenuTitle = "GAME MENU";
+        private const string StudentMenuTitle = "GAME MENU";
+        private const string FacultyMenuTitle = "FACULTY MENU";
         private const float PanelWidth = 420f;
+        private const float GeneralPanelHeight = 520f;
         private const float PanelHeight = 700f;
+        private const float FacultyPanelHeight = 650f;
         private const float ButtonHeight = 44f;
         private const int CanvasSortOrder = 240;
 
@@ -50,11 +56,16 @@ namespace UIU.Simulator.UI
         private GameObject overlayRoot;
         private GameObject confirmRoot;
         private GameObject endDayConfirmRoot;
+        private RectTransform panelRect;
+        private TextMeshProUGUI titleLabel;
         private TextMeshProUGUI statusLabel;
         private TextMeshProUGUI endDayTitleLabel;
         private TextMeshProUGUI endDayBodyLabel;
         private Button[] menuButtons;
         private Button nextDayButton;
+        private Button reportCardButton;
+        private Button idCardButton;
+        private Button classRoutineButton;
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
@@ -156,6 +167,12 @@ namespace UIU.Simulator.UI
                 return;
             }
 
+            if (WelcomeCardUI.IsOpen)
+            {
+                WelcomeCardUI.Instance?.Hide();
+                return;
+            }
+
             if (FloorMapHUD.IsOpen)
             {
                 FloorMapHUD.CloseActive();
@@ -165,6 +182,12 @@ namespace UIU.Simulator.UI
             if (IdCardUI.IsOpen)
             {
                 IdCardUI.Instance?.Hide();
+                return;
+            }
+
+            if (IsOpen && ClassRoutineUI.IsOpen)
+            {
+                ClassRoutineUI.Instance?.Hide();
                 return;
             }
 
@@ -224,6 +247,7 @@ namespace UIU.Simulator.UI
             HideConfirm();
             HideEndDayConfirm();
             SetStatus(string.Empty, UiTheme.Grey);
+            ApplyRoleLayout();
             SetMenuInteractable(true);
 
             overlayRoot.SetActive(true);
@@ -240,6 +264,11 @@ namespace UIU.Simulator.UI
             if (IdCardUI.IsOpen)
             {
                 IdCardUI.Instance?.Hide();
+            }
+
+            if (ClassRoutineUI.IsOpen)
+            {
+                ClassRoutineUI.Instance?.Hide();
             }
 
             HideConfirm();
@@ -272,6 +301,11 @@ namespace UIU.Simulator.UI
         /// </summary>
         public void ForceCloseAndRestoreGameplayControls()
         {
+            if (ClassRoutineUI.IsOpen)
+            {
+                ClassRoutineUI.Instance?.Hide();
+            }
+
             HideConfirm();
             HideEndDayConfirm();
             StopInFlightMenuWork();
@@ -330,6 +364,7 @@ namespace UIU.Simulator.UI
                 || DialogueUI.IsOpen
                 || CanteenQueueUI.IsOpen
                 || AdmissionUI.IsOpen
+                || WelcomeCardUI.IsOpen
                 || IdCardUI.IsOpen
                 || DailySummaryUI.IsOpen
                 || ClassroomChoiceUI.IsOpen
@@ -478,6 +513,12 @@ namespace UIU.Simulator.UI
                 return;
             }
 
+            if (IsFacultyRole())
+            {
+                SetStatus("Coming Soon", UiTheme.Grey);
+                return;
+            }
+
             PlayerSaveState saveState = PlayerSaveState.Instance != null
                 ? PlayerSaveState.Instance
                 : FindFirstObjectByType<PlayerSaveState>();
@@ -553,6 +594,62 @@ namespace UIU.Simulator.UI
 
             SetStatus(string.Empty, UiTheme.Grey);
             IdCardUI.EnsureExists().Show();
+        }
+
+        private void OnClassRoutineClicked()
+        {
+            if (isBusy || isNavigating || IsConfirmOpen || IsEndDayConfirmOpen)
+            {
+                return;
+            }
+
+            PlayerSaveState saveState = ResolveSaveState();
+            if (saveState == null || !saveState.HasIssuedIdCard)
+            {
+                SetStatus("No ID card yet. Visit the receptionist.", UiTheme.Red);
+                return;
+            }
+
+            SetStatus(string.Empty, UiTheme.Grey);
+            if (IsFacultyRole())
+            {
+                OpenFacultyClassRoutine();
+                return;
+            }
+
+            StudentClassRoutineUI.Show();
+        }
+
+        private static void OpenFacultyClassRoutine()
+        {
+            FacultyAssignedSchedule schedule = FacultyAssignedSchedule.Instance != null
+                ? FacultyAssignedSchedule.Instance
+                : FacultyAssignedSchedule.EnsureExists();
+
+            ApiClient.FacultyRoutineItemDto[] routine = ToRoutineArray(schedule != null ? schedule.AssignedClasses : null);
+            if (routine.Length == 0)
+            {
+                routine = ToRoutineArray(FacultyAssignedSchedule.CreateFallbackAssigned());
+            }
+
+            ClassRoutineUI.EnsureExists().Show(routine);
+        }
+
+        private static ApiClient.FacultyRoutineItemDto[] ToRoutineArray(
+            IReadOnlyList<ApiClient.FacultyRoutineItemDto> source)
+        {
+            if (source == null || source.Count == 0)
+            {
+                return System.Array.Empty<ApiClient.FacultyRoutineItemDto>();
+            }
+
+            var items = new ApiClient.FacultyRoutineItemDto[source.Count];
+            for (int i = 0; i < source.Count; i++)
+            {
+                items[i] = source[i];
+            }
+
+            return items;
         }
 
         private void OnPlaceholderClicked(string featureName)
@@ -909,6 +1006,65 @@ namespace UIU.Simulator.UI
             statusLabel.color = color;
         }
 
+        private void ApplyRoleLayout()
+        {
+            PlayerSaveState saveState = ResolveSaveState();
+            bool hasIdCard = saveState != null && saveState.HasIssuedIdCard;
+            bool faculty = hasIdCard && saveState.IsFacultyRole;
+            bool student = hasIdCard && saveState.IsStudentRole;
+
+            if (titleLabel != null)
+            {
+                if (faculty)
+                {
+                    titleLabel.text = FacultyMenuTitle;
+                }
+                else if (student)
+                {
+                    titleLabel.text = StudentMenuTitle;
+                }
+                else
+                {
+                    titleLabel.text = GeneralMenuTitle;
+                }
+            }
+
+            // Visitor (no ID): general options only. Role menus unlock after receptionist issuance.
+            SetMenuButtonActive(nextDayButton, hasIdCard);
+            SetMenuButtonActive(reportCardButton, student);
+            SetMenuButtonActive(idCardButton, hasIdCard);
+            SetMenuButtonActive(classRoutineButton, hasIdCard);
+
+            if (panelRect != null)
+            {
+                float height = !hasIdCard
+                    ? GeneralPanelHeight
+                    : faculty ? FacultyPanelHeight : PanelHeight;
+                panelRect.sizeDelta = new Vector2(PanelWidth, height);
+            }
+        }
+
+        private static void SetMenuButtonActive(Button button, bool active)
+        {
+            if (button != null)
+            {
+                button.gameObject.SetActive(active);
+            }
+        }
+
+        private static PlayerSaveState ResolveSaveState()
+        {
+            return PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+        }
+
+        private static bool IsFacultyRole()
+        {
+            PlayerSaveState saveState = ResolveSaveState();
+            return saveState != null && saveState.HasIssuedIdCard && saveState.IsFacultyRole;
+        }
+
         private void HideImmediate()
         {
             if (overlayRoot != null)
@@ -945,7 +1101,7 @@ namespace UIU.Simulator.UI
 
             GameObject panel = new GameObject("GameMenuPanel");
             panel.transform.SetParent(overlayRoot.transform, false);
-            RectTransform panelRect = panel.AddComponent<RectTransform>();
+            panelRect = panel.AddComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
@@ -961,7 +1117,7 @@ namespace UIU.Simulator.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            CreateTmpLabel(panel.transform, "Title", "GAME MENU", 28f, FontStyles.Bold, UiTheme.BrightOrange, 36f);
+            titleLabel = CreateTmpLabel(panel.transform, "Title", StudentMenuTitle, 28f, FontStyles.Bold, UiTheme.BrightOrange, 36f);
             CreateTmpLabel(panel.transform, "Subtitle", "Press Esc to resume", 14f, FontStyles.Normal, UiTheme.Grey, 22f);
 
             Button resume = CreateMenuButton(panel.transform, "Button_Resume", "Resume", OnResumeClicked);
@@ -970,13 +1126,20 @@ namespace UIU.Simulator.UI
             Button newGame = CreateMenuButton(panel.transform, "Button_NewGame", "New Game", OnNewGameClicked);
             Button reportCard = CreateMenuButton(panel.transform, "Button_ReportCard", "Report Card", OnReportCardClicked);
             Button idCard = CreateMenuButton(panel.transform, "Button_IdCard", "ID Card", OnIdCardClicked);
-            Button classRoutine = CreateMenuButton(panel.transform, "Button_ClassRoutine", "Class Routine", () => OnPlaceholderClicked("Class Routine"));
+            Button classRoutine = CreateMenuButton(panel.transform, "Button_ClassRoutine", "Class Routine", OnClassRoutineClicked);
             Button settings = CreateMenuButton(panel.transform, "Button_Settings", "Settings", () => OnPlaceholderClicked("Settings"));
             Button logout = CreateMenuButton(panel.transform, "Button_Logout", "Logout", OnLogoutClicked);
             Button quit = CreateMenuButton(panel.transform, "Button_QuitGame", "Quit Game", OnQuitClicked);
 
             nextDayButton = nextDay;
-            menuButtons = new[] { resume, save, nextDay, newGame, idCard, reportCard, classRoutine, settings, logout, quit };
+            reportCardButton = reportCard;
+            idCardButton = idCard;
+            classRoutineButton = classRoutine;
+            menuButtons = new[]
+            {
+                resume, save, nextDay, newGame, idCard, reportCard, classRoutine, settings, logout, quit
+            };
+            ApplyRoleLayout();
 
             GameObject statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(panel.transform, false);
