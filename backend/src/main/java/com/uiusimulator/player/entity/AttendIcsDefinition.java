@@ -9,7 +9,7 @@ public final class AttendIcsDefinition {
     public static final String ACTIVITY_ID = ClassroomCourseDefinition.ICS.activityId();
     public static final String COURSE_ID = ClassroomCourseDefinition.ICS.courseId();
     public static final String COURSE_NAME = ClassroomCourseDefinition.ICS.courseName();
-    public static final String REQUIRED_DEPARTMENT_CODE = "CSE";
+    public static final String REQUIRED_DEPARTMENT_CODE = ClassroomCourseDefinition.ICS.departmentCode();
     public static final PlayerRole REQUIRED_ROLE = PlayerRole.STUDENT;
 
     /** Gameplay day on which ICS is scheduled. Unity Inspector must match this. */

@@ -3,6 +3,7 @@ using TMPro;
 using UIU.Simulator.Gameplay.Activities;
 using UIU.Simulator.Gameplay.Classroom;
 using UIU.Simulator.Gameplay.Faculty;
+using UIU.Simulator.Gameplay.Player;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.Networking;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             DestroyExisting(ClassRoutineUI.Instance != null ? ClassRoutineUI.Instance.gameObject : null);
             DestroyExisting(FindDailyActivityState());
+            DestroyExisting(FindPlayerSaveState());
         }
 
         [TearDown]
@@ -29,11 +31,14 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             DestroyExisting(ClassRoutineUI.Instance != null ? ClassRoutineUI.Instance.gameObject : null);
             DestroyExisting(FindDailyActivityState());
+            DestroyExisting(FindPlayerSaveState());
         }
 
         [Test]
-        public void BuildRoutine_UsesExistingClassroomCatalog_WithoutPhysics()
+        public void BuildRoutine_CseStudent_UsesCseClassroomCatalog_WithoutPhysics()
         {
+            CreateStudentSave("CSE");
+
             ApiClient.FacultyRoutineItemDto[] routine = StudentClassRoutineUI.BuildRoutine();
 
             Assert.That(routine, Has.Length.EqualTo(3));
@@ -52,8 +57,40 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
+        public void BuildRoutine_BbaStudent_UsesBbaClassroomCatalogOnly()
+        {
+            CreateStudentSave("BBA");
+
+            ApiClient.FacultyRoutineItemDto[] routine = StudentClassRoutineUI.BuildRoutine();
+
+            Assert.That(routine, Has.Length.EqualTo(3));
+            Assert.That(routine[0].courseId, Is.EqualTo("IB"));
+            Assert.That(routine[0].courseName, Is.EqualTo("Introduction to Business"));
+            Assert.That(routine[0].classroomNumber, Is.EqualTo("523"));
+            Assert.That(routine[0].floor, Is.EqualTo(5));
+            Assert.That(routine[1].courseId, Is.EqualTo("POA"));
+            Assert.That(routine[1].courseName, Is.EqualTo("Principles of Accounting"));
+            Assert.That(routine[1].classroomNumber, Is.EqualTo("527"));
+            Assert.That(routine[1].floor, Is.EqualTo(5));
+            Assert.That(routine[2].courseId, Is.EqualTo("BBA-ENGLISH"));
+            Assert.That(routine[2].courseName, Is.EqualTo("English"));
+            Assert.That(routine[2].classroomNumber, Is.EqualTo("701"));
+            Assert.That(routine[2].floor, Is.EqualTo(7));
+        }
+
+        [Test]
+        public void CreateCatalog_FiltersByDepartmentCode()
+        {
+            Assert.That(StudentClassRoutineUI.CreateCatalog("CSE").ConvertAll(r => r.courseId),
+                Is.EqualTo(new[] { "ICS", "ENGLISH", "DM" }));
+            Assert.That(StudentClassRoutineUI.CreateCatalog("BBA").ConvertAll(r => r.courseId),
+                Is.EqualTo(new[] { "IB", "POA", "BBA-ENGLISH" }));
+        }
+
+        [Test]
         public void Show_OpensSharedClassRoutineUi()
         {
+            CreateStudentSave("CSE");
             StudentClassRoutineUI.Show();
 
             Assert.That(ClassRoutineUI.IsOpen, Is.True);
@@ -61,32 +98,63 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindRoutineLabel("ICS", "CourseValue").text, Is.EqualTo("Introduction to Computer Science"));
             Assert.That(FindRoutineLabel("ENGLISH", "CourseValue").text, Is.EqualTo("English"));
             Assert.That(FindRoutineLabel("DM", "CourseValue").text, Is.EqualTo("Discrete Mathematics"));
+            Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_IB"), Is.Null);
         }
 
         [Test]
-        public void BuildRoutine_OverlaysLiveClassroomAssets()
+        public void Show_BbaStudent_ShowsOnlyBbaCourses()
         {
+            CreateStudentSave("BBA");
+            StudentClassRoutineUI.Show();
+
+            Assert.That(ClassRoutineUI.IsOpen, Is.True);
+            Assert.That(FindRoutineLabel("IB", "CourseValue").text, Is.EqualTo("Introduction to Business"));
+            Assert.That(FindRoutineLabel("POA", "CourseValue").text, Is.EqualTo("Principles of Accounting"));
+            Assert.That(FindRoutineLabel("BBA-ENGLISH", "CourseValue").text, Is.EqualTo("English"));
+            Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_ICS"), Is.Null);
+            Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_ENGLISH"), Is.Null);
+            Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_DM"), Is.Null);
+        }
+
+        [Test]
+        public void BuildRoutine_OverlaysLiveClassroomAssets_SameDepartmentOnly()
+        {
+            CreateStudentSave("CSE");
+
             IcsClassroomLocationConfig english = ScriptableObject.CreateInstance<IcsClassroomLocationConfig>();
-            SetLocation(english, "ENGLISH", "English Literature", "801", 8);
+            SetLocation(english, "ENGLISH", "English Literature", "801", 8, "CSE");
+            IcsClassroomLocationConfig ib = ScriptableObject.CreateInstance<IcsClassroomLocationConfig>();
+            SetLocation(ib, "IB", "Introduction to Business", "523", 5, "BBA");
 
             GameObject dailyObject = new GameObject("TestDailyActivityState");
             DailyActivityState daily = dailyObject.AddComponent<DailyActivityState>();
-            daily.SetAdditionalLocationConfigsForTesting(new[] { english });
+            daily.SetAdditionalLocationConfigsForTesting(new[] { english, ib });
 
             try
             {
                 ApiClient.FacultyRoutineItemDto[] routine = StudentClassRoutineUI.BuildRoutine();
+                Assert.That(routine, Has.Length.EqualTo(3));
                 Assert.That(routine[1].courseName, Is.EqualTo("English Literature"));
                 Assert.That(routine[1].classroomNumber, Is.EqualTo("801"));
                 Assert.That(routine[1].floor, Is.EqualTo(8));
                 Assert.That(routine[0].courseId, Is.EqualTo("ICS"));
                 Assert.That(routine[2].courseId, Is.EqualTo("DM"));
+                Assert.That(System.Array.Exists(routine, r => r.courseId == "IB"), Is.False);
             }
             finally
             {
                 Object.DestroyImmediate(english);
+                Object.DestroyImmediate(ib);
                 Object.DestroyImmediate(dailyObject);
             }
+        }
+
+        private static GameObject CreateStudentSave(string department)
+        {
+            GameObject saveObject = new GameObject("TestStudentSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetIdentityForTesting("STUDENT", department, true);
+            return saveObject;
         }
 
         private static void SetLocation(
@@ -94,7 +162,8 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             string courseId,
             string courseName,
             string classroomNumber,
-            int floor)
+            int floor,
+            string departmentCode = "CSE")
         {
             System.Reflection.BindingFlags flags =
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
@@ -103,6 +172,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             type.GetField("courseName", flags)?.SetValue(config, courseName);
             type.GetField("classroomNumber", flags)?.SetValue(config, classroomNumber);
             type.GetField("floor", flags)?.SetValue(config, floor);
+            type.GetField("departmentCode", flags)?.SetValue(config, departmentCode);
         }
 
         private static TextMeshProUGUI FindLabel(string objectName)
@@ -168,6 +238,12 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         {
             DailyActivityState daily = Object.FindFirstObjectByType<DailyActivityState>();
             return daily != null ? daily.gameObject : null;
+        }
+
+        private static GameObject FindPlayerSaveState()
+        {
+            PlayerSaveState save = Object.FindFirstObjectByType<PlayerSaveState>();
+            return save != null ? save.gameObject : null;
         }
 
         private static void DestroyExisting(GameObject target)

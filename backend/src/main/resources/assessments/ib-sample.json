@@ -1,0 +1,119 @@
+[
+  {
+    "id": "IB-01",
+    "courseId": "IB",
+    "text": "What is the primary goal of most for-profit businesses?",
+    "answers": [
+      "Maximize owner wealth or profit",
+      "Eliminate all competition",
+      "Avoid paying any taxes",
+      "Hire as many employees as possible"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "IB-02",
+    "courseId": "IB",
+    "text": "Which of the following is a factor of production?",
+    "answers": [
+      "Advertisement slogans",
+      "Labor",
+      "Customer complaints",
+      "Store decorations"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "IB-03",
+    "courseId": "IB",
+    "text": "A sole proprietorship is owned by:",
+    "answers": [
+      "Two partners equally",
+      "Shareholders on a stock exchange",
+      "One individual",
+      "The government only"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "IB-04",
+    "courseId": "IB",
+    "text": "Stakeholders of a business typically include:",
+    "answers": [
+      "Only the CEO",
+      "Only competitors",
+      "Only the tax office",
+      "Customers, employees, and owners"
+    ],
+    "correctAnswer": 3,
+    "tier": "EASY"
+  },
+  {
+    "id": "IB-05",
+    "courseId": "IB",
+    "text": "In the SWOT framework, the letter O stands for:",
+    "answers": [
+      "Operations",
+      "Opportunities",
+      "Ownership",
+      "Outsourcing"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "IB-06",
+    "courseId": "IB",
+    "text": "Limited liability means owners:",
+    "answers": [
+      "Can never lose money",
+      "Are personally liable for all debts",
+      "Risk only what they invested in the firm",
+      "Must work full-time in the business"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "IB-07",
+    "courseId": "IB",
+    "text": "Which function focuses on attracting and motivating employees?",
+    "answers": [
+      "Human resource management",
+      "Inventory accounting",
+      "Tax auditing",
+      "Warehouse design only"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "IB-08",
+    "courseId": "IB",
+    "text": "Corporate social responsibility primarily concerns:",
+    "answers": [
+      "Ignoring community impact",
+      "Maximizing pollution for growth",
+      "Ethical obligations beyond pure profit",
+      "Setting product prices only"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "IB-09",
+    "courseId": "IB",
+    "text": "Entrepreneurship is best described as:",
+    "answers": [
+      "Avoiding all business risk",
+      "Creating and growing new ventures",
+      "Only managing government agencies",
+      "Copying competitors without ideas"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  }
+]

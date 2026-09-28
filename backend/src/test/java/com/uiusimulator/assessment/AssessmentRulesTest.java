@@ -52,6 +52,22 @@ class AssessmentRulesTest {
             });
         }
     }
+    @Test void bbaSampleBanksLoadWithRequiredShapeAndSelection() {
+        var catalog=new AssessmentCatalog();
+        for(var course:List.of("IB","POA","BBA-ENGLISH")) {
+            var bank=catalog.bank(course);
+            assertThat(bank).hasSizeGreaterThanOrEqualTo(8);
+            assertThat(bank.stream().map(AssessmentCatalog.Question::id)).doesNotHaveDuplicates();
+            assertThat(bank.stream().map(AssessmentCatalog.Question::tier).distinct()).containsExactlyInAnyOrder("EASY","NORMAL","HARD");
+            assertThat(bank).allSatisfy(q -> {
+                assertThat(q.courseId()).isEqualTo(course);
+                assertThat(q.answers()).hasSize(4);
+                assertThat(q.correctAnswer()).isBetween(0,3);
+            });
+            assertThat(catalog.select(course,AssessmentType.FINAL,50,()->0.5).questions()).hasSize(8);
+            assertThat(catalog.select(course,AssessmentType.QUIZ_1,50,()->0.3).questions()).hasSize(3);
+        }
+    }
     @Test void randomSelectionDrawsDifferentSetsAndKeepsRequiredCounts() {
         var catalog=new AssessmentCatalog();
         var first=catalog.select("ICS",AssessmentType.QUIZ_1,50,()->0.1);

@@ -464,10 +464,15 @@ public class AttendIcsService {
         if (assessments.scheduled(save) != null) throw new IllegalArgumentException("Assessment today; normal attendance is unavailable.");
 
         if (save.getRole() != PlayerRole.STUDENT) {
-            throw new IllegalArgumentException("Only CSE students can resolve " + course.courseName() + ".");
+            throw new IllegalArgumentException(
+                    "Only " + course.departmentCode() + " students can resolve " + course.courseName() + "."
+            );
         }
-        if (save.getDepartment() == null || !"CSE".equalsIgnoreCase(save.getDepartment().getCode())) {
-            throw new IllegalArgumentException("Only CSE students can resolve " + course.courseName() + ".");
+        if (save.getDepartment() == null
+                || !course.departmentCode().equalsIgnoreCase(save.getDepartment().getCode())) {
+            throw new IllegalArgumentException(
+                    "Only " + course.departmentCode() + " students can resolve " + course.courseName() + "."
+            );
         }
         if (!ClassroomCourseDefinition.isNormalClassDay(save.getSemester(), save.getCurrentDay())) {
             throw new IllegalArgumentException(

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using TMPro;
+using UIU.Simulator.Gameplay.Assessment;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
@@ -337,6 +338,9 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 Assert.That(FindRoutineCourse("DM", "ClassroomValue").text, Is.EqualTo("Room 423"));
                 Assert.That(FindRoutineCourse("DM", "FloorValue").text, Is.EqualTo("4"));
                 Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_PHY"), Is.Null);
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_IB"), Is.Null);
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_POA"), Is.Null);
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_BBA-ENGLISH"), Is.Null);
 
                 menu.HandleEscape();
                 Assert.That(ClassRoutineUI.IsOpen, Is.False);
@@ -344,6 +348,62 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             }
             finally
             {
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test08d2_BbaStudentClassRoutine_ShowsOnlyBbaCourses()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestBbaStudentSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.ApplyCreatedSave(new ApiClient.PlayerSaveStatusDto
+            {
+                hasSave = true,
+                save = new ApiClient.PlayerSaveDto
+                {
+                    playerName = "Nadia Student",
+                    role = "STUDENT",
+                    department = "BBA",
+                    universityId = "22110001",
+                    admissionCompleted = true,
+                    idCardIssued = true,
+                    semester = 1,
+                    currentDay = 1
+                }
+            });
+
+            try
+            {
+                menu.Open();
+                FindButton("Button_ClassRoutine").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(ClassRoutineUI.IsOpen, Is.True);
+                Assert.That(FindRoutineLabel("Title").text, Is.EqualTo(StudentClassRoutineUI.Title));
+                Assert.That(FindRoutineCourse("IB", "CourseValue").text, Is.EqualTo("Introduction to Business"));
+                Assert.That(FindRoutineCourse("IB", "ClassroomValue").text, Is.EqualTo("Room 523"));
+                Assert.That(FindRoutineCourse("IB", "FloorValue").text, Is.EqualTo("5"));
+                Assert.That(FindRoutineCourse("POA", "CourseValue").text, Is.EqualTo("Principles of Accounting"));
+                Assert.That(FindRoutineCourse("POA", "ClassroomValue").text, Is.EqualTo("Room 527"));
+                Assert.That(FindRoutineCourse("BBA-ENGLISH", "CourseValue").text, Is.EqualTo("English"));
+                Assert.That(FindRoutineCourse("BBA-ENGLISH", "ClassroomValue").text, Is.EqualTo("Room 701"));
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_ICS"), Is.Null);
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_ENGLISH"), Is.Null);
+                Assert.That(FindNamedChild(ClassRoutineUI.Instance.transform, "Routine_DM"), Is.Null);
+            }
+            finally
+            {
+                if (ClassRoutineUI.IsOpen && ClassRoutineUI.Instance != null)
+                {
+                    ClassRoutineUI.Instance.Hide();
+                }
+
                 Object.DestroyImmediate(saveObject);
             }
         }
@@ -419,6 +479,69 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                     Object.DestroyImmediate(IdCardUI.Instance.gameObject);
                 }
 
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test08d_ReportCard_AvailableToAnyAdmittedStudent()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestPlayerSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetDayProgressForTesting(1, 1);
+            saveState.SetIdentityForTesting("STUDENT", "BBA", true);
+
+            try
+            {
+                menu.Open();
+                FindButton("Button_ReportCard").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.False, "Report Card must close the menu for admitted students.");
+                Assert.That(ReportCardUI.Instance, Is.Not.Null);
+            }
+            finally
+            {
+                if (ReportCardUI.Instance != null)
+                {
+                    ReportCardUI.Instance.CloseModal();
+                    Object.DestroyImmediate(ReportCardUI.Instance.gameObject);
+                }
+
+                Object.DestroyImmediate(saveObject);
+            }
+        }
+
+        [Test]
+        public void Test08e_ReportCard_DeniedForNonStudent()
+        {
+            if (PlayerSaveState.Instance != null)
+            {
+                Object.DestroyImmediate(PlayerSaveState.Instance.gameObject);
+            }
+
+            GameObject saveObject = new GameObject("TestPlayerSaveState");
+            PlayerSaveState saveState = saveObject.AddComponent<PlayerSaveState>();
+            saveState.SetDayProgressForTesting(1, 1);
+            saveState.SetIdentityForTesting("FACULTY", "CSE", true);
+
+            try
+            {
+                menu.Open();
+                FindButton("Button_ReportCard").onClick.Invoke();
+
+                Assert.That(GameMenuManager.IsOpen, Is.True);
+                TextMeshProUGUI status = FindNamedTmp("StatusLabel");
+                Assert.That(status, Is.Not.Null);
+                Assert.That(status.text, Does.Contain("students").IgnoreCase);
+                Assert.That(status.text, Does.Not.Contain("CSE"));
+            }
+            finally
+            {
                 Object.DestroyImmediate(saveObject);
             }
         }

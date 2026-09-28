@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_12_PoaDiscussion
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_poa_discussion
+  topic: "Principles of Accounting discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 2
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: "POA"
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "You're in {course} too, right? Room 527 feels packed already."
+    choices:
+    - playerLine: "Yeah, I'm taking {course} this trimester."
+      npcReaction: "Good. Misery loves company with the debit-credit stuff."
+      nextNodeId: finding
+  - id: finding
+    npcLine: "How are you finding {course}?"
+    choices:
+    - playerLine: "The numbers make sense once I practice."
+      npcReaction: "Same. Practice problems are everything."
+      nextNodeId: ledger
+    - playerLine: "Debits and credits still confuse me."
+      npcReaction: "You're not alone. I redraw the T-accounts every night."
+      nextNodeId: ledger
+    - playerLine: "Harder than I expected, honestly."
+      npcReaction: "It looked simple in the outline. It isn't."
+      nextNodeId: ledger
+  - id: ledger
+    npcLine: "Have you done any journal entries on your own yet?"
+    choices:
+    - playerLine: "A few from the textbook."
+      npcReaction: "That's the way. Repetition locks it in."
+      nextNodeId: pace
+    - playerLine: "Only what we did in class."
+      npcReaction: "Try one extra set. It pays off before quizzes."
+      nextNodeId: pace
+    - playerLine: "Yes, and I still got half of them wrong."
+      npcReaction: "Ha, same. Wrong answers teach faster though."
+      nextNodeId: pace
+  - id: pace
+    npcLine: "What do you think about the class pace?"
+    choices:
+    - playerLine: "It's fine if I review after class."
+      npcReaction: "Reviewing the same day really helps with POA."
+      nextNodeId: review
+    - playerLine: "It moves too fast for me."
+      npcReaction: "Ask early. Accounting builds on every lecture."
+      nextNodeId: review
+    - playerLine: "Manageable if I stay caught up."
+      npcReaction: "That's the secret. Falling behind hurts here."
+      nextNodeId: review
+  - id: review
+    npcLine: "Are you practicing {course} outside class?"
+    choices:
+    - playerLine: "Yes, a little every day."
+      npcReaction: "Perfect. Consistency beats cramming for this one."
+      nextNodeId: end
+    - playerLine: "Only before assessments."
+      npcReaction: "Risky. The topics stack fast."
+      nextNodeId: end
+    - playerLine: "Not yet, honestly."
+      npcReaction: "Try one journal entry a day. It adds up."
+      nextNodeId: end
+  - id: end
+    npcLine: "Okay, see you in the next {course} class. Bring your calculator."
+    choices: []

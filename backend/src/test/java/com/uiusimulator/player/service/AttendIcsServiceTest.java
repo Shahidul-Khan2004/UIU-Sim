@@ -19,6 +19,7 @@ import com.uiusimulator.player.repository.PlayerStatsRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -402,7 +403,11 @@ class AttendIcsServiceTest {
         assertThat(summary.activities())
                 .filteredOn(a -> AttendIcsDefinition.ACTIVITY_ID.equals(a.activityId()))
                 .isEmpty();
-        assertThat(summary.academicReputation()).isEqualTo(50);
+        assertThat(summary.activities())
+                .filteredOn(a -> a.activityId().startsWith("ATTEND_"))
+                .extracting(a -> a.activityId())
+                .containsExactlyInAnyOrder("ATTEND_IB", "ATTEND_POA", "ATTEND_BBA_ENGLISH");
+        assertThat(summary.academicReputation()).isEqualTo(38);
     }
 
     @Test
@@ -684,9 +689,64 @@ class AttendIcsServiceTest {
 
         DayFinalizeResponse summary = playerDayService.finalizeCurrentDay(bba);
         assertThat(summary.activities())
-                .filteredOn(a -> a.activityId().startsWith("ATTEND_"))
+                .filteredOn(a -> List.of("ATTEND_ICS", "ATTEND_ENGLISH", "ATTEND_DM").contains(a.activityId()))
                 .isEmpty();
-        assertThat(summary.academicReputation()).isEqualTo(50);
+        assertThat(summary.activities())
+                .filteredOn(a -> a.activityId().startsWith("ATTEND_"))
+                .extracting(a -> a.activityId())
+                .containsExactlyInAnyOrder("ATTEND_IB", "ATTEND_POA", "ATTEND_BBA_ENGLISH");
+        assertThat(summary.academicReputation()).isEqualTo(38);
+    }
+
+    @Test
+    void bbaStudent_canAttendProxyAndLeaveBbaCourses_andCseIsDenied() {
+        Jwt jwt = jwtWith("bba_classroom_flow");
+        playerSaveService.createSave(
+                jwt,
+                new PlayerSaveCreateRequest(PlayerRole.STUDENT, "BBA Student", bba.getId(), "22118888")
+        );
+
+        assertThatThrownBy(() -> attendIcsService.startLecture(jwt, "ATTEND_ICS"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSE students");
+        assertThatThrownBy(() -> attendIcsService.punchProxy(jwt, "ATTEND_ENGLISH"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("CSE students");
+
+        attendIcsService.startLecture(jwt, "ATTEND_IB");
+        mutableClock.advanceSeconds(30);
+        AttendIcsSessionResponse milestone = attendIcsService.claimMilestone(
+                jwt, "ATTEND_IB", new AttendIcsMilestoneRequest(30));
+        assertThat(milestone.appliedReputationDelta()).isEqualTo(2);
+        AttendIcsSessionResponse left = attendIcsService.leaveEarly(jwt, "ATTEND_IB");
+        assertThat(left.outcome()).isEqualTo("LEFT_EARLY");
+
+        AttendIcsSessionResponse proxy = attendIcsService.punchProxy(jwt, "ATTEND_POA");
+        assertThat(proxy.outcome()).isEqualTo("PROXY");
+        assertThat(proxy.appliedAuraDelta()).isEqualTo(3);
+
+        attendIcsService.startLecture(jwt, "ATTEND_BBA_ENGLISH");
+        claimThrough(jwt, "ATTEND_BBA_ENGLISH", 90);
+        var playerId = playerRepository.findByClerkUserId("bba_classroom_flow").orElseThrow().getId();
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_BBA_ENGLISH")
+                .orElseThrow().getOutcome()).isEqualTo("COMPLETED");
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(playerId, "ATTEND_ICS")).isEmpty();
+    }
+
+    @Test
+    void cseStudent_cannotAttendBbaCourses() {
+        Jwt jwt = jwtWith("cse_denied_bba");
+        createCseStudent(jwt);
+
+        assertThatThrownBy(() -> attendIcsService.startLecture(jwt, "ATTEND_IB"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BBA students");
+        assertThatThrownBy(() -> attendIcsService.punchProxy(jwt, "ATTEND_POA"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BBA students");
+        assertThatThrownBy(() -> attendIcsService.startLecture(jwt, "ATTEND_BBA_ENGLISH"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BBA students");
     }
 
     @Test

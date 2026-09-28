@@ -8,6 +8,9 @@ namespace UIU.Simulator.Gameplay.Activities
         public const string AttendIcs = "ATTEND_ICS";
         public const string AttendEnglish = "ATTEND_ENGLISH";
         public const string AttendDm = "ATTEND_DM";
+        public const string AttendIb = "ATTEND_IB";
+        public const string AttendPoa = "ATTEND_POA";
+        public const string AttendBbaEnglish = "ATTEND_BBA_ENGLISH";
         public const string LibraryStudy = "LIBRARY_STUDY";
         public const string LibrarySelfStudy = "LIBRARY_SELF_STUDY";
 
@@ -16,7 +19,12 @@ namespace UIU.Simulator.Gameplay.Activities
 
         public static bool IsClassroomActivity(string activityId)
         {
-            return activityId == AttendIcs || activityId == AttendEnglish || activityId == AttendDm;
+            return activityId == AttendIcs
+                || activityId == AttendEnglish
+                || activityId == AttendDm
+                || activityId == AttendIb
+                || activityId == AttendPoa
+                || activityId == AttendBbaEnglish;
         }
 
         public static bool IsNpcConversation(string activityId)

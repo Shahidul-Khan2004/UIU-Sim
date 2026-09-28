@@ -125,6 +125,9 @@ namespace UIU.Simulator.Gameplay.UI
                 return;
             }
 
+            // Player may spawn after Show(); re-bind controls and keep the cursor free.
+            EnsureGameplayInputLocked();
+
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 Hide();
@@ -146,7 +149,7 @@ namespace UIU.Simulator.Gameplay.UI
             ShowWelcomeContent();
             overlayRoot.SetActive(true);
             IsOpen = true;
-            LockPlayerInput();
+            EnsureGameplayInputLocked();
             AuthUiUtility.EnsureInputSystemEventSystem();
             EnsureEventSystem();
         }
@@ -323,29 +326,44 @@ namespace UIU.Simulator.Gameplay.UI
             saveEventsBound = false;
         }
 
-        private void LockPlayerInput()
+        /// <summary>
+        /// Disables gameplay look/move and shows the UI cursor.
+        /// Safe to call repeatedly — the player often spawns after the welcome card opens.
+        /// </summary>
+        private void EnsureGameplayInputLocked()
         {
-            if (ownsGameplayLock)
+            if (cachedPlayerMovement == null)
             {
-                return;
+                cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
             }
 
-            cachedPlayerMovement = FindFirstObjectByType<PlayerMovement>();
             if (cachedPlayerMovement != null)
             {
                 cachedPlayerMovement.enabled = false;
             }
 
-            cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
-            if (cachedFirstPersonLook != null)
+            if (cachedFirstPersonLook == null)
+            {
+                cachedFirstPersonLook = FindFirstObjectByType<FirstPersonLook>();
+            }
+
+            if (cachedFirstPersonLook != null && cachedFirstPersonLook.enabled)
             {
                 cachedFirstPersonLook.enabled = false;
             }
 
-            cachedCameraSwitcher = FindFirstObjectByType<CameraSwitcher>();
+            if (cachedCameraSwitcher == null)
+            {
+                cachedCameraSwitcher = FindFirstObjectByType<CameraSwitcher>();
+            }
+
             if (cachedCameraSwitcher != null)
             {
-                wasCameraSwitcherEnabled = cachedCameraSwitcher.enabled;
+                if (!ownsGameplayLock)
+                {
+                    wasCameraSwitcherEnabled = cachedCameraSwitcher.enabled;
+                }
+
                 cachedCameraSwitcher.enabled = false;
             }
 

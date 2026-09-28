@@ -37,6 +37,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d467ba648c015e19abe27c7d555fd762, type: 2}
   - {fileID: 11400000, guid: f3748915a76657d5b77d6b7c8b6741f1, type: 2}
   - {fileID: 11400000, guid: bb8bfcabf9b858e6ac2a095070b33e43, type: 2}
+  - {fileID: 11400000, guid: c15f80ac1df5490daaf044d33c6875cf, type: 2}
+  - {fileID: 11400000, guid: 5ec45531e1a1456dba44cb4c720ecf8e, type: 2}
+  - {fileID: 11400000, guid: 175c63f5eae644a68384c9ca11ce4998, type: 2}
+  - {fileID: 11400000, guid: 5ae803cdc3cd4b3581cdcdca5acc4c1e, type: 2}
+  - {fileID: 11400000, guid: eaa43b329e8246e189e2b1e945e6d32d, type: 2}
   facultyHonorific: sir
   defaultClosingPlayerLine: "See you around!"
   leaveChoiceLine: "(Leave) Sorry, I have to go."

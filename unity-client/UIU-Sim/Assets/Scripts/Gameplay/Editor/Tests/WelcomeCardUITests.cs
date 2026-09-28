@@ -76,6 +76,37 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindButton(welcome.transform, "Button_GoToReceptionist").gameObject.activeSelf, Is.False);
             Assert.That(statsHud.IsVisible, Is.False);
             Assert.That(facultyHud.IsVisible, Is.False);
+            Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.None), "Cursor must be unlocked while the welcome card is open.");
+            Assert.That(Cursor.visible, Is.True, "Cursor must be visible while the welcome card is open.");
+        }
+
+        [Test]
+        public void WelcomeOpen_DisablesLateSpawnedFirstPersonLook_AndKeepsCursorVisible()
+        {
+            saveState.SetStateForTesting(hasSaveValue: false, idCardIssuedValue: false);
+            welcome.EvaluateForCurrentSave();
+            Assert.That(WelcomeCardUI.IsOpen, Is.True);
+
+            // Mimic PlayerSpawner creating the player after the welcome modal already opened.
+            GameObject latePlayer = new GameObject("LateSpawnedPlayer");
+            FirstPersonLook look = latePlayer.AddComponent<FirstPersonLook>();
+            try
+            {
+                Assert.That(look.enabled, Is.True);
+                // FirstPersonLook.OnEnable would lock the cursor; welcome Update must reclaim it.
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+
+                welcome.SendMessage("Update", SendMessageOptions.DontRequireReceiver);
+
+                Assert.That(look.enabled, Is.False, "Late-spawned look must be disabled while welcome is open.");
+                Assert.That(Cursor.lockState, Is.EqualTo(CursorLockMode.None));
+                Assert.That(Cursor.visible, Is.True);
+            }
+            finally
+            {
+                DestroyExisting(latePlayer);
+            }
         }
 
         [Test]
