@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_13_BbaEnglishDiscussion
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_bba_english_discussion
+  topic: "BBA English discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 2
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: "BBA-ENGLISH"
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "You're in {course} too, right? Room 701 on the seventh floor."
+    choices:
+    - playerLine: "Yeah, I'm taking {course} this trimester."
+      npcReaction: "Nice! Then you know exactly what I'm about to talk about."
+      nextNodeId: finding
+  - id: finding
+    npcLine: "How are you finding {course}?"
+    choices:
+    - playerLine: "It's useful for presentations."
+      npcReaction: "Same. Business writing is harder than I thought."
+      nextNodeId: writing
+    - playerLine: "More reading than I expected."
+      npcReaction: "The essays sneak up on you."
+      nextNodeId: writing
+    - playerLine: "I'm still getting used to it."
+      npcReaction: "Honestly, that's where most of us are."
+      nextNodeId: writing
+  - id: writing
+    npcLine: "Have you started any writing assignments yet?"
+    choices:
+    - playerLine: "A short paragraph. Still polishing it."
+      npcReaction: "Proofreading twice helps more than rewriting once."
+      nextNodeId: pace
+    - playerLine: "Not yet, but I outlined one."
+      npcReaction: "Outlines save time. Keep that habit."
+      nextNodeId: pace
+    - playerLine: "Yes, and feedback was tougher than expected."
+      npcReaction: "Harsh feedback early is a gift, apparently."
+      nextNodeId: pace
+  - id: pace
+    npcLine: "What do you think about the class pace?"
+    choices:
+    - playerLine: "It's fine if I review after class."
+      npcReaction: "Reviewing vocab the same day really sticks."
+      nextNodeId: review
+    - playerLine: "It moves too fast for me."
+      npcReaction: "Ask questions early. Speaking practice helps."
+      nextNodeId: review
+    - playerLine: "Pretty comfortable so far."
+      npcReaction: "Good. Speaking tasks will pick up soon."
+      nextNodeId: review
+  - id: review
+    npcLine: "Are you practicing {course} outside class?"
+    choices:
+    - playerLine: "Yes, a little reading every day."
+      npcReaction: "Look at you, being responsible."
+      nextNodeId: end
+    - playerLine: "Only before assessments."
+      npcReaction: "Risky. Fluency doesn't appear overnight."
+      nextNodeId: end
+    - playerLine: "Not yet, honestly."
+      npcReaction: "Try one short paragraph a day. It adds up."
+      nextNodeId: end
+  - id: end
+    npcLine: "Okay, see you in the next {course} class in 701. Sit near me if you want."
+    choices: []

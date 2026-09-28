@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_14_BbaFindingClassrooms
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_bba_finding_classrooms
+  topic: "BBA finding classrooms"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 2
+    semester: 1
+    minDay: 1
+    maxDay: 1
+    requiredCourseId: ""
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: "Good luck finding it!"
+  nodes:
+  - id: start
+    npcLine: "Wait, do you know where room 523 is? I keep mixing up the BBA classrooms."
+    choices:
+    - playerLine: "523 and 527 are both on floor 5."
+      npcReaction: "That helps. I've been checking floor 4 by mistake."
+      nextNodeId: late
+    - playerLine: "No idea, I'm lost too."
+      npcReaction: "Great, two lost BBA freshers. At least we're lost together."
+      nextNodeId: late
+    - playerLine: "Check the signs near the stairs on five."
+      npcReaction: "Oh! I walked right past those. Thanks."
+      nextNodeId: late
+  - id: late
+    npcLine: "Have you been late to a class yet?"
+    choices:
+    - playerLine: "Almost. Looking for 527 took forever."
+      npcReaction: "527 hides until you're right in front of it."
+      nextNodeId: english
+    - playerLine: "No, I leave extra early for floor 5."
+      npcReaction: "Teach me your ways."
+      nextNodeId: english
+    - playerLine: "Once. I went to the wrong wing."
+      npcReaction: "The look from the teacher is worse than a scolding."
+      nextNodeId: english
+  - id: english
+    npcLine: "And English is in 701 on floor 7, right? Not 702?"
+    choices:
+    - playerLine: "Yeah, BBA English is room 701."
+      npcReaction: "Good. I almost followed the CSE crowd to 702."
+      nextNodeId: trick
+    - playerLine: "I think so. I double-checked my routine."
+      npcReaction: "Smart. 701 and 702 look identical from far away."
+      nextNodeId: trick
+    - playerLine: "Don't remind me. Elevators to seven are chaos."
+      npcReaction: "Stairs at peak hour are somehow worse."
+      nextNodeId: trick
+  - id: trick
+    npcLine: "Any trick for remembering our rooms — 523, 527, 701?"
+    choices:
+    - playerLine: "Five for business classes, seven for English."
+      npcReaction: "Wait, that actually sticks. Thanks."
+      nextNodeId: seat
+    - playerLine: "I saved my routine as my lock screen."
+      npcReaction: "That's genius. I'm stealing that."
+      nextNodeId: seat
+    - playerLine: "I just follow people from my section."
+      npcReaction: "The herd method. It works until they're lost too."
+      nextNodeId: seat
+  - id: seat
+    npcLine: "Do you usually sit in the front or at the back?"
+    choices:
+    - playerLine: "Front, so I actually pay attention."
+      npcReaction: "Respect. Teachers remember front-row faces."
+      nextNodeId: end
+    - playerLine: "Back, near the door."
+      npcReaction: "Strategic. Quick escape to the canteen."
+      nextNodeId: end
+    - playerLine: "Wherever there's a free seat."
+      npcReaction: "Honestly, that's how it goes on day one."
+      nextNodeId: end
+  - id: end
+    npcLine: "Okay, I'm heading toward 523. Thanks for the help. See you!"
+    choices: []

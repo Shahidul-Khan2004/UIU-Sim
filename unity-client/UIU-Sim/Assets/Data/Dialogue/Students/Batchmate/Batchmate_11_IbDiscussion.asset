@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ba7a30d5b43537da2c76517d585d811, type: 3}
+  m_Name: Batchmate_11_IbDiscussion
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.NPC.StudentDialogueTree
+  treeId: batchmate_ib_discussion
+  topic: "Introduction to Business discussion"
+  npcType: 0
+  requirements:
+    playerRole: 0
+    department: 2
+    semester: 1
+    minDay: 1
+    maxDay: 0
+    requiredCourseId: "IB"
+    assessmentDay: 0
+  startNodeId: start
+  closingPlayerLine: ""
+  nodes:
+  - id: start
+    npcLine: "You're in {course} too, right? I think I saw you in room 523."
+    choices:
+    - playerLine: "Yeah, I'm taking {course} this trimester."
+      npcReaction: "Nice! Then you know exactly what I'm about to talk about."
+      nextNodeId: finding
+  - id: finding
+    npcLine: "How are you finding {course}?"
+    choices:
+    - playerLine: "It's more practical than I expected."
+      npcReaction: "Same. The case studies actually feel useful."
+      nextNodeId: cases
+    - playerLine: "There's a lot of theory so far."
+      npcReaction: "Yeah, but it connects once we get to real examples."
+      nextNodeId: cases
+    - playerLine: "I'm still getting used to it."
+      npcReaction: "Honestly, that's where most of us are."
+      nextNodeId: cases
+  - id: cases
+    npcLine: "Have you started reading the case studies yet?"
+    choices:
+    - playerLine: "A couple. They're longer than I thought."
+      npcReaction: "Right? Highlighting helps a lot."
+      nextNodeId: pace
+    - playerLine: "Not really, just the slides so far."
+      npcReaction: "I'd catch up soon. They come up in class a lot."
+      nextNodeId: pace
+    - playerLine: "Yes, and one of them was actually interesting."
+      npcReaction: "Okay, now I need that title from you."
+      nextNodeId: pace
+  - id: pace
+    npcLine: "What do you think about the class pace?"
+    choices:
+    - playerLine: "It's fine if I review after class."
+      npcReaction: "Reviewing the same day really helps, I noticed."
+      nextNodeId: review
+    - playerLine: "It moves too fast for me."
+      npcReaction: "Ask questions early. Nobody minds, I promise."
+      nextNodeId: review
+    - playerLine: "Pretty manageable so far."
+      npcReaction: "Enjoy it. The presentations will ramp things up."
+      nextNodeId: review
+  - id: review
+    npcLine: "Are you keeping notes for {course} outside class?"
+    choices:
+    - playerLine: "Yes, a little every day."
+      npcReaction: "Look at you, being responsible."
+      nextNodeId: end
+    - playerLine: "Only before assessments."
+      npcReaction: "Risky. The topics build on each other."
+      nextNodeId: end
+    - playerLine: "Not yet, honestly."
+      npcReaction: "Try summarizing one concept a day. It adds up."
+      nextNodeId: end
+  - id: end
+    npcLine: "Okay, see you in the next {course} class. Sit near me if you want."
+    choices: []
