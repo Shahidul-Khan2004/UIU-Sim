@@ -87,14 +87,30 @@ namespace UIU.Simulator.Gameplay.Tests
             int day = 1,
             bool assessmentDay = false)
         {
-            var courses = department == "CSE"
-                ? new[]
+            StudentDialogueContext.CourseInfo[] courses;
+            if (string.Equals(department, "CSE", StringComparison.OrdinalIgnoreCase))
+            {
+                courses = new[]
                 {
                     new StudentDialogueContext.CourseInfo("ICS", "Introduction to Computer Science"),
                     new StudentDialogueContext.CourseInfo("ENGLISH", "English"),
                     new StudentDialogueContext.CourseInfo("DM", "Discrete Mathematics")
-                }
-                : Array.Empty<StudentDialogueContext.CourseInfo>();
+                };
+            }
+            else if (string.Equals(department, "BBA", StringComparison.OrdinalIgnoreCase))
+            {
+                courses = new[]
+                {
+                    new StudentDialogueContext.CourseInfo("IB", "Introduction to Business"),
+                    new StudentDialogueContext.CourseInfo("POA", "Principles of Accounting"),
+                    new StudentDialogueContext.CourseInfo("BBA-ENGLISH", "English")
+                };
+            }
+            else
+            {
+                courses = Array.Empty<StudentDialogueContext.CourseInfo>();
+            }
+
             return new StudentDialogueContext(role, department, 1, day, role == "STUDENT" ? courses : null, assessmentDay, "Nadia Rahman", "011221001");
         }
     }
@@ -166,11 +182,25 @@ namespace UIU.Simulator.Gameplay.Tests
         {
             var cse = database.GetValidTrees(StudentNpcType.Batchmate, StudentDialogueTestData.Context(department: "CSE")).Select(t => t.TreeId).ToList();
             var bba = database.GetValidTrees(StudentNpcType.Batchmate, StudentDialogueTestData.Context(department: "BBA")).Select(t => t.TreeId).ToList();
+            var cseSenior = database.GetValidTrees(StudentNpcType.Senior, StudentDialogueTestData.Context(department: "CSE")).Select(t => t.TreeId).ToList();
+            var bbaSenior = database.GetValidTrees(StudentNpcType.Senior, StudentDialogueTestData.Context(department: "BBA")).Select(t => t.TreeId).ToList();
 
             Assert.That(cse, Does.Contain("batchmate_ics_discussion"));
             Assert.That(cse, Does.Not.Contain("batchmate_bba_courses"));
+            Assert.That(cse, Does.Not.Contain("batchmate_ib_discussion"));
+            Assert.That(cse, Does.Not.Contain("batchmate_poa_discussion"));
+            Assert.That(cse, Does.Not.Contain("batchmate_bba_english_discussion"));
+            Assert.That(cse, Does.Not.Contain("batchmate_bba_finding_classrooms"));
+
             Assert.That(bba, Does.Contain("batchmate_bba_courses"));
+            Assert.That(bba, Does.Contain("batchmate_ib_discussion"));
+            Assert.That(bba, Does.Contain("batchmate_poa_discussion"));
+            Assert.That(bba, Does.Contain("batchmate_bba_english_discussion"));
+            Assert.That(bba, Does.Contain("batchmate_bba_finding_classrooms"));
             Assert.That(bba, Does.Not.Contain("batchmate_ics_discussion"));
+
+            Assert.That(bbaSenior, Does.Contain("senior_bba_freshman_advice"));
+            Assert.That(cseSenior, Does.Not.Contain("senior_bba_freshman_advice"));
 
             var random = new System.Random(7);
             for (int i = 0; i < 200; i++)
@@ -178,6 +208,31 @@ namespace UIU.Simulator.Gameplay.Tests
                 StudentDialogueTree picked = database.SelectTree(StudentNpcType.Batchmate, StudentDialogueTestData.Context(department: "BBA"), null, random);
                 Assert.That(picked.TreeId, Is.Not.EqualTo("batchmate_ics_discussion"));
             }
+        }
+
+        [Test]
+        public void Tokens_FillPlayerDataInsteadOfAsking()
+        {
+            StudentDialogueContext cse = StudentDialogueTestData.Context();
+            StudentDialogueTree ics = database.Trees.First(t => t.TreeId == "batchmate_ics_discussion");
+            StudentDialogueContext bba = StudentDialogueTestData.Context(department: "BBA");
+            StudentDialogueTree ib = database.Trees.First(t => t.TreeId == "batchmate_ib_discussion");
+
+            Assert.That(
+                StudentDialogueText.Resolve("Yeah, I'm in my {trimester} trimester.", cse, null, "sir"),
+                Is.EqualTo("Yeah, I'm in my first trimester."));
+            Assert.That(
+                StudentDialogueText.Resolve("How are you finding {course}?", cse, ics, "sir"),
+                Is.EqualTo("How are you finding Introduction to Computer Science?"));
+            Assert.That(
+                StudentDialogueText.Resolve("How are you finding {course}?", bba, ib, "sir"),
+                Is.EqualTo("How are you finding Introduction to Business?"));
+            Assert.That(
+                StudentDialogueText.Resolve("{department} / {departmentName} / {name}", bba, null, "sir"),
+                Is.EqualTo("BBA / Business Administration / Nadia"));
+            Assert.That(
+                StudentDialogueText.Resolve("Good morning, {honorific}.", StudentDialogueTestData.Context(role: "FACULTY"), null, "sir"),
+                Is.EqualTo("Good morning, sir."));
         }
 
         [Test]
@@ -192,26 +247,6 @@ namespace UIU.Simulator.Gameplay.Tests
             var classDay = database.GetValidTrees(StudentNpcType.Senior, StudentDialogueTestData.Context(day: 4)).Select(t => t.TreeId).ToList();
             Assert.That(quizDay, Does.Not.Contain("senior_preparing_quizzes"));
             Assert.That(classDay, Does.Contain("senior_preparing_quizzes"));
-        }
-
-        [Test]
-        public void Tokens_FillPlayerDataInsteadOfAsking()
-        {
-            StudentDialogueContext cse = StudentDialogueTestData.Context();
-            StudentDialogueTree ics = database.Trees.First(t => t.TreeId == "batchmate_ics_discussion");
-
-            Assert.That(
-                StudentDialogueText.Resolve("Yeah, I'm in my {trimester} trimester.", cse, null, "sir"),
-                Is.EqualTo("Yeah, I'm in my first trimester."));
-            Assert.That(
-                StudentDialogueText.Resolve("How are you finding {course}?", cse, ics, "sir"),
-                Is.EqualTo("How are you finding Introduction to Computer Science?"));
-            Assert.That(
-                StudentDialogueText.Resolve("{department} / {departmentName} / {name}", StudentDialogueTestData.Context(department: "BBA"), null, "sir"),
-                Is.EqualTo("BBA / Business Administration / Nadia"));
-            Assert.That(
-                StudentDialogueText.Resolve("Good morning, {honorific}.", StudentDialogueTestData.Context(role: "FACULTY"), null, "sir"),
-                Is.EqualTo("Good morning, sir."));
         }
 
         [Test]
@@ -492,6 +527,27 @@ namespace UIU.Simulator.Gameplay.Tests
             npc.Interact();
 
             Assert.That(npc.ActiveConversation.Tree.TreeId, Is.EqualTo("bba_tree"));
+        }
+
+        [Test]
+        public void FromGameState_EmptyReportCard_UsesDepartmentDefaultCourses()
+        {
+            SetPlayer("STUDENT", "CSE", day: 1);
+            StudentDialogueContext cse = StudentDialogueContext.FromGameState(saveState, dailyActivityState);
+            Assert.That(cse.HasCourse("ICS"), Is.True);
+            Assert.That(cse.HasCourse("ENGLISH"), Is.True);
+            Assert.That(cse.HasCourse("DM"), Is.True);
+            Assert.That(cse.HasCourse("IB"), Is.False);
+
+            SetPlayer("STUDENT", "BBA", day: 1);
+            StudentDialogueContext bba = StudentDialogueContext.FromGameState(saveState, dailyActivityState);
+            Assert.That(bba.HasCourse("IB"), Is.True);
+            Assert.That(bba.HasCourse("POA"), Is.True);
+            Assert.That(bba.HasCourse("BBA-ENGLISH"), Is.True);
+            Assert.That(bba.CourseName("IB"), Is.EqualTo("Introduction to Business"));
+            Assert.That(bba.CourseName("POA"), Is.EqualTo("Principles of Accounting"));
+            Assert.That(bba.CourseName("BBA-ENGLISH"), Is.EqualTo("English"));
+            Assert.That(bba.HasCourse("ICS"), Is.False);
         }
 
         [Test]

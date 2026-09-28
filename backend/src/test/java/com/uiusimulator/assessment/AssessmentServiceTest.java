@@ -229,7 +229,7 @@ class AssessmentServiceTest {
         assertThat(service.reportCard(jwt).courses()).allMatch(c->c.status().equals("DROPPED_CHEATING"));
     }
     @Test void normalAttendanceAndProxyAreUnavailableOnAssessmentDay() {
-        for(var c:ClassroomCourseDefinition.all()) {
+        for(var c:ClassroomCourseDefinition.forDepartment("CSE")) {
             assertThatThrownBy(()->attendance.startLecture(jwt,c.activityId())).hasMessageContaining("Assessment today");
             assertThatThrownBy(()->attendance.punchProxy(jwt,c.activityId())).hasMessageContaining("Assessment today");
         }
@@ -243,10 +243,13 @@ class AssessmentServiceTest {
         ReflectionTestUtils.setField(save,"currentDay",2);ReflectionTestUtils.setField(save,"semester",2);
         assertThatThrownBy(()->service.start(jwt,"ICS",AssessmentType.QUIZ_1)).hasMessageContaining("not scheduled");
         ReflectionTestUtils.setField(save,"semester",1);ReflectionTestUtils.setField(save,"role",PlayerRole.FACULTY);
-        assertThatThrownBy(()->service.start(jwt,"ICS",AssessmentType.QUIZ_1)).hasMessageContaining("CSE students");
+        assertThatThrownBy(()->service.start(jwt,"ICS",AssessmentType.QUIZ_1)).hasMessageContaining("students in departments with scheduled courses");
         ReflectionTestUtils.setField(save,"role",PlayerRole.STUDENT);
         var bba=departments.saveAndFlush(Department.createNew("BBA","Business"));ReflectionTestUtils.setField(save,"department",bba);
         assertThatThrownBy(()->service.start(jwt,"ICS",AssessmentType.QUIZ_1)).hasMessageContaining("CSE students");
+        assertThatCode(()->service.start(jwt,"IB",AssessmentType.QUIZ_1)).doesNotThrowAnyException();
+        assertThat(service.reportCard(jwt).courses()).extracting(ReportCardResponse.Course::courseId)
+                .containsExactly("IB", "POA", "BBA-ENGLISH");
     }
     @Test void invalidAnswersAndOtherPlayersAttemptAreRejected() {
         var a=service.start(jwt,"ICS",AssessmentType.QUIZ_1);
@@ -268,7 +271,7 @@ class AssessmentServiceTest {
         setDay(day);
         var save = saveRepository.findByPlayerId(player.getId()).orElseThrow();
         assertThat(service.reportCard(jwt).scheduledAssessment()).isEqualTo(expected);
-        for (var course : ClassroomCourseDefinition.all()) {
+        for (var course : ClassroomCourseDefinition.forDepartment("CSE")) {
             assertThat(course.isEligible(save)).isEqualTo(expected == null);
             if (expected != null) {
                 assertThatThrownBy(() -> attendance.startLecture(jwt, course.activityId())).hasMessageContaining("Assessment today");
@@ -385,6 +388,29 @@ class AssessmentServiceTest {
         var proxy = attendance.punchProxy(jwt, activity);
         assertThat(proxy.auraDelta()).isEqualTo(3); assertThat(proxy.reputationDelta()).isZero();
         assertThat(stats().getAcademicReputation()).isEqualTo(50);
+    }
+    @Test void cseReportCardListsOnlyCseCourses() {
+        var card = service.reportCard(jwt);
+        assertThat(card.courses()).extracting(ReportCardResponse.Course::courseId)
+                .containsExactly("ICS", "ENGLISH", "DM");
+    }
+    @Test void bbaStudentReportCardAndAssessmentStayDepartmentScoped() {
+        Jwt bbaJwt = jwt("bba_assessment_" + UUID.randomUUID());
+        players.getOrProvisionPlayer(bbaJwt);
+        var bba = departments.saveAndFlush(Department.createNew("BBA", "Business"));
+        saves.createSave(bbaJwt, new PlayerSaveCreateRequest(PlayerRole.STUDENT, "BBA Student", bba.getId(), "011-bba"));
+        saveRepository.findByPlayerId(players.getOrProvisionPlayer(bbaJwt).getId()).orElseThrow().advanceToNextDay();
+
+        assertThatThrownBy(() -> service.start(bbaJwt, "ICS", AssessmentType.QUIZ_1)).hasMessageContaining("CSE students");
+        var started = service.start(bbaJwt, "IB", AssessmentType.QUIZ_1);
+        assertThat(started.courseId()).isEqualTo("IB");
+        assertThat(service.reportCard(bbaJwt).courses()).extracting(ReportCardResponse.Course::courseId)
+                .containsExactly("IB", "POA", "BBA-ENGLISH");
+
+        days.finalizeCurrentDay(bbaJwt);
+        assertThat(results.findByPlayerIdAndSemester(players.getOrProvisionPlayer(bbaJwt).getId(), 1))
+                .extracting(PlayerAssessmentResult::getCourseId)
+                .containsExactlyInAnyOrder("IB", "POA", "BBA-ENGLISH");
     }
     private void setDay(int day) { ReflectionTestUtils.setField(saveRepository.findByPlayerId(player.getId()).orElseThrow(), "currentDay", day); }
     private static int dayFor(AssessmentType type) { return switch (type) { case QUIZ_1 -> 2; case MIDTERM -> 3; case QUIZ_2 -> 5; case FINAL -> 6; }; }

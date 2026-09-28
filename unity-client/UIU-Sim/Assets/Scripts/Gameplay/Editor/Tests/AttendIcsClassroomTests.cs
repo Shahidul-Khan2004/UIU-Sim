@@ -284,6 +284,31 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         }
 
         [Test]
+        public void IneligibleMessage_UsesLocationDepartmentCode()
+        {
+            SetCourseFields(classroom, ActivityIds.AttendIb, "IB", "Introduction to Business", "523", 5);
+            typeof(IcsClassroomInteractable)
+                .GetField("departmentCode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(classroom, "BBA");
+            saveState.SetIdentityForTesting("STUDENT", "CSE", true);
+
+            string result = classroom.Interact();
+            Assert.That(result, Is.EqualTo("This class is only for BBA students on the scheduled day."));
+            Assert.That(ClassroomChoiceUI.IsOpen, Is.False);
+        }
+
+        [Test]
+        public void ActivityIds_IsClassroomActivity_IncludesBbaCourses()
+        {
+            Assert.That(ActivityIds.IsClassroomActivity(ActivityIds.AttendIb), Is.True);
+            Assert.That(ActivityIds.IsClassroomActivity(ActivityIds.AttendPoa), Is.True);
+            Assert.That(ActivityIds.IsClassroomActivity(ActivityIds.AttendBbaEnglish), Is.True);
+            Assert.That(ActivityIds.AttendIb, Is.EqualTo("ATTEND_IB"));
+            Assert.That(ActivityIds.AttendPoa, Is.EqualTo("ATTEND_POA"));
+            Assert.That(ActivityIds.AttendBbaEnglish, Is.EqualTo("ATTEND_BBA_ENGLISH"));
+        }
+
+        [Test]
         public void CompletedClass_ShowsTerminalMessage_NotLectureUi()
         {
             SetClassroomConfig(classroom, "205", 2);
@@ -679,6 +704,38 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             UnityEngine.Object.DestroyImmediate(english);
             UnityEngine.Object.DestroyImmediate(dm);
+        }
+
+        [Test]
+        public void Hud_ShowsBbaCoursesFromConfigs_IncludingRoom701()
+        {
+            DestroyClassroomWithoutCache();
+            saveState.SetIdentityForTesting("STUDENT", "BBA", true);
+            IcsClassroomLocationConfig ib = CreateCourseConfig(
+                ActivityIds.AttendIb, "IB", "Introduction to Business", "523", 5, "BBA");
+            IcsClassroomLocationConfig poa = CreateCourseConfig(
+                ActivityIds.AttendPoa, "POA", "Principles of Accounting", "527", 5, "BBA");
+            IcsClassroomLocationConfig bbaEnglish = CreateCourseConfig(
+                ActivityIds.AttendBbaEnglish, "BBA-ENGLISH", "English", "701", 7, "BBA");
+            dailyActivityState.SetAdditionalLocationConfigsForTesting(new[] { ib, poa, bbaEnglish });
+
+            statsHud.enabled = false;
+            statsHud.enabled = true;
+
+            Transform panel = FindChild(statsHud.transform, "StatsPanel");
+            Assert.That(FindLabel(panel, "ATTEND_IBTitle").text, Is.EqualTo("Attend Introduction to Business"));
+            Assert.That(FindLabel(panel, "ATTEND_IBDescription").text,
+                Is.EqualTo("Go to Room 523 on Floor 5 to attend Introduction to Business."));
+            Assert.That(FindLabel(panel, "ATTEND_POATitle").text, Is.EqualTo("Attend Principles of Accounting"));
+            Assert.That(FindLabel(panel, "ATTEND_POADescription").text,
+                Is.EqualTo("Go to Room 527 on Floor 5 to attend Principles of Accounting."));
+            Assert.That(FindLabel(panel, "ATTEND_BBA_ENGLISHTitle").text, Is.EqualTo("Attend English"));
+            Assert.That(FindLabel(panel, "ATTEND_BBA_ENGLISHDescription").text,
+                Is.EqualTo("Go to Room 701 on Floor 7 to attend English."));
+
+            UnityEngine.Object.DestroyImmediate(ib);
+            UnityEngine.Object.DestroyImmediate(poa);
+            UnityEngine.Object.DestroyImmediate(bbaEnglish);
         }
 
         [Test]
@@ -1144,7 +1201,8 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             string courseId,
             string courseName,
             string room,
-            int floor)
+            int floor,
+            string departmentCode = "CSE")
         {
             IcsClassroomLocationConfig config = CreateLocationConfig(room, floor);
             var type = typeof(IcsClassroomLocationConfig);
@@ -1153,6 +1211,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             type.GetField("activityId", flags)?.SetValue(config, activityId);
             type.GetField("courseId", flags)?.SetValue(config, courseId);
             type.GetField("courseName", flags)?.SetValue(config, courseName);
+            type.GetField("departmentCode", flags)?.SetValue(config, departmentCode);
             return config;
         }
 
