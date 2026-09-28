@@ -84,7 +84,8 @@ public sealed class CameraSwitcher : MonoBehaviour
             || FacultyClassroomChoiceUI.IsOpen
             || FacultyLectureUI.IsOpen
             || IdCardUI.IsOpen
-            || GameMenuManager.IsOpen;
+            || GameMenuManager.IsOpen
+            || FloorMapHUD.IsOpen;
     }
 
     /// <summary>Switches to the other camera mode.</summary>
