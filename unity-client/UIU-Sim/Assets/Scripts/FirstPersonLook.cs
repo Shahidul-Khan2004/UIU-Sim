@@ -1,6 +1,7 @@
 using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.Faculty;
+using UIU.Simulator.Gameplay.Teleport;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -114,7 +115,8 @@ public class FirstPersonLook : MonoBehaviour
             || ClassroomChoiceUI.IsOpen
             || ClassroomLectureUI.IsOpen
             || FacultyClassroomChoiceUI.IsOpen
-            || FacultyLectureUI.IsOpen;
+            || FacultyLectureUI.IsOpen
+            || FloorTeleportChoiceUI.IsOpen;
     }
 
     private void HandleLook()
