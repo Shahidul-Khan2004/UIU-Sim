@@ -3,6 +3,7 @@ using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.Gameplay.Teleport;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -105,7 +106,7 @@ public sealed class InteractionController : MonoBehaviour
         currentTarget = null;
 
         // Block interaction targeting while a dialogue panel, queue UI, advisor panel, elevator UI, admission UI, or game menu is open.
-        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen)
+        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen || FloorTeleportChoiceUI.IsOpen)
         {
             if (previousTarget != null)
             {
@@ -160,7 +161,7 @@ public sealed class InteractionController : MonoBehaviour
         }
 
         // Block interaction input while a dialogue panel, queue UI, advisor panel, elevator UI, or game menu is open.
-        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen)
+        if (UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay || DialogueUI.IsOpen || CanteenQueueUI.IsOpen || AdvisorUI.IsOpen || ElevatorUI.IsOpen || FacultyPortalUI.IsOpen || AdmissionUI.IsOpen || WelcomeCardUI.IsOpen || IdCardUI.IsOpen || GameMenuManager.IsOpen || DailySummaryUI.IsOpen || ClassroomChoiceUI.IsOpen || ClassroomLectureUI.IsOpen || FacultyClassroomChoiceUI.IsOpen || FacultyLectureUI.IsOpen || LibrarySelfStudyUI.IsOpen || FloorTeleportChoiceUI.IsOpen)
         {
             return;
         }

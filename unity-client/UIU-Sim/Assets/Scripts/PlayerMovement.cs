@@ -41,6 +41,20 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>Current combined horizontal + vertical velocity.</summary>
     public Vector3 Velocity => horizontalVelocity + Vector3.up * verticalVelocity;
 
+    /// <summary>
+    /// Drops carried fall and jump speed. Call after a teleport so the next move
+    /// does not shove the capsule through the floor.
+    /// </summary>
+    public void PrepareForTeleport()
+    {
+        horizontalVelocity = Vector3.zero;
+        verticalVelocity = 0f;
+        grounded = false;
+        jumpBufferCounter = 0f;
+        coyoteCounter = 0f;
+        sprinting = false;
+    }
+
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();

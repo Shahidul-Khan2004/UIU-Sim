@@ -6,6 +6,7 @@ using UIU.Simulator.Gameplay.Advisor;
 using UIU.Simulator.Gameplay.Assessment;
 using UIU.Simulator.Gameplay.Elevator;
 using UIU.Simulator.Gameplay.Faculty;
+using UIU.Simulator.Gameplay.Teleport;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
@@ -152,6 +153,7 @@ namespace UIU.Simulator.UI
                 || FacultyPortalUI.IsOpen
                 || FacultyClassroomChoiceUI.IsOpen
                 || FacultyLectureUI.IsOpen
+                || FloorTeleportChoiceUI.IsOpen
                 || FacultyCoursesUI.IsOpen
                 || FacultyMaterialsUI.IsOpen
                 || FacultyStudentListUI.IsOpen;

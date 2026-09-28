@@ -1,6 +1,7 @@
 using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.Gameplay.Teleport;
 using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
@@ -83,6 +84,7 @@ public sealed class CameraSwitcher : MonoBehaviour
             || FacultyPortalUI.IsOpen
             || FacultyClassroomChoiceUI.IsOpen
             || FacultyLectureUI.IsOpen
+            || FloorTeleportChoiceUI.IsOpen
             || IdCardUI.IsOpen
             || GameMenuManager.IsOpen
             || FloorMapHUD.IsOpen;
