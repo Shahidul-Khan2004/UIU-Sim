@@ -186,6 +186,26 @@ public class PlayerDayActivity {
         );
     }
 
+    public static PlayerDayActivity startLibrarySelfStudy(Player player, int dayNumber, Instant now) {
+        return new PlayerDayActivity(
+                UUID.randomUUID(),
+                player,
+                LibrarySelfStudyDefinition.ACTIVITY_ID,
+                dayNumber,
+                ActivityStatus.IN_PROGRESS,
+                LibrarySelfStudyDefinition.OUTCOME_STARTED,
+                0,
+                0,
+                0,
+                now,
+                null,
+                0L,
+                false,
+                now,
+                now
+        );
+    }
+
     /**
      * Completes today's Library Study exactly once. Aura stays 0.
      * Reputation is the actual applied Academic Reputation delta after clamping.
@@ -238,6 +258,20 @@ public class PlayerDayActivity {
         sessionPausedAt = null;
         sessionStartedAt = now;
         resolvedAt = now;
+    }
+
+    /**
+     * Ends today's Library Self Study without extra rewards. Milestones already
+     * applied are kept. The row stays COMPLETED so it cannot be restarted today.
+     */
+    public void abandonLibrarySelfStudy(Instant now) {
+        if (status == ActivityStatus.COMPLETED) {
+            return;
+        }
+        pauseSession(now);
+        this.status = ActivityStatus.COMPLETED;
+        this.outcome = LibrarySelfStudyDefinition.OUTCOME_ABANDONED;
+        this.resolvedAt = now;
     }
 
     public void applyMilestone(int milestoneSeconds, int reputationReward, Instant now) {

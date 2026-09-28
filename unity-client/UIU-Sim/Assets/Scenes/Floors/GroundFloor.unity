@@ -444,8 +444,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1412665}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1412664}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &1412663 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 1412662}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1412664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1412663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &1412665
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1412663}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.4204884, y: 1.0943254, z: 0.8593726}
+  m_Center: {x: -0.060578723, y: 0.04716289, z: -0.07031314}
 --- !u!1 &2565456
 GameObject:
   m_ObjectHideFlags: 0
@@ -12514,8 +12559,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 46118866}
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 46118865}
   m_SourcePrefab: {fileID: 100100000, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+--- !u!1 &46118864 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+  m_PrefabInstance: {fileID: 46118863}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &46118865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46118864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &46118866
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46118864}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.6448146, y: 2.8795912, z: 0.9775014}
+  m_Center: {x: 0.32240754, y: 0.9397939, z: -0.3756504}
 --- !u!1 &46797813
 GameObject:
   m_ObjectHideFlags: 0
@@ -67055,8 +67145,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 249873125}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 249873124}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &249873123 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 249873122}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &249873124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249873123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &249873125
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249873123}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!43 &250424010
 Mesh:
   m_ObjectHideFlags: 0
@@ -190426,8 +190561,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 689584349}
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 689584348}
   m_SourcePrefab: {fileID: 100100000, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+--- !u!1 &689584347 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+  m_PrefabInstance: {fileID: 689584346}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &689584348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689584347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &689584349
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689584347}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.7368084, y: 2.8868701, z: 1}
+  m_Center: {x: -0.08982578, y: 0.94343406, z: 0}
 --- !u!43 &690557404
 Mesh:
   m_ObjectHideFlags: 0
@@ -219685,8 +219865,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 790082558}
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 790082557}
   m_SourcePrefab: {fileID: 100100000, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+--- !u!1 &790082556 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+  m_PrefabInstance: {fileID: 790082555}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &790082557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 790082556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &790082558
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 790082556}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.33901, y: 2.7260666, z: 0.71336937}
+  m_Center: {x: 0.18484418, y: 0.8630326, z: -0.14331512}
 --- !u!1 &790181260
 GameObject:
   m_ObjectHideFlags: 0
@@ -297366,7 +297591,7 @@ Transform:
   m_GameObject: {fileID: 1081384064}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -74.73, y: -2.2, z: 0.15}
+  m_LocalPosition: {x: -74.99, y: -2.2, z: 0.15}
   m_LocalScale: {x: 2.7722337, y: 1.2682939, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -304953,7 +305178,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1863296680}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1863296679}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
 --- !u!1 &1109391136
 GameObject:
@@ -321854,8 +322085,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1168673005}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1168673004}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &1168673003 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 1168673002}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1168673004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168673003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &1168673005
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168673003}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5417905, y: 1.2101903, z: 1}
+  m_Center: {x: -0.07808326, y: 0.10509515, z: 0}
 --- !u!1001 &1168720383
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -346057,8 +346333,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1270231390}
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1270231389}
   m_SourcePrefab: {fileID: 100100000, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+--- !u!1 &1270231388 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+  m_PrefabInstance: {fileID: 1270231387}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1270231389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1270231388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &1270231390
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1270231388}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.9143944, y: 2.9077053, z: 0.97004163}
+  m_Center: {x: 0.048669763, y: 0.953852, z: -0.014979155}
 --- !u!1001 &1271914934
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -406721,8 +407042,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1501402403}
+    - targetCorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1501402402}
   m_SourcePrefab: {fileID: 100100000, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+--- !u!1 &1501402401 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 1501402400}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1501402402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501402401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &1501402403
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501402401}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5737668, y: 1.13673, z: 1}
+  m_Center: {x: -0.023046602, y: 0.06836504, z: 0}
 --- !u!1 &1502422957
 GameObject:
   m_ObjectHideFlags: 0
@@ -500132,6 +500498,45 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1861575373}
   m_Mesh: {fileID: -2432090755550338912, guid: f6d16e1f1644926079e8007c5f99adaa, type: 3}
+--- !u!1 &1863296678 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5994510087063336191, guid: f685d48f0f02d62fab9541d26a1a136f, type: 3}
+  m_PrefabInstance: {fileID: 1109387151}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1863296679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863296678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &1863296680
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863296678}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.4493413, y: 1.080452, z: 1}
+  m_Center: {x: 0.0032524962, y: 0.040225983, z: 0}
 --- !u!1001 &1863312057
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -548653,8 +549058,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2034309667}
+    - targetCorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2034309666}
   m_SourcePrefab: {fileID: 100100000, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+--- !u!1 &2034309665 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3827490318450713837, guid: 29875c9a23d29aeab9c6ce4af92254c1, type: 3}
+  m_PrefabInstance: {fileID: 2034309664}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2034309666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034309665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c4e8f2b7d3491a8e6c5f0b2d9a4731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Library.LibrarySelfStudyInteractable
+  prompt: Study
+--- !u!65 &2034309667
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034309665}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.3654045, y: 2.8783996, z: 1.3229216}
+  m_Center: {x: 0.18270262, y: 0.9391994, z: -0.20725733}
 --- !u!1 &2034869564
 GameObject:
   m_ObjectHideFlags: 0
@@ -575540,7 +575990,7 @@ MeshCollider:
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
-  m_Mesh: {fileID: 1670522234}
+  m_Mesh: {fileID: 1568204122}
 --- !u!33 &2127848692
 MeshFilter:
   m_ObjectHideFlags: 10

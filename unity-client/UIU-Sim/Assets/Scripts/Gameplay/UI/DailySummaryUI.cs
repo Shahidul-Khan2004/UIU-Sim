@@ -513,6 +513,11 @@ namespace UIU.Simulator.Gameplay.UI
                 return "Library Study";
             }
 
+            if (activityId == ActivityIds.LibrarySelfStudy)
+            {
+                return "Library Self Study";
+            }
+
             if (ActivityIds.IsClassroomActivity(activityId))
             {
                 string courseName = state != null ? state.CourseNameForActivity(activityId) : null;
@@ -585,6 +590,11 @@ namespace UIU.Simulator.Gameplay.UI
         private static bool IncludeInSummary(DaySummaryActivity item)
         {
             if (item.ActivityId == ActivityIds.LibraryStudy && item.Status != ActivityStatus.Completed)
+            {
+                return false;
+            }
+
+            if (item.ActivityId == ActivityIds.LibrarySelfStudy && item.Status != ActivityStatus.Completed)
             {
                 return false;
             }

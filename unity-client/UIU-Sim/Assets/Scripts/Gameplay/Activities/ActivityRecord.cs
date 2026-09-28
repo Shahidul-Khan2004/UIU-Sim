@@ -122,4 +122,37 @@ namespace UIU.Simulator.Gameplay.Activities
             AcademicReputation = academicReputation;
         }
     }
+
+    /// <summary>Authoritative Library Self Study session (table reading, not Rocket Study).</summary>
+    public readonly struct LibrarySelfStudySessionResult
+    {
+        public ActivityRecord Record { get; }
+        public int AppliedReputationDelta { get; }
+        public bool AlreadyApplied { get; }
+        public bool AlreadyCompleted { get; }
+        public bool SessionActive { get; }
+        public long ActiveElapsedMs { get; }
+        public float Aura { get; }
+        public float AcademicReputation { get; }
+
+        public LibrarySelfStudySessionResult(
+            ActivityRecord record,
+            int appliedReputationDelta,
+            bool alreadyApplied,
+            bool alreadyCompleted,
+            bool sessionActive,
+            long activeElapsedMs,
+            float aura,
+            float academicReputation)
+        {
+            Record = record;
+            AppliedReputationDelta = appliedReputationDelta;
+            AlreadyApplied = alreadyApplied;
+            AlreadyCompleted = alreadyCompleted;
+            SessionActive = sessionActive;
+            ActiveElapsedMs = activeElapsedMs;
+            Aura = aura;
+            AcademicReputation = academicReputation;
+        }
+    }
 }

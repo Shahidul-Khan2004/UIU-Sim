@@ -24,7 +24,7 @@ namespace UIU.Simulator.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerStats))]
-    public sealed partial class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync, ILibraryStudyProgressSync
+    public sealed partial class PlayerProgressSync : MonoBehaviour, IPlayerProgressSync, IActivityProgressSync, IAttendIcsProgressSync, ILibraryStudyProgressSync, ILibrarySelfStudyProgressSync
     {
         private const string ActivitiesPath = "api/players/me/activities";
         private const string ResolvePath = "api/players/me/activities/resolve";
@@ -38,6 +38,11 @@ namespace UIU.Simulator.Gameplay.Player
         private const string AttendIcsProxyPath = "api/players/me/activities/attend-ics/proxy";
         private const string LibraryStudyStartPath = "api/players/me/activities/library-study/start";
         private const string LibraryStudyCompletePath = "api/players/me/activities/library-study/complete";
+        private const string LibrarySelfStudyStartPath = "api/players/me/activities/library-self-study/start";
+        private const string LibrarySelfStudyPausePath = "api/players/me/activities/library-self-study/pause";
+        private const string LibrarySelfStudyAbandonPath = "api/players/me/activities/library-self-study/abandon";
+        private const string LibrarySelfStudyResumePath = "api/players/me/activities/library-self-study/resume";
+        private const string LibrarySelfStudyMilestonePath = "api/players/me/activities/library-self-study/milestone";
 
         private PlayerStats playerStats;
         private PlayerInventory playerInventory;
@@ -250,7 +255,9 @@ namespace UIU.Simulator.Gameplay.Player
             bool breakfastFound = false;
             bool getIdCardFound = false;
             bool libraryStudyFound = false;
+            bool librarySelfStudyFound = false;
             ActivityRecord libraryStudyRecord = default;
+            ActivityRecord librarySelfStudyRecord = default;
             var presentClassrooms = new System.Collections.Generic.List<string>();
             if (dto.activities != null)
             {
@@ -294,6 +301,14 @@ namespace UIU.Simulator.Gameplay.Player
                         continue;
                     }
 
+                    if (activity.activityId == ActivityIds.LibrarySelfStudy)
+                    {
+                        librarySelfStudyFound = true;
+                        librarySelfStudyRecord = record;
+                        dailyActivityState?.ApplyServerActivity(record);
+                        continue;
+                    }
+
                     if (activity.activityId != ActivityIds.Breakfast)
                     {
                         continue;
@@ -319,6 +334,10 @@ namespace UIU.Simulator.Gameplay.Player
                     {
                         dailyActivityState.ApplyServerActivity(libraryStudyRecord);
                     }
+                    if (librarySelfStudyFound)
+                    {
+                        dailyActivityState.ApplyServerActivity(librarySelfStudyRecord);
+                    }
                 }
                 else
                 {
@@ -326,6 +345,10 @@ namespace UIU.Simulator.Gameplay.Player
                     if (!libraryStudyFound)
                     {
                         dailyActivityState.ClearLibraryStudy();
+                    }
+                    if (!librarySelfStudyFound)
+                    {
+                        dailyActivityState.ClearLibrarySelfStudy();
                     }
                 }
             }
@@ -335,6 +358,10 @@ namespace UIU.Simulator.Gameplay.Player
                 if (!libraryStudyFound)
                 {
                     dailyActivityState?.ClearLibraryStudy();
+                }
+                if (!librarySelfStudyFound)
+                {
+                    dailyActivityState?.ClearLibrarySelfStudy();
                 }
             }
 

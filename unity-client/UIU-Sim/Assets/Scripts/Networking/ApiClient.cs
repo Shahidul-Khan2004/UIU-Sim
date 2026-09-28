@@ -437,6 +437,26 @@ namespace UIU.Simulator.Networking
         }
 
         [Serializable]
+        public class LibrarySelfStudySessionResponseDto
+        {
+            public string activityId;
+            public string status;
+            public string outcome;
+            public int milestoneSeconds;
+            public int auraDelta;
+            public int reputationDelta;
+            public int requestedReputationDelta;
+            public int appliedReputationDelta;
+            public bool alreadyApplied;
+            public bool alreadyCompleted;
+            public bool sessionActive;
+            public long activeElapsedMs;
+            public int dayNumber;
+            public int aura;
+            public int academicReputation;
+        }
+
+        [Serializable]
         public class DaySummaryActivityDto
         {
             public string activityId;

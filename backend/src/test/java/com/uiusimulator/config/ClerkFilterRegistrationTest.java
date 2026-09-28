@@ -59,6 +59,21 @@ class ClerkFilterRegistrationTest {
     private com.uiusimulator.player.service.LibraryStudyService libraryStudyService;
 
     @MockitoBean
+    private com.uiusimulator.player.service.LibrarySelfStudyService librarySelfStudyService;
+
+    @MockitoBean
+    private com.uiusimulator.player.service.FacultyProgressService facultyProgressService;
+
+    @MockitoBean
+    private com.uiusimulator.player.service.FacultyTeachService facultyTeachService;
+
+    @MockitoBean
+    private com.uiusimulator.player.service.FacultyCourseService facultyCourseService;
+
+    @MockitoBean
+    private com.uiusimulator.player.service.FacultyRoutineService facultyRoutineService;
+
+    @MockitoBean
     private com.uiusimulator.auth.service.AuthService authService;
 
     @MockitoBean
