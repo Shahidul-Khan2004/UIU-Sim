@@ -32,6 +32,14 @@ namespace UIU.Simulator.Gameplay.NPC
             new CourseInfo("DM", "Discrete Mathematics")
         };
 
+        // Semester 1 BBA enrollment; used until the Report Card has been hydrated.
+        private static readonly CourseInfo[] DefaultBbaCourses =
+        {
+            new CourseInfo("IB", "Introduction to Business"),
+            new CourseInfo("POA", "Principles of Accounting"),
+            new CourseInfo("BBA-ENGLISH", "English")
+        };
+
         private readonly List<CourseInfo> courses;
 
         public StudentDialogueContext(
@@ -140,9 +148,17 @@ namespace UIU.Simulator.Gameplay.NPC
                 return result;
             }
 
-            if (string.Equals(save.Department, "CSE", StringComparison.OrdinalIgnoreCase) && save.Semester == 1)
+            if (save.Semester == 1)
             {
-                return DefaultCseCourses;
+                if (string.Equals(save.Department, "CSE", StringComparison.OrdinalIgnoreCase))
+                {
+                    return DefaultCseCourses;
+                }
+
+                if (string.Equals(save.Department, "BBA", StringComparison.OrdinalIgnoreCase))
+                {
+                    return DefaultBbaCourses;
+                }
             }
 
             return Array.Empty<CourseInfo>();

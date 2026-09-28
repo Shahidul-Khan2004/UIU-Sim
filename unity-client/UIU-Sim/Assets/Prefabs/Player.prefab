@@ -276,6 +276,9 @@ MonoBehaviour:
   additionalClassroomLocations:
   - {fileID: 11400000, guid: 4c8e1a7b2d9f4e6a8c0b1d3e5f709182, type: 2}
   - {fileID: 11400000, guid: 9d2f6b4a1c8e4d7b0a5f3e2c1b8d9076, type: 2}
+  - {fileID: 11400000, guid: 7b3e9a2c5f1d4e8a9c0b6d4f2a8e1c53, type: 2}
+  - {fileID: 11400000, guid: 8c4f0b3d6a2e5f9b0d1c7e5a3b9f2d64, type: 2}
+  - {fileID: 11400000, guid: 9d5a1c4e7b3f6a0c1e2d8f6b4c0a3e75, type: 2}
 --- !u!114 &6238491823749123841
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -556,10 +556,9 @@ namespace UIU.Simulator.UI
                 return;
             }
 
-            if (!string.Equals(saveState.Role, "STUDENT", System.StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(saveState.Department, "CSE", System.StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(saveState.Role, "STUDENT", System.StringComparison.OrdinalIgnoreCase))
             {
-                SetStatus("Report Card is available to CSE students.", UiTheme.Grey);
+                SetStatus("Report Card is available to students.", UiTheme.Grey);
                 return;
             }
 

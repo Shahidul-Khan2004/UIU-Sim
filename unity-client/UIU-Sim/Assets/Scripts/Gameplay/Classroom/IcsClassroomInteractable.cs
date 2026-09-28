@@ -56,7 +56,8 @@ namespace UIU.Simulator.Gameplay.Classroom
         [Header("Interaction Copy")]
         [SerializeField] private string prompt = "Enter Classroom";
         [SerializeField, TextArea] private string alreadyResolvedMessage = "You already resolved this class today.";
-        [SerializeField, TextArea] private string ineligibleMessage = "This class is only for CSE students on the scheduled day.";
+        [SerializeField, TextArea] private string ineligibleMessage =
+            "This class is only for students in the matching department on the scheduled day.";
         [SerializeField, TextArea] private string missingSetupMessage =
             "ICS classroom setup is incomplete. Set Classroom Number and Floor in the Inspector on IcsClassroomInteractable.";
 
@@ -153,7 +154,8 @@ namespace UIU.Simulator.Gameplay.Classroom
 
             if (!IsEligible(save))
             {
-                return ineligibleMessage;
+                string dept = string.IsNullOrWhiteSpace(DepartmentCode) ? "enrolled" : DepartmentCode.Trim();
+                return $"This class is only for {dept} students on the scheduled day.";
             }
 
             if (activities != null && activities.IsClassroomResolved(ActivityId))

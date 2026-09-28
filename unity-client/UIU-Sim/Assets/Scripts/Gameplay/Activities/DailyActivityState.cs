@@ -362,7 +362,7 @@ namespace UIU.Simulator.Gameplay.Activities
                 return config.CourseName.Trim();
             }
 
-            if (activityId == ActivityIds.AttendEnglish)
+            if (activityId == ActivityIds.AttendEnglish || activityId == ActivityIds.AttendBbaEnglish)
             {
                 return "English";
             }
@@ -370,6 +370,16 @@ namespace UIU.Simulator.Gameplay.Activities
             if (activityId == ActivityIds.AttendDm)
             {
                 return "Discrete Mathematics";
+            }
+
+            if (activityId == ActivityIds.AttendIb)
+            {
+                return "Introduction to Business";
+            }
+
+            if (activityId == ActivityIds.AttendPoa)
+            {
+                return "Principles of Accounting";
             }
 
             return "Introduction to Computer Science";
