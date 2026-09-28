@@ -156,6 +156,12 @@ namespace UIU.Simulator.UI
                 return;
             }
 
+            if (FloorMapHUD.IsOpen)
+            {
+                FloorMapHUD.CloseActive();
+                return;
+            }
+
             if (IdCardUI.IsOpen)
             {
                 IdCardUI.Instance?.Hide();
@@ -328,7 +334,8 @@ namespace UIU.Simulator.UI
                 || DailySummaryUI.IsOpen
                 || ClassroomChoiceUI.IsOpen
                 || ClassroomLectureUI.IsOpen
-                || LibraryStudyUI.BlocksGameplay;
+                || LibraryStudyUI.BlocksGameplay
+                || FloorMapHUD.IsOpen;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
