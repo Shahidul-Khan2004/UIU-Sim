@@ -1,0 +1,119 @@
+[
+  {
+    "id": "POA-01",
+    "courseId": "POA",
+    "text": "The accounting equation is:",
+    "answers": [
+      "Assets = Liabilities + Equity",
+      "Assets = Revenue − Expenses",
+      "Cash = Profit + Loss",
+      "Equity = Assets + Liabilities"
+    ],
+    "correctAnswer": 0,
+    "tier": "EASY"
+  },
+  {
+    "id": "POA-02",
+    "courseId": "POA",
+    "text": "Which account normally has a debit balance?",
+    "answers": [
+      "Accounts Payable",
+      "Cash",
+      "Owner's Capital",
+      "Sales Revenue"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "POA-03",
+    "courseId": "POA",
+    "text": "Revenue is recognized when:",
+    "answers": [
+      "Cash is always received first",
+      "The owner withdraws money",
+      "It is earned under the revenue principle",
+      "A supplier invoice arrives"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "POA-04",
+    "courseId": "POA",
+    "text": "A balance sheet reports:",
+    "answers": [
+      "Only cash flows for the year",
+      "Only revenues and expenses",
+      "Only owner drawings",
+      "Assets, liabilities, and equity at a point in time"
+    ],
+    "correctAnswer": 3,
+    "tier": "EASY"
+  },
+  {
+    "id": "POA-05",
+    "courseId": "POA",
+    "text": "Double-entry bookkeeping requires that:",
+    "answers": [
+      "Every debit has an equal credit",
+      "Only cash accounts are used",
+      "Expenses never affect equity",
+      "Liabilities equal zero"
+    ],
+    "correctAnswer": 0,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "POA-06",
+    "courseId": "POA",
+    "text": "Depreciation allocates the cost of:",
+    "answers": [
+      "Inventory sold today",
+      "Long-lived tangible assets over useful life",
+      "Owner capital contributions",
+      "Short-term bank loans"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "POA-07",
+    "courseId": "POA",
+    "text": "Accounts receivable represents:",
+    "answers": [
+      "Amounts the firm owes suppliers",
+      "Cash already paid to employees",
+      "Amounts customers owe the firm",
+      "Owner investments only"
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "POA-08",
+    "courseId": "POA",
+    "text": "The matching principle pairs:",
+    "answers": [
+      "Assets with cash only",
+      "Liabilities with dividends",
+      "Expenses with related revenues in the period",
+      "Equity with inventory counts"
+    ],
+    "correctAnswer": 2,
+    "tier": "HARD"
+  },
+  {
+    "id": "POA-09",
+    "courseId": "POA",
+    "text": "An accrued expense is:",
+    "answers": [
+      "Paid in advance for future services",
+      "Incurred but not yet paid",
+      "Never recorded in journals",
+      "Always a long-term asset"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  }
+]

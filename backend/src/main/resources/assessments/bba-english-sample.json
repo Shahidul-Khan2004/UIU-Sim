@@ -1,0 +1,119 @@
+[
+  {
+    "id": "BBA-ENGLISH-01",
+    "courseId": "BBA-ENGLISH",
+    "text": "Which sentence is grammatically correct?",
+    "answers": [
+      "She go to class every day.",
+      "She goes to class every day.",
+      "She going to class every day.",
+      "She gone to class every day."
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "BBA-ENGLISH-02",
+    "courseId": "BBA-ENGLISH",
+    "text": "Choose the correct article: ___ honest manager.",
+    "answers": [
+      "A",
+      "An",
+      "The only",
+      "No article ever"
+    ],
+    "correctAnswer": 1,
+    "tier": "EASY"
+  },
+  {
+    "id": "BBA-ENGLISH-03",
+    "courseId": "BBA-ENGLISH",
+    "text": "A synonym of \"purchase\" is:",
+    "answers": [
+      "Sell",
+      "Rent",
+      "Buy",
+      "Borrow"
+    ],
+    "correctAnswer": 2,
+    "tier": "EASY"
+  },
+  {
+    "id": "BBA-ENGLISH-04",
+    "courseId": "BBA-ENGLISH",
+    "text": "The plural of \"analysis\" is:",
+    "answers": [
+      "Analysises",
+      "Analysis",
+      "Analysi",
+      "Analyses"
+    ],
+    "correctAnswer": 3,
+    "tier": "EASY"
+  },
+  {
+    "id": "BBA-ENGLISH-05",
+    "courseId": "BBA-ENGLISH",
+    "text": "In formal business email, the most appropriate closing is often:",
+    "answers": [
+      "Later dude",
+      "Best regards",
+      "Bye bye now",
+      "See ya"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "BBA-ENGLISH-06",
+    "courseId": "BBA-ENGLISH",
+    "text": "Identify the passive voice sentence:",
+    "answers": [
+      "The team finished the report.",
+      "The manager wrote the memo.",
+      "The report was finished by the team.",
+      "Customers prefer clear prices."
+    ],
+    "correctAnswer": 2,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "BBA-ENGLISH-07",
+    "courseId": "BBA-ENGLISH",
+    "text": "\"Although the market fell, demand remained strong\" is an example of a:",
+    "answers": [
+      "Simple fragment",
+      "Complex sentence with contrast",
+      "Question tag only",
+      "Command sentence"
+    ],
+    "correctAnswer": 1,
+    "tier": "NORMAL"
+  },
+  {
+    "id": "BBA-ENGLISH-08",
+    "courseId": "BBA-ENGLISH",
+    "text": "Which word best completes: The board reached a ___ decision after debate.",
+    "answers": [
+      "consensus",
+      "consenses",
+      "consensuous",
+      "consentingness"
+    ],
+    "correctAnswer": 0,
+    "tier": "HARD"
+  },
+  {
+    "id": "BBA-ENGLISH-09",
+    "courseId": "BBA-ENGLISH",
+    "text": "A concise thesis statement should primarily:",
+    "answers": [
+      "List every source used",
+      "State the central claim clearly",
+      "Avoid taking any position",
+      "Repeat the essay title only"
+    ],
+    "correctAnswer": 1,
+    "tier": "HARD"
+  }
+]
