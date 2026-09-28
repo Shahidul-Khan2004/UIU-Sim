@@ -1,6 +1,7 @@
 using UIU.Simulator.Gameplay.Admission;
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.IDCard;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -78,6 +79,7 @@ public sealed class CameraSwitcher : MonoBehaviour
     private static bool IsCameraToggleBlocked()
     {
         return AdmissionUI.IsOpen
+            || WelcomeCardUI.IsOpen
             || FacultyPortalUI.IsOpen
             || FacultyClassroomChoiceUI.IsOpen
             || FacultyLectureUI.IsOpen

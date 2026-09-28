@@ -90,6 +90,28 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindNamedChild(ui.transform, "Routine_ICS"), Is.Null);
         }
 
+        [Test]
+        public void Show_CustomTitle_UsesProvidedHeader()
+        {
+            ClassRoutineUI ui = ClassRoutineUI.EnsureExists();
+            ui.Show(
+                new[]
+                {
+                    new ApiClient.FacultyRoutineItemDto
+                    {
+                        courseId = "ENGLISH",
+                        courseName = "English",
+                        classroomNumber = "702",
+                        floor = 7
+                    }
+                },
+                "STUDENT CLASS ROUTINE");
+
+            Assert.That(FindLabel("Title").text, Is.EqualTo("STUDENT CLASS ROUTINE"));
+            Assert.That(FindRoutineLabel("ENGLISH", "ClassroomValue").text, Is.EqualTo("Room 702"));
+            Assert.That(FindRoutineLabel("ENGLISH", "FloorValue").text, Is.EqualTo("7"));
+        }
+
         private static TextMeshProUGUI FindLabel(string objectName)
         {
             if (ClassRoutineUI.Instance == null)

@@ -1,5 +1,6 @@
 using UIU.Simulator.Gameplay.Faculty;
 using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
 
 namespace UIU.Simulator.Core
@@ -67,6 +68,7 @@ namespace UIU.Simulator.Core
             FacultyProgress.EnsureExists();
             FacultyProgressSync.EnsureExists();
             FacultyHUD.EnsureExists();
+            WelcomeCardUI.EnsureExists();
         }
 
         private void OnDestroy()

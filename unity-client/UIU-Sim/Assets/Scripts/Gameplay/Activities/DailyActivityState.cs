@@ -326,6 +326,34 @@ namespace UIU.Simulator.Gameplay.Activities
             return GetExtra(activityId).Outcome;
         }
 
+        /// <summary>
+        /// ICS plus additional classroom location assets, in HUD order.
+        /// Used by the student class-routine menu; does not change attendance rules.
+        /// </summary>
+        public IcsClassroomLocationConfig[] SnapshotClassroomLocations()
+        {
+            int extra = additionalClassroomLocations != null ? additionalClassroomLocations.Length : 0;
+            var locations = new List<IcsClassroomLocationConfig>(1 + extra);
+            if (icsLocationConfig != null)
+            {
+                locations.Add(icsLocationConfig);
+            }
+
+            if (additionalClassroomLocations != null)
+            {
+                for (int i = 0; i < additionalClassroomLocations.Length; i++)
+                {
+                    IcsClassroomLocationConfig config = additionalClassroomLocations[i];
+                    if (config != null)
+                    {
+                        locations.Add(config);
+                    }
+                }
+            }
+
+            return locations.ToArray();
+        }
+
         public string CourseNameForActivity(string activityId)
         {
             IcsClassroomLocationConfig config = FindLocationConfig(activityId);
