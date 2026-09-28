@@ -57,6 +57,11 @@ namespace UIU.Simulator.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            if (GetComponent<DisplaySettings>() == null)
+            {
+                gameObject.AddComponent<DisplaySettings>();
+            }
+
             // Cache admission / ID-card save state for scanner + receptionist gating.
             PlayerSaveState.EnsureExists();
             FacultyProgress.EnsureExists();
