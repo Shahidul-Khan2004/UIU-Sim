@@ -44,11 +44,19 @@ public class AssessmentService {
         var player = players.getOrProvisionPlayer(jwt);
         var lockedStats = stats.findByPlayerIdWithLock(player.getId()).orElseThrow(() -> new PlayerStatsNotFoundException(player.getId()));
         var save = saves.findByPlayerIdWithLock(player.getId()).orElseThrow(PlayerSaveNotFoundException::new);
-        if (!AssessmentCatalog.eligible(save)) throw new IllegalArgumentException("Assessments are available only to CSE students.");
+        if (!AssessmentCatalog.eligible(save)) {
+            throw new IllegalArgumentException("Assessments are available only to students in departments with scheduled courses.");
+        }
         return new Context(player, lockedStats, save);
     }
     private void requireSchedule(Context ctx, String course, AssessmentType type) {
-        AssessmentCatalog.course(course);
+        var definition = AssessmentCatalog.course(course);
+        if (ctx.save().getDepartment() == null
+                || !definition.departmentCode().equalsIgnoreCase(ctx.save().getDepartment().getCode())) {
+            throw new IllegalArgumentException(
+                    "Only " + definition.departmentCode() + " students can take assessments for this course."
+            );
+        }
         if (catalog.scheduled(ctx.save()) != type) throw new IllegalArgumentException("This assessment is not scheduled today.");
     }
     @Transactional
@@ -137,7 +145,10 @@ public class AssessmentService {
         var dropped = enrollments.findByPlayerIdAndSemester(player, save.getSemester()).stream()
                 .filter(e -> e.getStatus() == CourseStatus.DROPPED_CHEATING).map(PlayerCourseEnrollment::getCourseId).toList();
         var reportCourses = new ArrayList<ReportCardResponse.Course>();
-        for (var course : ClassroomCourseDefinition.all()) {
+        var departmentCourses = ClassroomCourseDefinition.forDepartment(
+                save.getDepartment() == null ? null : save.getDepartment().getCode()
+        );
+        for (var course : departmentCourses) {
             boolean isDropped = dropped.contains(course.courseId());
             int total = 0; boolean complete = true;
             var components = new ArrayList<ReportCardResponse.Component>();
@@ -167,7 +178,10 @@ public class AssessmentService {
     public void finalizeDay(Player player, PlayerSave save) {
         var type = catalog.scheduled(save);
         if (type == null) return;
-        for (var course : ClassroomCourseDefinition.all()) {
+        var departmentCourses = ClassroomCourseDefinition.forDepartment(
+                save.getDepartment() == null ? null : save.getDepartment().getCode()
+        );
+        for (var course : departmentCourses) {
             if (courses.isDropped(player.getId(), save.getSemester(), course.courseId())) continue;
             var a = results.findByPlayerIdAndSemesterAndCourseIdAndAssessmentType(player.getId(), save.getSemester(), course.courseId(), type)
                     .orElseGet(() -> PlayerAssessmentResult.start(player.getId(), save.getSemester(), save.getCurrentDay(), course.courseId(), type, null, 1, clock.instant()));

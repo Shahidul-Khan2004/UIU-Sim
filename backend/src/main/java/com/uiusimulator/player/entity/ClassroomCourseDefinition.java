@@ -3,11 +3,12 @@ package com.uiusimulator.player.entity;
 import java.util.List;
 
 /**
- * Server-authoritative CSE classroom courses that share one lecture ruleset.
+ * Server-authoritative classroom courses that share one lecture ruleset.
  * Normal lecture days are centralized here; location assets only describe the rooms.
  * The server does not trust a client-submitted schedule.
  *
- * <p>Semester 1, days 1 and 4: Introduction to Computer Science, English, Discrete Mathematics.
+ * <p>Semester 1, days 1 and 4 (CSE): Introduction to Computer Science, English, Discrete Mathematics.
+ * <p>Semester 1, days 1 and 4 (BBA): Introduction to Business, Principles of Accounting, English.
  */
 public final class ClassroomCourseDefinition {
 
@@ -44,7 +45,33 @@ public final class ClassroomCourseDefinition {
             "CSE"
     );
 
-    private static final List<ClassroomCourseDefinition> ALL = List.of(ICS, ENGLISH, DISCRETE_MATHEMATICS);
+    public static final ClassroomCourseDefinition IB = new ClassroomCourseDefinition(
+            "ATTEND_IB",
+            "IB",
+            "Introduction to Business",
+            1,
+            "BBA"
+    );
+
+    public static final ClassroomCourseDefinition POA = new ClassroomCourseDefinition(
+            "ATTEND_POA",
+            "POA",
+            "Principles of Accounting",
+            1,
+            "BBA"
+    );
+
+    public static final ClassroomCourseDefinition BBA_ENGLISH = new ClassroomCourseDefinition(
+            "ATTEND_BBA_ENGLISH",
+            "BBA-ENGLISH",
+            "English",
+            1,
+            "BBA"
+    );
+
+    private static final List<ClassroomCourseDefinition> ALL = List.of(
+            ICS, ENGLISH, DISCRETE_MATHEMATICS, IB, POA, BBA_ENGLISH
+    );
 
     private final String activityId;
     private final String courseId;
@@ -68,6 +95,16 @@ public final class ClassroomCourseDefinition {
 
     public static List<ClassroomCourseDefinition> all() {
         return ALL;
+    }
+
+    public static List<ClassroomCourseDefinition> forDepartment(String code) {
+        if (code == null || code.isBlank()) {
+            return List.of();
+        }
+        String normalized = code.trim();
+        return ALL.stream()
+                .filter(course -> course.departmentCode.equalsIgnoreCase(normalized))
+                .toList();
     }
 
     public static ClassroomCourseDefinition require(String activityId) {

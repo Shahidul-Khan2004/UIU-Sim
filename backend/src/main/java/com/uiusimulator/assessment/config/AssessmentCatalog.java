@@ -60,7 +60,10 @@ public class AssessmentCatalog {
         }
     }
     public static boolean eligible(PlayerSave save) {
-        return save.getRole() == PlayerRole.STUDENT && save.getDepartment() != null && "CSE".equalsIgnoreCase(save.getDepartment().getCode());
+        if (save.getRole() != PlayerRole.STUDENT || save.getDepartment() == null) {
+            return false;
+        }
+        return !ClassroomCourseDefinition.forDepartment(save.getDepartment().getCode()).isEmpty();
     }
     public AssessmentType scheduled(PlayerSave save) {
         if (!eligible(save)) return null;
