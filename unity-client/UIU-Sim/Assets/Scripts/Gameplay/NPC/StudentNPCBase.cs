@@ -15,7 +15,7 @@ namespace UIU.Simulator.Gameplay.NPC
     /// </para>
     /// </summary>
     [DisallowMultipleComponent]
-    public abstract class StudentNPCBase : MonoBehaviour, IInteractable
+    public abstract class StudentNPCBase : MonoBehaviour, IInteractable, ICampusWalkingPauseSource
     {
         public const string CompletedOutcome = "COMPLETED";
         private const int MaxNpcIdLength = 40;
@@ -47,6 +47,14 @@ namespace UIU.Simulator.Gameplay.NPC
         public string ActivityId => ActivityIds.NpcConversationPrefix + NpcId;
         public string SpeakerName => string.IsNullOrWhiteSpace(speakerName) ? DefaultSpeakerName : speakerName.Trim();
         public StudentConversationRunner ActiveConversation => activeRunner;
+
+        /// <summary>A conversation with this NPC is running and on screen.</summary>
+        public bool IsInConversation =>
+            activeRunner != null &&
+            activeRunner.State == StudentConversationRunner.RunState.Running &&
+            DialogueUI.IsOpen;
+
+        bool ICampusWalkingPauseSource.PausesWalking => IsInConversation;
 
         public string InteractionPrompt => string.IsNullOrWhiteSpace(prompt) ? $"Talk to {SpeakerName}" : prompt;
 
