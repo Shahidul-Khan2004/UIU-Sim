@@ -1,3 +1,4 @@
+using UIU.Simulator.Gameplay.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -45,8 +46,12 @@ public class CameraFollow : MonoBehaviour
         }
 
         // Lock the cursor during play so mouse movement controls the camera naturally.
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // Skip when a blocking UI (e.g. welcome) already owns the cursor.
+        if (!WelcomeCardUI.IsOpen)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     private void LateUpdate()
@@ -88,7 +93,7 @@ public class CameraFollow : MonoBehaviour
     private void OnApplicationFocus(bool hasFocus)
     {
         // Only re-lock while this camera is active in a gameplay scene.
-        if (hasFocus && isActiveAndEnabled)
+        if (hasFocus && isActiveAndEnabled && !WelcomeCardUI.IsOpen)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;

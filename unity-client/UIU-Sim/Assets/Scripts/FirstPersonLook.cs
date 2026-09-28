@@ -61,7 +61,11 @@ public class FirstPersonLook : MonoBehaviour
     private void OnEnable()
     {
         lookAction?.Enable();
-        LockCursor();
+        // Welcome (and other modals) may already be open when the player spawns.
+        if (!IsCursorLockBlockedByUi())
+        {
+            LockCursor();
+        }
     }
 
     private void OnDisable()
@@ -93,19 +97,24 @@ public class FirstPersonLook : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked &&
             Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame &&
-            !UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay &&
-            !ElevatorUI.IsOpen &&
-            !AdvisorUI.IsOpen &&
-            !FacultyPortalUI.IsOpen &&
-            !WelcomeCardUI.IsOpen &&
-            !GameMenuManager.IsOpen &&
-            !ClassroomChoiceUI.IsOpen &&
-            !ClassroomLectureUI.IsOpen &&
-            !FacultyClassroomChoiceUI.IsOpen &&
-            !FacultyLectureUI.IsOpen)
+            !IsCursorLockBlockedByUi())
         {
             LockCursor();
         }
+    }
+
+    private static bool IsCursorLockBlockedByUi()
+    {
+        return UIU.Simulator.Gameplay.Assessment.AcademicModal.BlocksGameplay
+            || ElevatorUI.IsOpen
+            || AdvisorUI.IsOpen
+            || FacultyPortalUI.IsOpen
+            || WelcomeCardUI.IsOpen
+            || GameMenuManager.IsOpen
+            || ClassroomChoiceUI.IsOpen
+            || ClassroomLectureUI.IsOpen
+            || FacultyClassroomChoiceUI.IsOpen
+            || FacultyLectureUI.IsOpen;
     }
 
     private void HandleLook()
@@ -136,7 +145,7 @@ public class FirstPersonLook : MonoBehaviour
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        if (hasFocus && isActiveAndEnabled)
+        if (hasFocus && isActiveAndEnabled && !IsCursorLockBlockedByUi())
         {
             LockCursor();
         }
