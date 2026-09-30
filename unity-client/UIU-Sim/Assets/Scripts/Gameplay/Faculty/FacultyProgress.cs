@@ -30,6 +30,8 @@ namespace UIU.Simulator.Gameplay.Faculty
         private bool dmMaterialPrepared;
         private bool icsCompleted;
         private bool dmCompleted;
+        private bool coffeeClaimedForCurrentDay;
+        private string coffeeOption;
 
         public int Reputation => reputation;
         public bool FacultyIdIssued => facultyIdIssued;
@@ -46,6 +48,9 @@ namespace UIU.Simulator.Gameplay.Faculty
         public bool OfficeSetup => computerUsed || officeEntered;
         public bool FirstClassTaught => icsCompleted;
         public int CompletedAssignedCount => (icsCompleted ? 1 : 0) + (dmCompleted ? 1 : 0);
+        public bool BothClassesCompleted => icsCompleted && dmCompleted;
+        public bool CoffeeClaimedForCurrentDay => coffeeClaimedForCurrentDay;
+        public string CoffeeOption => coffeeOption;
 
         public event Action<int, FacultyUpdateSource> OnReputationUpdated;
         public event Action OnObjectivesChanged;
@@ -106,7 +111,9 @@ namespace UIU.Simulator.Gameplay.Faculty
                 FacultyUpdateSource.InitialHydration,
                 false,
                 false,
-                false);
+                false,
+                false,
+                null);
         }
 
         public void SetFacultyIdIssued(bool issued)
@@ -132,7 +139,9 @@ namespace UIU.Simulator.Gameplay.Faculty
             FacultyUpdateSource source,
             bool newIcsCompleted = false,
             bool newDmCompleted = false,
-            bool newFacultyIdIssued = false)
+            bool newFacultyIdIssued = false,
+            bool newCoffeeClaimedForCurrentDay = false,
+            string newCoffeeOption = null)
         {
             int previousReputation = reputation;
             reputation = Mathf.Clamp(newReputation, 0, 100);
@@ -146,6 +155,8 @@ namespace UIU.Simulator.Gameplay.Faculty
             dmMaterialPrepared = newDmMaterialPrepared;
             icsCompleted = newIcsCompleted;
             dmCompleted = newDmCompleted;
+            coffeeClaimedForCurrentDay = newCoffeeClaimedForCurrentDay;
+            coffeeOption = newCoffeeClaimedForCurrentDay ? newCoffeeOption : null;
 
             OnReputationUpdated?.Invoke(reputation, source);
             OnObjectivesChanged?.Invoke();
@@ -167,7 +178,9 @@ namespace UIU.Simulator.Gameplay.Faculty
             FacultyUpdateSource source = FacultyUpdateSource.InitialHydration,
             bool icsCompletedValue = false,
             bool dmCompletedValue = false,
-            bool facultyIdIssuedValue = false)
+            bool facultyIdIssuedValue = false,
+            bool coffeeClaimedForCurrentDayValue = false,
+            string coffeeOptionValue = null)
         {
             ApplyServerState(
                 reputationValue,
@@ -181,7 +194,9 @@ namespace UIU.Simulator.Gameplay.Faculty
                 source,
                 icsCompletedValue,
                 dmCompletedValue,
-                facultyIdIssuedValue);
+                facultyIdIssuedValue,
+                coffeeClaimedForCurrentDayValue,
+                coffeeOptionValue);
         }
 
         public bool IsCourseCompleted(string courseCode)

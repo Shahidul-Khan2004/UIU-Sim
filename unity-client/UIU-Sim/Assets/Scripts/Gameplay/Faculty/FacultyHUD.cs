@@ -51,6 +51,11 @@ namespace UIU.Simulator.Gameplay.Faculty
         private readonly List<GameObject> assignedCourseRows = new List<GameObject>();
         private readonly List<TextMeshProUGUI> assignedCourseMarkers = new List<TextMeshProUGUI>();
         private readonly List<TextMeshProUGUI> assignedCourseTitles = new List<TextMeshProUGUI>();
+        private GameObject optionalSectionRoot;
+        private GameObject optionalDivider;
+        private TextMeshProUGUI optionalHeaderText;
+        private TextMeshProUGUI coffeeMarkerText;
+        private TextMeshProUGUI coffeeTitleText;
 
         private int lastReputation = FacultyProgress.DefaultReputation;
         private Coroutine feedbackRoutine;
@@ -259,6 +264,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             SetObjectiveVisual(officeMarkerText, officeTitleText, officeDone);
             SetObjectiveVisual(materialsMarkerText, materialsTitleText, materialsDone);
             UpdateAssignedCourseMarkers();
+            UpdateOptionalCoffeeRow();
 
             if (!idIssued)
             {
@@ -300,6 +306,42 @@ namespace UIU.Simulator.Gameplay.Faculty
             nextActivityText.text = FacultyAssignedSchedule.BuildNextActivity(currentClass);
         }
 
+        private void UpdateOptionalCoffeeRow()
+        {
+            bool showOptional = facultyProgress != null && facultyProgress.BothClassesCompleted;
+            if (optionalSectionRoot != null)
+            {
+                optionalSectionRoot.SetActive(showOptional);
+            }
+
+            if (optionalDivider != null)
+            {
+                optionalDivider.SetActive(showOptional);
+            }
+
+            if (!showOptional)
+            {
+                return;
+            }
+
+            EnsureOptionalSectionLast();
+            bool coffeeDone = facultyProgress.CoffeeClaimedForCurrentDay;
+            SetOptionalObjectiveVisual(coffeeMarkerText, coffeeTitleText, coffeeDone);
+        }
+
+        private void EnsureOptionalSectionLast()
+        {
+            if (optionalDivider != null)
+            {
+                optionalDivider.transform.SetAsLastSibling();
+            }
+
+            if (optionalSectionRoot != null)
+            {
+                optionalSectionRoot.transform.SetAsLastSibling();
+            }
+        }
+
         private void UpdateAssignedCourseMarkers()
         {
             for (int i = 0; i < assignedCourseMarkers.Count; i++)
@@ -326,6 +368,20 @@ namespace UIU.Simulator.Gameplay.Faculty
             if (title != null)
             {
                 title.color = complete ? UiTheme.Success : UiTheme.White;
+            }
+        }
+
+        private static void SetOptionalObjectiveVisual(TextMeshProUGUI marker, TextMeshProUGUI title, bool complete)
+        {
+            if (marker != null)
+            {
+                marker.text = complete ? "✓" : "○";
+                marker.color = complete ? UiTheme.Success : UiTheme.Grey;
+            }
+
+            if (title != null)
+            {
+                title.color = complete ? UiTheme.Success : UiTheme.Grey;
             }
         }
 
@@ -460,6 +516,45 @@ namespace UIU.Simulator.Gameplay.Faculty
             CreateObjectiveRow(panelRoot.transform, "Office", "Setup Faculty Office", out officeMarkerText, out officeTitleText);
             CreateObjectiveRow(panelRoot.transform, "Materials", "Prepare Course Materials", out materialsMarkerText, out materialsTitleText);
             RebuildAssignedCourseRows();
+            BuildOptionalCoffeeSection();
+        }
+
+        private void BuildOptionalCoffeeSection()
+        {
+            if (panelRoot == null || optionalSectionRoot != null)
+            {
+                return;
+            }
+
+            optionalDivider = CreateDividerObject(panelRoot.transform, "OptionalDivider");
+            optionalSectionRoot = new GameObject("OptionalSection");
+            optionalSectionRoot.transform.SetParent(panelRoot.transform, false);
+
+            VerticalLayoutGroup layout = optionalSectionRoot.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(0, 0, 0, 0);
+            layout.spacing = 6f;
+            layout.childAlignment = TextAnchor.UpperLeft;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            optionalHeaderText = CreateLabel(
+                optionalSectionRoot.transform,
+                "OptionalHeader",
+                "OPTIONAL",
+                objectiveBodySize,
+                UiTheme.Grey,
+                FontStyles.Bold);
+            CreateObjectiveRow(
+                optionalSectionRoot.transform,
+                "Coffee",
+                "Get Coffee",
+                out coffeeMarkerText,
+                out coffeeTitleText);
+            SetOptionalObjectiveVisual(coffeeMarkerText, coffeeTitleText, complete: false);
+            optionalSectionRoot.SetActive(false);
+            optionalDivider.SetActive(false);
         }
 
         private void RebuildAssignedCourseRows()
@@ -522,6 +617,8 @@ namespace UIU.Simulator.Gameplay.Faculty
                     assignedCourseRows.Add(row.gameObject);
                 }
             }
+
+            EnsureOptionalSectionLast();
         }
 
         private void CreateObjectiveRow(
@@ -555,7 +652,12 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         private static void CreateDivider(Transform parent)
         {
-            GameObject go = new GameObject("ObjectiveDivider");
+            CreateDividerObject(parent, "ObjectiveDivider");
+        }
+
+        private static GameObject CreateDividerObject(Transform parent, string name)
+        {
+            GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.preferredHeight = 1f;
@@ -563,6 +665,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             Image image = go.AddComponent<Image>();
             image.color = new Color(1f, 1f, 1f, 0.18f);
             image.raycastTarget = false;
+            return go;
         }
 
         private static TextMeshProUGUI CreateLabel(

@@ -3,6 +3,7 @@ package com.uiusimulator.player.service;
 import com.uiusimulator.player.dto.FacultyCourseProgressItem;
 import com.uiusimulator.player.dto.FacultyProgressResponse;
 import com.uiusimulator.player.entity.ClassroomCourseDefinition;
+import com.uiusimulator.player.entity.FacultyCoffeeOption;
 import com.uiusimulator.player.entity.FacultyCourseAssignmentCatalog;
 import com.uiusimulator.player.entity.FacultyCourseProgress;
 import com.uiusimulator.player.entity.FacultyProgress;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FacultyProgressService {
 
     public static final String FACULTY_ONLY_MESSAGE = "Faculty progress is available only to faculty.";
+    public static final String COFFEE_CLASSES_REQUIRED_MESSAGE = "Coffee is available after your classes.";
 
     private static final Logger log = LoggerFactory.getLogger(FacultyProgressService.class);
 
@@ -74,6 +76,37 @@ public class FacultyProgressService {
             log.info(
                     "Faculty computer reward applied for clerkUserId={}: reputation={}",
                     jwt.getSubject(),
+                    saved.getReputation()
+            );
+        }
+        return toResponse(saved);
+    }
+
+    /**
+     * Optional once-per-day coffee claim. Awards exclusive +1/+2/+3 reputation for the selected
+     * combination. Idempotent for the current player day; requires both assigned classes complete.
+     */
+    @Transactional
+    public FacultyProgressResponse claimCoffee(Jwt jwt, FacultyCoffeeOption option) {
+        if (option == null) {
+            throw new IllegalArgumentException("Coffee option is required.");
+        }
+
+        FacultyContext context = requireFaculty(jwt);
+        if (!bothAssignedCoursesCompleted(context.player().getId())) {
+            throw new IllegalArgumentException(COFFEE_CLASSES_REQUIRED_MESSAGE);
+        }
+
+        int currentDay = context.save().getCurrentDay();
+        FacultyProgress locked = getOrCreateWithLock(context.player());
+        boolean rewarded = locked.claimCoffeeForDay(currentDay, option);
+        FacultyProgress saved = facultyProgressRepository.saveAndFlush(locked);
+        if (rewarded) {
+            log.info(
+                    "Faculty coffee reward applied for clerkUserId={} day={} option={} reputation={}",
+                    jwt.getSubject(),
+                    currentDay,
+                    option.name(),
                     saved.getReputation()
             );
         }
@@ -182,9 +215,9 @@ public class FacultyProgressService {
             ));
         }
 
-        boolean facultyIdIssued = playerSaveRepository.findByPlayerId(playerId)
-                .map(PlayerSave::isIdCardIssued)
-                .orElse(false);
+        var save = playerSaveRepository.findByPlayerId(playerId);
+        boolean facultyIdIssued = save.map(PlayerSave::isIdCardIssued).orElse(false);
+        int currentDay = save.map(PlayerSave::getCurrentDay).orElse(1);
 
         return FacultyProgressResponse.from(
                 progress,
@@ -195,8 +228,21 @@ public class FacultyProgressService {
                 dmCompleted,
                 nextCourseCode,
                 courses,
-                teachBlockedReason
+                teachBlockedReason,
+                currentDay
         );
+    }
+
+    private boolean bothAssignedCoursesCompleted(UUID playerId) {
+        for (ClassroomCourseDefinition course : FacultyCourseAssignmentCatalog.defaultAssignedCourses()) {
+            FacultyCourseProgress row = facultyCourseProgressRepository
+                    .findByPlayerIdAndCourseCode(playerId, course.courseId())
+                    .orElse(null);
+            if (row == null || !row.isCompleted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private FacultyProgress getOrCreate(Player player) {

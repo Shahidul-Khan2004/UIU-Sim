@@ -18,6 +18,7 @@ namespace UIU.Simulator.Gameplay.Faculty
     {
         private const string ProgressPath = "api/players/me/faculty-progress";
         private const string ComputerPath = "api/players/me/faculty-progress/computer";
+        private const string CoffeePath = "api/players/me/faculty-progress/coffee";
         private const string ScanPath = "api/players/me/faculty-teach/scan";
         private const string CompletePath = "api/players/me/faculty-teach/complete";
         private const string LeavePath = "api/players/me/faculty-teach/leave";
@@ -134,6 +135,18 @@ namespace UIU.Simulator.Gameplay.Faculty
         public void RequestComputerUse()
         {
             RequestMutation(ComputerPath, jsonBody: null, FacultyUpdateSource.GameplayMutation, null, null);
+        }
+
+        public void RequestCoffee(string option, Action onSuccess = null, Action onFailure = null)
+        {
+            if (string.IsNullOrWhiteSpace(option))
+            {
+                onFailure?.Invoke();
+                return;
+            }
+
+            string json = JsonUtility.ToJson(new ApiClient.FacultyCoffeeRequestDto(option.Trim()));
+            RequestMutation(CoffeePath, json, FacultyUpdateSource.GameplayMutation, onSuccess, onFailure);
         }
 
         public void RequestScan(string courseId, Action onSuccess, Action onFailure)
@@ -349,7 +362,9 @@ namespace UIU.Simulator.Gameplay.Faculty
                     source,
                     dto.icsCompleted,
                     dto.dmCompleted,
-                    dto.facultyIdIssued);
+                    dto.facultyIdIssued,
+                    dto.coffeeClaimedForCurrentDay,
+                    dto.coffeeOption);
                 return dto;
             }
             catch (Exception ex)

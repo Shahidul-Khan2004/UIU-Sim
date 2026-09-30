@@ -20,7 +20,9 @@ public record FacultyProgressResponse(
         String nextCourseCode,
         String activeCourseCode,
         String teachBlockedReason,
-        List<FacultyCourseProgressItem> courses
+        List<FacultyCourseProgressItem> courses,
+        boolean coffeeClaimedForCurrentDay,
+        String coffeeOption
 ) {
     public static FacultyProgressResponse from(
             FacultyProgress progress,
@@ -31,10 +33,12 @@ public record FacultyProgressResponse(
             boolean dmCompleted,
             String nextCourseCode,
             List<FacultyCourseProgressItem> courses,
-            String teachBlockedReason
+            String teachBlockedReason,
+            int currentDay
     ) {
         boolean allAssignedComplete = icsCompleted && dmCompleted;
         boolean officeSetup = progress.isComputerUsed() || progress.isOfficeEntered();
+        boolean coffeeClaimedForCurrentDay = progress.isCoffeeClaimedForDay(currentDay);
         return new FacultyProgressResponse(
                 progress.getReputation(),
                 facultyIdIssued,
@@ -52,7 +56,9 @@ public record FacultyProgressResponse(
                 nextCourseCode,
                 progress.getActiveCourseCode(),
                 teachBlockedReason,
-                courses == null ? List.of() : List.copyOf(courses)
+                courses == null ? List.of() : List.copyOf(courses),
+                coffeeClaimedForCurrentDay,
+                coffeeClaimedForCurrentDay ? progress.getCoffeeOption() : null
         );
     }
 
@@ -83,7 +89,9 @@ public record FacultyProgressResponse(
                 lectureCompleted ? null : "ICS",
                 null,
                 null,
-                List.of()
+                List.of(),
+                false,
+                null
         );
     }
 }

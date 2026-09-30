@@ -255,6 +255,8 @@ namespace UIU.Simulator.Networking
             public string activeCourseCode;
             public string teachBlockedReason;
             public FacultyCourseProgressDto[] courses;
+            public bool coffeeClaimedForCurrentDay;
+            public string coffeeOption;
         }
 
         [Serializable]
@@ -273,6 +275,17 @@ namespace UIU.Simulator.Networking
             public FacultyTeachScanRequestDto(string courseId)
             {
                 this.courseId = courseId;
+            }
+        }
+
+        [Serializable]
+        public class FacultyCoffeeRequestDto
+        {
+            public string option;
+
+            public FacultyCoffeeRequestDto(string option)
+            {
+                this.option = option;
             }
         }
 
