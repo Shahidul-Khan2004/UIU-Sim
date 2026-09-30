@@ -257,6 +257,7 @@ namespace UIU.Simulator.Networking
             public FacultyCourseProgressDto[] courses;
             public bool coffeeClaimedForCurrentDay;
             public string coffeeOption;
+            public bool questionsPreparedForCurrentDay;
         }
 
         [Serializable]

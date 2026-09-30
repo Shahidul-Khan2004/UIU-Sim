@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using TMPro;
 using UIU.Simulator.Gameplay.IDCard;
 using UIU.Simulator.Gameplay.Player;
+using UIU.Simulator.Gameplay.UI;
 using UIU.Simulator.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -22,6 +24,9 @@ namespace UIU.Simulator.Gameplay.Faculty
         public static FacultyPortalUI Instance { get; private set; }
         public static bool IsOpen { get; private set; }
 
+        /// <summary>Unscaled prepare-questions wait. EditMode tests may set this to 0.</summary>
+        public static float PrepareQuestionsDurationSeconds = 30f;
+
         public static bool HasNestedModalOpen =>
             FacultyCoursesUI.IsOpen
             || FacultyStudentListUI.IsOpen
@@ -30,7 +35,14 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         private const int CanvasSortOrder = 230;
         private const float PanelWidth = 640f;
-        private const float PanelHeight = 620f;
+        /// <summary>
+        /// Tall enough for accent, title, welcome, five profile rows, and three action buttons
+        /// without VerticalLayoutGroup compression.
+        /// </summary>
+        private const float PanelHeight = 780f;
+        private const string PreparingQuestionsLabel = "Preparing questions";
+        private const float PreparingProgressBarWidth = 420f;
+        private const float PreparingProgressBarHeight = 22f;
 
         private GameObject overlayRoot;
         private TextMeshProUGUI welcomeLabel;
@@ -39,7 +51,13 @@ namespace UIU.Simulator.Gameplay.Faculty
         private TextMeshProUGUI departmentValue;
         private TextMeshProUGUI designationValue;
         private TextMeshProUGUI officeValue;
+        private Button prepareQuestionsButton;
+        private TextMeshProUGUI prepareQuestionsButtonLabel;
+        private GameObject prepareQuestionsButtonRoot;
         private Button viewCoursesButton;
+        private GameObject preparingOverlayRoot;
+        private TextMeshProUGUI preparingLabel;
+        private RectTransform preparingProgressFillRect;
 
         private PlayerMovement cachedPlayerMovement;
         private FirstPersonLook cachedFirstPersonLook;
@@ -47,6 +65,8 @@ namespace UIU.Simulator.Gameplay.Faculty
         private bool wasLookEnabled = true;
         private CursorLockMode previousLockMode;
         private bool previousCursorVisible;
+        private bool isPreparingQuestions;
+        private Coroutine prepareQuestionsRoutine;
 
         public static FacultyPortalUI EnsureExists()
         {
@@ -95,7 +115,7 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         private void Update()
         {
-            if (!IsOpen || HasNestedModalOpen)
+            if (!IsOpen || HasNestedModalOpen || isPreparingQuestions)
             {
                 return;
             }
@@ -123,6 +143,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             LockGameplayInput();
             EnsureEventSystem();
             PopulateProfileFromSaveState();
+            RefreshPrepareQuestionsButton();
             if (viewCoursesButton != null)
             {
                 viewCoursesButton.interactable = true;
@@ -131,7 +152,7 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         public void Hide()
         {
-            if (!IsOpen)
+            if (!IsOpen || isPreparingQuestions)
             {
                 return;
             }
@@ -149,6 +170,11 @@ namespace UIU.Simulator.Gameplay.Faculty
 
         public void OpenCourses()
         {
+            if (isPreparingQuestions)
+            {
+                return;
+            }
+
             FacultyCoursesUI coursesUI = FacultyCoursesUI.Instance != null
                 ? FacultyCoursesUI.Instance
                 : FacultyCoursesUI.EnsureExists();
@@ -158,11 +184,121 @@ namespace UIU.Simulator.Gameplay.Faculty
             }
         }
 
+        public void OnPrepareQuestionsClicked()
+        {
+            if (!IsOpen || isPreparingQuestions)
+            {
+                return;
+            }
+
+            FacultyProgress progress = FacultyProgress.Instance != null
+                ? FacultyProgress.Instance
+                : FacultyProgress.EnsureExists();
+            if (progress != null && progress.QuestionsPreparedForCurrentDay)
+            {
+                return;
+            }
+
+            PlayerSaveState saveState = ResolveSaveState();
+            if (saveState == null
+                || !FacultyDaySchedule.IsExamDay(saveState.Semester, saveState.CurrentDay))
+            {
+                return;
+            }
+
+            if (!Application.isPlaying)
+            {
+                CompletePrepareQuestionsForTesting();
+                return;
+            }
+
+            if (prepareQuestionsRoutine != null)
+            {
+                StopCoroutine(prepareQuestionsRoutine);
+            }
+
+            prepareQuestionsRoutine = StartCoroutine(PrepareQuestionsRoutine());
+        }
+
+        /// <summary>
+        /// Test seam: completes prepare-questions via the same apply path used after a successful POST.
+        /// </summary>
+        public void CompletePrepareQuestionsForTesting()
+        {
+            FacultyProgressSync sync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FacultyProgressSync.EnsureExists();
+            sync?.ApplyPrepareQuestionsLocallyForTesting();
+            HidePreparingOverlay();
+            isPreparingQuestions = false;
+            RefreshPrepareQuestionsButton();
+        }
+
+        private IEnumerator PrepareQuestionsRoutine()
+        {
+            isPreparingQuestions = true;
+            ShowPreparingOverlay();
+            RefreshPrepareQuestionsButton();
+
+            float duration = Mathf.Max(0f, PrepareQuestionsDurationSeconds);
+            if (duration <= 0f)
+            {
+                SetPreparingProgress(1f);
+            }
+            else
+            {
+                float elapsed = 0f;
+                SetPreparingProgress(0f);
+                while (elapsed < duration)
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    SetPreparingProgress(Mathf.Clamp01(elapsed / duration));
+                    yield return null;
+                }
+
+                SetPreparingProgress(1f);
+            }
+
+            bool finished = false;
+
+            FacultyProgressSync sync = FacultyProgressSync.Instance != null
+                ? FacultyProgressSync.Instance
+                : FacultyProgressSync.EnsureExists();
+
+            if (sync == null)
+            {
+                HidePreparingOverlay();
+                isPreparingQuestions = false;
+                SystemNotificationUI.Show("Faculty progress sync is unavailable.");
+                RefreshPrepareQuestionsButton();
+                prepareQuestionsRoutine = null;
+                yield break;
+            }
+
+            sync.RequestPrepareQuestions(
+                onSuccess: () =>
+                {
+                    finished = true;
+                },
+                onFailure: () =>
+                {
+                    finished = true;
+                });
+
+            while (!finished)
+            {
+                yield return null;
+            }
+
+            HidePreparingOverlay();
+            isPreparingQuestions = false;
+            RefreshPrepareQuestionsButton();
+            prepareQuestionsRoutine = null;
+        }
+
         private void PopulateProfileFromSaveState()
         {
-            PlayerSaveState saveState = PlayerSaveState.Instance != null
-                ? PlayerSaveState.Instance
-                : FindFirstObjectByType<PlayerSaveState>();
+            PlayerSaveState saveState = ResolveSaveState();
 
             string playerName = saveState != null && !string.IsNullOrWhiteSpace(saveState.PlayerName)
                 ? saveState.PlayerName
@@ -213,6 +349,77 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 officeValue.text = FormatRoom(office);
             }
+        }
+
+        private void RefreshPrepareQuestionsButton()
+        {
+            PlayerSaveState saveState = ResolveSaveState();
+            bool examDay = saveState != null
+                && FacultyDaySchedule.IsExamDay(saveState.Semester, saveState.CurrentDay);
+
+            if (prepareQuestionsButtonRoot != null)
+            {
+                prepareQuestionsButtonRoot.SetActive(examDay);
+            }
+
+            if (!examDay || prepareQuestionsButton == null)
+            {
+                return;
+            }
+
+            FacultyProgress progress = FacultyProgress.Instance != null
+                ? FacultyProgress.Instance
+                : FindFirstObjectByType<FacultyProgress>();
+            bool prepared = progress != null && progress.QuestionsPreparedForCurrentDay;
+
+            prepareQuestionsButton.interactable = !prepared && !isPreparingQuestions;
+            if (prepareQuestionsButtonLabel != null)
+            {
+                prepareQuestionsButtonLabel.text = prepared ? "Questions Prepared" : "Prepare Questions";
+            }
+        }
+
+        private void ShowPreparingOverlay()
+        {
+            if (preparingOverlayRoot == null)
+            {
+                return;
+            }
+
+            if (preparingLabel != null)
+            {
+                preparingLabel.text = PreparingQuestionsLabel;
+            }
+
+            SetPreparingProgress(PrepareQuestionsDurationSeconds <= 0f ? 1f : 0f);
+            preparingOverlayRoot.SetActive(true);
+            preparingOverlayRoot.transform.SetAsLastSibling();
+        }
+
+        private void HidePreparingOverlay()
+        {
+            if (preparingOverlayRoot != null)
+            {
+                preparingOverlayRoot.SetActive(false);
+            }
+        }
+
+        private void SetPreparingProgress(float normalized)
+        {
+            if (preparingProgressFillRect == null)
+            {
+                return;
+            }
+
+            float clamped = Mathf.Clamp01(normalized);
+            preparingProgressFillRect.anchorMax = new Vector2(clamped, 1f);
+        }
+
+        private static PlayerSaveState ResolveSaveState()
+        {
+            return PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
         }
 
         private static void CloseNestedModals()
@@ -351,6 +558,15 @@ namespace UIU.Simulator.Gameplay.Faculty
             CreateFlowLabel(panel.transform, "OfficeKey", "Office:", 14f, FontStyles.Normal, UiTheme.Grey);
             officeValue = CreateFlowLabel(panel.transform, "OfficeValue", "—", 20f, FontStyles.Bold, UiTheme.White);
 
+            prepareQuestionsButton = CreateButton(
+                panel.transform,
+                "Button_PrepareQuestions",
+                "Prepare Questions",
+                OnPrepareQuestionsClicked);
+            prepareQuestionsButtonRoot = prepareQuestionsButton.gameObject;
+            prepareQuestionsButtonLabel = prepareQuestionsButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            prepareQuestionsButtonRoot.SetActive(false);
+
             viewCoursesButton = CreateButton(
                 panel.transform,
                 "Button_ViewCourses",
@@ -358,6 +574,80 @@ namespace UIU.Simulator.Gameplay.Faculty
                 OpenCourses);
             viewCoursesButton.interactable = true;
             CreateButton(panel.transform, "Button_CloseFacultyPortal", "Close", Hide);
+
+            // Child of portal overlay so it fully covers panel content and blocks buttons.
+            BuildPreparingOverlay(overlayRoot.transform);
+        }
+
+        private void BuildPreparingOverlay(Transform portalOverlayTransform)
+        {
+            preparingOverlayRoot = new GameObject("PreparingQuestionsOverlay");
+            preparingOverlayRoot.transform.SetParent(portalOverlayTransform, false);
+            RectTransform overlayRect = preparingOverlayRoot.AddComponent<RectTransform>();
+            StretchFull(overlayRect);
+            Image blocker = preparingOverlayRoot.AddComponent<Image>();
+            blocker.color = UiTheme.Black;
+            blocker.raycastTarget = true;
+
+            preparingLabel = CreateFlowLabel(
+                preparingOverlayRoot.transform,
+                "PreparingQuestionsLabel",
+                PreparingQuestionsLabel,
+                28f,
+                FontStyles.Bold,
+                UiTheme.White);
+            RectTransform labelRect = preparingLabel.rectTransform;
+            labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            labelRect.pivot = new Vector2(0.5f, 0.5f);
+            labelRect.anchoredPosition = new Vector2(0f, 36f);
+            labelRect.sizeDelta = new Vector2(640f, 64f);
+            preparingLabel.alignment = TextAlignmentOptions.Center;
+            preparingLabel.raycastTarget = false;
+
+            // Overlay uses absolute layout; remove flow LayoutElement sizing.
+            LayoutElement flowLayout = preparingLabel.GetComponent<LayoutElement>();
+            if (flowLayout != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(flowLayout);
+                }
+                else
+                {
+                    DestroyImmediate(flowLayout);
+                }
+            }
+
+            BuildPreparingProgressBar(preparingOverlayRoot.transform);
+            preparingOverlayRoot.SetActive(false);
+        }
+
+        private void BuildPreparingProgressBar(Transform parent)
+        {
+            GameObject trackGo = new GameObject("PreparingQuestionsProgressTrack");
+            trackGo.transform.SetParent(parent, false);
+            RectTransform trackRect = trackGo.AddComponent<RectTransform>();
+            trackRect.anchorMin = new Vector2(0.5f, 0.5f);
+            trackRect.anchorMax = new Vector2(0.5f, 0.5f);
+            trackRect.pivot = new Vector2(0.5f, 0.5f);
+            trackRect.anchoredPosition = new Vector2(0f, -18f);
+            trackRect.sizeDelta = new Vector2(PreparingProgressBarWidth, PreparingProgressBarHeight);
+            Image trackImage = trackGo.AddComponent<Image>();
+            trackImage.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+            trackImage.raycastTarget = false;
+
+            GameObject fillGo = new GameObject("PreparingQuestionsProgressFill");
+            fillGo.transform.SetParent(trackGo.transform, false);
+            preparingProgressFillRect = fillGo.AddComponent<RectTransform>();
+            preparingProgressFillRect.anchorMin = new Vector2(0f, 0f);
+            preparingProgressFillRect.anchorMax = new Vector2(0f, 1f);
+            preparingProgressFillRect.pivot = new Vector2(0f, 0.5f);
+            preparingProgressFillRect.offsetMin = Vector2.zero;
+            preparingProgressFillRect.offsetMax = Vector2.zero;
+            Image fillImage = fillGo.AddComponent<Image>();
+            fillImage.color = UiTheme.BrightOrange;
+            fillImage.raycastTarget = false;
         }
 
         private static Button CreateButton(

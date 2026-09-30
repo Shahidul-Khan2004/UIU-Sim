@@ -273,5 +273,61 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
 
             Assert.That(map.IsMiniMapVisibleForTesting, Is.False);
         }
+
+        [Test]
+        public void Test13_ScrollUp_IncreasesZoom()
+        {
+            float zoomed = FloorMapHUD.ComputeMapZoom(1f, 120f);
+
+            Assert.That(zoomed, Is.EqualTo(2f).Within(0.0001f));
+            Assert.That(zoomed, Is.GreaterThan(1f));
+        }
+
+        [Test]
+        public void Test14_ScrollDown_DecreasesZoom()
+        {
+            float zoomed = FloorMapHUD.ComputeMapZoom(2f, -120f);
+
+            Assert.That(zoomed, Is.EqualTo(1f).Within(0.0001f));
+            Assert.That(zoomed, Is.LessThan(2f));
+        }
+
+        [Test]
+        public void Test15_Zoom_ClampsAtMinAndMax()
+        {
+            Assert.That(FloorMapHUD.ComputeMapZoom(1f, -120f), Is.EqualTo(1f));
+            Assert.That(FloorMapHUD.ComputeMapZoom(4f, 120f), Is.EqualTo(4f));
+            Assert.That(FloorMapHUD.ComputeMapZoom(3.9f, 1200f), Is.EqualTo(4f));
+            Assert.That(FloorMapHUD.ComputeMapZoom(1.1f, -1200f), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Test16_Close_ResetsMapZoomToFit()
+        {
+            Assert.That(map.TryOpen(), Is.True);
+            Assert.That(map.MapZoomForTesting, Is.EqualTo(1f));
+
+            map.ApplyMapScrollForTesting(120f);
+            Assert.That(map.MapZoomForTesting, Is.GreaterThan(1f));
+
+            map.Close();
+
+            Assert.That(map.MapZoomForTesting, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Test17_Reopen_StartsAtFitZoom()
+        {
+            Assert.That(map.TryOpen(), Is.True);
+            map.ApplyMapScrollForTesting(120f);
+            map.ApplyMapScrollForTesting(120f);
+            Assert.That(map.MapZoomForTesting, Is.GreaterThan(1f));
+
+            map.Close();
+            Assert.That(map.TryOpen(), Is.True);
+
+            Assert.That(map.MapZoomForTesting, Is.EqualTo(1f),
+                "Reopening the fullscreen map must start fitted (zoom 1).");
+        }
     }
 }

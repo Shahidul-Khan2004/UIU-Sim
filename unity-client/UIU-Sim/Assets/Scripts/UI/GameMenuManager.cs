@@ -38,6 +38,9 @@ namespace UIU.Simulator.UI
         private const string GeneralMenuTitle = "GAME MENU";
         private const string StudentMenuTitle = "GAME MENU";
         private const string FacultyMenuTitle = "FACULTY MENU";
+        private const string SemesterCapMessage = "Semester progression is not available yet.";
+        private const string FacultyEndDayBody =
+            "You will return to the campus entrance and today's classes will reset. Your Reputation is kept.";
         private const float PanelWidth = 420f;
         private const float GeneralPanelHeight = 520f;
         private const float PanelHeight = 700f;
@@ -515,12 +518,6 @@ namespace UIU.Simulator.UI
                 return;
             }
 
-            if (IsFacultyRole())
-            {
-                SetStatus("Coming Soon", UiTheme.Grey);
-                return;
-            }
-
             PlayerSaveState saveState = PlayerSaveState.Instance != null
                 ? PlayerSaveState.Instance
                 : FindFirstObjectByType<PlayerSaveState>();
@@ -535,6 +532,13 @@ namespace UIU.Simulator.UI
             if (!saveState.HasActiveUniversityDay)
             {
                 SetStatus("Complete admission before ending the day.", UiTheme.Red);
+                return;
+            }
+
+            if (IsFacultyRole()
+                && saveState.CurrentDay >= FacultyDaySchedule.MaxDayPerSemester)
+            {
+                SetStatus(SemesterCapMessage, UiTheme.Grey);
                 return;
             }
 
@@ -873,8 +877,9 @@ namespace UIU.Simulator.UI
 
             if (endDayBodyLabel != null)
             {
-                endDayBodyLabel.text =
-                    "Any unfinished required activities will be marked as missed and their penalties will be applied.";
+                endDayBodyLabel.text = IsFacultyRole()
+                    ? FacultyEndDayBody
+                    : "Any unfinished required activities will be marked as missed and their penalties will be applied.";
             }
 
             IsEndDayConfirmOpen = true;
@@ -919,7 +924,142 @@ namespace UIU.Simulator.UI
                 StopCoroutine(nextDayRoutine);
             }
 
-            nextDayRoutine = StartCoroutine(EndDayRoutine());
+            nextDayRoutine = IsFacultyRole()
+                ? StartCoroutine(FacultyNextDayRoutine())
+                : StartCoroutine(EndDayRoutine());
+        }
+
+        private IEnumerator FacultyNextDayRoutine()
+        {
+            isBusy = true;
+            SetMenuInteractable(false);
+            SetStatus("Advancing day…", UiTheme.Grey);
+
+            PlayerSaveState saveState = PlayerSaveState.Instance != null
+                ? PlayerSaveState.Instance
+                : FindFirstObjectByType<PlayerSaveState>();
+            if (saveState == null || !saveState.IsHydrated || !saveState.HasActiveUniversityDay)
+            {
+                SetStatus("Progress is still loading.", UiTheme.Red);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            if (saveState.CurrentDay >= FacultyDaySchedule.MaxDayPerSemester)
+            {
+                SetStatus(SemesterCapMessage, UiTheme.Grey);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            PlayerProgressSync sync = FindFirstObjectByType<PlayerProgressSync>();
+            if (sync == null || !sync.IsHydrated)
+            {
+                SetStatus("Progress is still loading.", UiTheme.Red);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            int expectedSemester = saveState.Semester;
+            int expectedDay = saveState.CurrentDay;
+
+            bool finished = false;
+            bool succeeded = false;
+            string failureMessage = null;
+
+            sync.RequestAdvanceDay(
+                expectedSemester,
+                expectedDay,
+                onSuccess: _ =>
+                {
+                    succeeded = true;
+                    finished = true;
+                },
+                onFailure: error =>
+                {
+                    failureMessage = error;
+                    finished = true;
+                });
+
+            while (!finished)
+            {
+                yield return null;
+            }
+
+            if (!succeeded)
+            {
+                SetStatus(string.IsNullOrWhiteSpace(failureMessage)
+                    ? "Could not advance the day."
+                    : failureMessage, UiTheme.Red);
+                isBusy = false;
+                SetMenuInteractable(true);
+                nextDayRoutine = null;
+                yield break;
+            }
+
+            // Backend already advanced — do not retry advance if spawn fails.
+            bool respawnDone = false;
+            bool respawnOk = true;
+            string respawnError = null;
+
+            PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+            if (spawner != null)
+            {
+                yield return spawner.RespawnExistingPlayerAtPrimarySpawnRoutine(
+                    onComplete: () =>
+                    {
+                        respawnDone = true;
+                        respawnOk = true;
+                    },
+                    onError: err =>
+                    {
+                        respawnDone = true;
+                        respawnOk = false;
+                        respawnError = err;
+                    });
+            }
+            else
+            {
+                PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+                PlayerSpawnPoint spawnPoint = FindFirstObjectByType<PlayerSpawnPoint>();
+                if (player != null && spawnPoint != null)
+                {
+                    PlayerSpawner.TryTeleportPlayerToSpawnPoint(player, spawnPoint);
+                    respawnOk = true;
+                }
+                else
+                {
+                    respawnOk = false;
+                    respawnError = "Primary spawn point is unavailable.";
+                }
+
+                respawnDone = true;
+            }
+
+            while (!respawnDone)
+            {
+                yield return null;
+            }
+
+            ForceCloseAndRestoreGameplayControls();
+
+            if (!respawnOk)
+            {
+                string message = string.IsNullOrWhiteSpace(respawnError)
+                    ? "Day advanced, but respawn failed. Return to the entrance manually."
+                    : respawnError;
+                SystemNotificationUI.Show(message);
+                Debug.LogWarning($"[GameMenuManager] Faculty day advanced but respawn failed: {message}");
+            }
+
+            isBusy = false;
+            nextDayRoutine = null;
         }
 
         private IEnumerator EndDayRoutine()

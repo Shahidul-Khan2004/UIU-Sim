@@ -602,8 +602,19 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 Assert.That(FindButton("Button_MaterialsManagement"), Is.Null);
 
                 FindButton("Button_NextDay").onClick.Invoke();
-                Assert.That(FindNamedTmp("StatusLabel").text, Is.EqualTo("Coming Soon"));
+                Assert.That(menu.IsEndDayConfirmOpen, Is.True);
+                Assert.That(FindNamedTmp("EndDayTitle").text, Is.EqualTo("End Day 1?"));
+                Assert.That(
+                    FindNamedTmp("EndDayMessage").text,
+                    Does.Contain("campus entrance").IgnoreCase);
+                Assert.That(
+                    FindNamedTmp("EndDayMessage").text,
+                    Does.Not.Contain("missed").IgnoreCase);
                 Assert.That(GameMenuManager.IsOpen, Is.True);
+                Assert.That(FindNamedTmp("StatusLabel").text, Is.Not.EqualTo("Coming Soon"));
+
+                FindButton("Button_CancelEndDay").onClick.Invoke();
+                Assert.That(menu.IsEndDayConfirmOpen, Is.False);
 
                 FindButton("Button_Settings").onClick.Invoke();
                 Assert.That(FindNamedTmp("StatusLabel").text, Does.Contain("coming soon").IgnoreCase);

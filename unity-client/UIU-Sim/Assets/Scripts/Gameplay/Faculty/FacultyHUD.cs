@@ -42,8 +42,13 @@ namespace UIU.Simulator.Gameplay.Faculty
         private TextMeshProUGUI reputationFeedbackText;
         private TextMeshProUGUI currentObjectiveText;
         private TextMeshProUGUI nextActivityText;
+        private GameObject prepareQuestionsRow;
+        private TextMeshProUGUI prepareQuestionsMarkerText;
+        private TextMeshProUGUI prepareQuestionsTitleText;
+        private GameObject idCardRow;
         private TextMeshProUGUI idMarkerText;
         private TextMeshProUGUI idTitleText;
+        private GameObject officeRow;
         private TextMeshProUGUI officeMarkerText;
         private TextMeshProUGUI officeTitleText;
         private TextMeshProUGUI materialsMarkerText;
@@ -259,9 +264,14 @@ namespace UIU.Simulator.Gameplay.Faculty
             bool idIssued = facultyProgress != null && facultyProgress.FacultyIdIssued;
             bool officeDone = facultyProgress != null && facultyProgress.OfficeSetup;
             bool materialsDone = facultyProgress != null && facultyProgress.CourseMaterialsPrepared;
+            bool questionsPrepared = facultyProgress != null && facultyProgress.QuestionsPreparedForCurrentDay;
+            int semester = playerSaveState != null ? playerSaveState.Semester : 0;
+            int day = playerSaveState != null ? playerSaveState.CurrentDay : 0;
+            bool examDay = FacultyDaySchedule.IsExamDay(semester, day);
 
-            SetObjectiveVisual(idMarkerText, idTitleText, idIssued);
-            SetObjectiveVisual(officeMarkerText, officeTitleText, officeDone);
+            UpdatePrepareQuestionsRow(examDay, questionsPrepared);
+            UpdateIdCardRow(day, idIssued);
+            UpdateOfficeRow(day, officeDone);
             SetObjectiveVisual(materialsMarkerText, materialsTitleText, materialsDone);
             UpdateAssignedCourseMarkers();
             UpdateOptionalCoffeeRow();
@@ -270,6 +280,13 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 currentObjectiveText.text = "Current Objective:\nCollect Faculty ID Card";
                 nextActivityText.text = "Next Activity:\nVisit the receptionist";
+                return;
+            }
+
+            if (examDay && !questionsPrepared)
+            {
+                currentObjectiveText.text = "Current Objective:\nPrepare Questions";
+                nextActivityText.text = FacultyDaySchedule.BuildPrepareQuestionsNextActivity(semester, day);
                 return;
             }
 
@@ -304,6 +321,55 @@ namespace UIU.Simulator.Gameplay.Faculty
 
             currentObjectiveText.text = FacultyAssignedSchedule.BuildCurrentObjective(currentClass);
             nextActivityText.text = FacultyAssignedSchedule.BuildNextActivity(currentClass);
+        }
+
+        private void UpdatePrepareQuestionsRow(bool examDay, bool questionsPrepared)
+        {
+            if (prepareQuestionsRow != null)
+            {
+                prepareQuestionsRow.SetActive(examDay);
+            }
+
+            if (!examDay)
+            {
+                return;
+            }
+
+            SetObjectiveVisual(prepareQuestionsMarkerText, prepareQuestionsTitleText, questionsPrepared);
+        }
+
+        private void UpdateIdCardRow(int day, bool idIssued)
+        {
+            // Keep the completed ID-card checklist on day 1; hide it from day 2 onward.
+            bool hideCompletedIdCard = idIssued && day >= 2;
+            if (idCardRow != null)
+            {
+                idCardRow.SetActive(!hideCompletedIdCard);
+            }
+
+            if (hideCompletedIdCard)
+            {
+                return;
+            }
+
+            SetObjectiveVisual(idMarkerText, idTitleText, idIssued);
+        }
+
+        private void UpdateOfficeRow(int day, bool officeDone)
+        {
+            // Keep the completed office checklist on day 1; hide it from day 2 onward.
+            bool hideCompletedOffice = officeDone && day >= 2;
+            if (officeRow != null)
+            {
+                officeRow.SetActive(!hideCompletedOffice);
+            }
+
+            if (hideCompletedOffice)
+            {
+                return;
+            }
+
+            SetObjectiveVisual(officeMarkerText, officeTitleText, officeDone);
         }
 
         private void UpdateOptionalCoffeeRow()
@@ -512,8 +578,28 @@ namespace UIU.Simulator.Gameplay.Faculty
                 wrap: true);
 
             CreateDivider(panelRoot.transform);
+            CreateObjectiveRow(
+                panelRoot.transform,
+                "PrepareQuestions",
+                "Prepare Questions",
+                out prepareQuestionsMarkerText,
+                out prepareQuestionsTitleText);
+            prepareQuestionsRow = prepareQuestionsMarkerText != null && prepareQuestionsMarkerText.transform.parent != null
+                ? prepareQuestionsMarkerText.transform.parent.gameObject
+                : null;
+            if (prepareQuestionsRow != null)
+            {
+                prepareQuestionsRow.SetActive(false);
+            }
+
             CreateObjectiveRow(panelRoot.transform, "IdCard", "Faculty ID Card", out idMarkerText, out idTitleText);
+            idCardRow = idMarkerText != null && idMarkerText.transform.parent != null
+                ? idMarkerText.transform.parent.gameObject
+                : null;
             CreateObjectiveRow(panelRoot.transform, "Office", "Setup Faculty Office", out officeMarkerText, out officeTitleText);
+            officeRow = officeMarkerText != null && officeMarkerText.transform.parent != null
+                ? officeMarkerText.transform.parent.gameObject
+                : null;
             CreateObjectiveRow(panelRoot.transform, "Materials", "Prepare Course Materials", out materialsMarkerText, out materialsTitleText);
             RebuildAssignedCourseRows();
             BuildOptionalCoffeeSection();

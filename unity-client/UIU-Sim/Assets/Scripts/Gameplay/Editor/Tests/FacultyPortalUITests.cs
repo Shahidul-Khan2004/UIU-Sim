@@ -21,12 +21,15 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         [SetUp]
         public void SetUp()
         {
+            FacultyPortalUI.PrepareQuestionsDurationSeconds = 30f;
             DestroyExisting(PlayerSaveState.Instance != null ? PlayerSaveState.Instance.gameObject : null);
             DestroyExisting(FacultyMaterialsUI.Instance != null ? FacultyMaterialsUI.Instance.gameObject : null);
             DestroyExisting(FacultyStudentListUI.Instance != null ? FacultyStudentListUI.Instance.gameObject : null);
             DestroyExisting(FacultyCoursesUI.Instance != null ? FacultyCoursesUI.Instance.gameObject : null);
             DestroyExisting(ClassRoutineUI.Instance != null ? ClassRoutineUI.Instance.gameObject : null);
             DestroyExisting(FacultyPortalUI.Instance != null ? FacultyPortalUI.Instance.gameObject : null);
+            DestroyExisting(FacultyProgress.Instance != null ? FacultyProgress.Instance.gameObject : null);
+            DestroyExisting(FacultyProgressSync.Instance != null ? FacultyProgressSync.Instance.gameObject : null);
 
             saveObject = new GameObject("TestPlayerSaveState");
             saveState = saveObject.AddComponent<PlayerSaveState>();
@@ -39,6 +42,8 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         [TearDown]
         public void TearDown()
         {
+            FacultyPortalUI.PrepareQuestionsDurationSeconds = 30f;
+
             if (FacultyMaterialsUI.IsOpen && FacultyMaterialsUI.Instance != null)
             {
                 FacultyMaterialsUI.Instance.Hide();
@@ -69,6 +74,8 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             DestroyExisting(FacultyCoursesUI.Instance != null ? FacultyCoursesUI.Instance.gameObject : null);
             DestroyExisting(ClassRoutineUI.Instance != null ? ClassRoutineUI.Instance.gameObject : null);
             DestroyExisting(FacultyPortalUI.Instance != null ? FacultyPortalUI.Instance.gameObject : null);
+            DestroyExisting(FacultyProgress.Instance != null ? FacultyProgress.Instance.gameObject : null);
+            DestroyExisting(FacultyProgressSync.Instance != null ? FacultyProgressSync.Instance.gameObject : null);
             DestroyExisting(deskObject);
             DestroyExisting(saveObject);
         }
@@ -105,6 +112,71 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindPortalLabel("Button_ViewCoursesLabel").text, Is.EqualTo("View Courses"));
             Assert.That(FindNamedChild(portal.transform, "Button_ViewClassRoutine"), Is.Null);
             Assert.That(ClassRoutineUI.IsOpen, Is.False);
+            Assert.That(FindNamedChild(portal.transform, "Button_PrepareQuestions").gameObject.activeSelf, Is.False);
+        }
+
+        [Test]
+        public void FacultyPortal_ExamDay_ShowsPrepareQuestionsAboveViewCourses()
+        {
+            ApplySave("Lail", FacultyIdentity.Role, "CSE", "F-001", idCardIssued: true, currentDay: 2);
+            FacultyPortalUI portal = FacultyPortalUI.EnsureExists();
+            portal.Show();
+
+            Transform prepareButton = FindNamedChild(portal.transform, "Button_PrepareQuestions");
+            Transform viewButton = FindNamedChild(portal.transform, "Button_ViewCourses");
+            Assert.That(prepareButton, Is.Not.Null);
+            Assert.That(prepareButton.gameObject.activeSelf, Is.True);
+            Assert.That(prepareButton.GetComponent<Button>().interactable, Is.True);
+            Assert.That(FindPortalLabel("Button_PrepareQuestionsLabel").text, Is.EqualTo("Prepare Questions"));
+            Assert.That(prepareButton.GetSiblingIndex(), Is.LessThan(viewButton.GetSiblingIndex()));
+
+            RectTransform panel = FindNamedChild(portal.transform, "FacultyPortalPanel") as RectTransform;
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel.sizeDelta.y, Is.GreaterThanOrEqualTo(780f));
+        }
+
+        [Test]
+        public void FacultyPortal_PreparingOverlay_HasProgressFillAndSolidBlocker()
+        {
+            ApplySave("Lail", FacultyIdentity.Role, "CSE", "F-001", idCardIssued: true, currentDay: 2);
+            FacultyPortalUI portal = FacultyPortalUI.EnsureExists();
+            portal.Show();
+
+            Transform overlay = FindNamedChild(portal.transform, "PreparingQuestionsOverlay");
+            Assert.That(overlay, Is.Not.Null);
+            Assert.That(overlay.gameObject.activeSelf, Is.False);
+            Assert.That(overlay.parent.name, Is.EqualTo("FacultyPortalOverlay"));
+
+            Image blocker = overlay.GetComponent<Image>();
+            Assert.That(blocker, Is.Not.Null);
+            Assert.That(blocker.color, Is.EqualTo(UiTheme.Black));
+            Assert.That(blocker.raycastTarget, Is.True);
+
+            Assert.That(FindPortalLabel("PreparingQuestionsLabel").text, Is.EqualTo("Preparing questions"));
+            Transform fill = FindNamedChild(portal.transform, "PreparingQuestionsProgressFill");
+            Assert.That(fill, Is.Not.Null);
+            Assert.That(fill.GetComponent<Image>(), Is.Not.Null);
+            Assert.That(fill.GetComponent<Image>().color, Is.EqualTo(UiTheme.BrightOrange));
+        }
+
+        [Test]
+        public void FacultyPortal_PrepareQuestions_WithZeroDuration_AppliesPlusThreeReputation()
+        {
+            ApplySave("Lail", FacultyIdentity.Role, "CSE", "F-001", idCardIssued: true, currentDay: 3);
+            FacultyProgress progress = FacultyProgress.EnsureExists();
+            progress.SetStateForTesting(50, facultyIdIssuedValue: true);
+            FacultyProgressSync.EnsureExists();
+
+            FacultyPortalUI.PrepareQuestionsDurationSeconds = 0f;
+            FacultyPortalUI portal = FacultyPortalUI.EnsureExists();
+            portal.Show();
+
+            FindNamedChild(portal.transform, "Button_PrepareQuestions").GetComponent<Button>().onClick.Invoke();
+
+            Assert.That(progress.QuestionsPreparedForCurrentDay, Is.True);
+            Assert.That(progress.Reputation, Is.EqualTo(53));
+            Assert.That(FindPortalLabel("Button_PrepareQuestionsLabel").text, Is.EqualTo("Questions Prepared"));
+            Assert.That(FindNamedChild(portal.transform, "Button_PrepareQuestions").GetComponent<Button>().interactable, Is.False);
         }
 
         [Test]
@@ -383,7 +455,13 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             };
         }
 
-        private void ApplySave(string playerName, string role, string department, string universityId, bool idCardIssued)
+        private void ApplySave(
+            string playerName,
+            string role,
+            string department,
+            string universityId,
+            bool idCardIssued,
+            int currentDay = 1)
         {
             var dto = new ApiClient.PlayerSaveStatusDto
             {
@@ -397,7 +475,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                     admissionCompleted = true,
                     idCardIssued = idCardIssued,
                     semester = 1,
-                    currentDay = 1
+                    currentDay = currentDay
                 }
             };
             saveState.ApplyCreatedSave(dto);

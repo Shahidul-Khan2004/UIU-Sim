@@ -40,6 +40,12 @@ namespace UIU.Simulator.UI
         private const float MiniMapHeight = 340f;
         private const float GameplayLookupInterval = 0.5f;
 
+        private const float MinMapZoom = 1f;
+        private const float MaxMapZoom = 4f;
+        /// <summary>Relative zoom increase per typical mouse-wheel notch (~120 scroll units). 1 → 2×.</summary>
+        private const float MapZoomStepPerNotch = 1f;
+        private const float ScrollUnitsPerNotch = 120f;
+
         [Header("Appearance")]
         [SerializeField] private Color overlayColor = new Color(0f, 0f, 0f, 0.72f);
         [SerializeField] private Color panelColor = UiTheme.Black;
@@ -51,8 +57,11 @@ namespace UIU.Simulator.UI
         private GameObject overlayRoot;
         private TextMeshProUGUI titleLabel;
         private TextMeshProUGUI statusLabel;
+        private RectTransform mapAreaRect;
+        private RectTransform mapZoomRect;
         private RawImage mapImage;
         private AspectRatioFitter mapAspect;
+        private float mapZoom = MinMapZoom;
 
         private GameObject miniMapRoot;
         private TextMeshProUGUI miniMapTitle;
@@ -133,6 +142,28 @@ namespace UIU.Simulator.UI
             return floorNumber <= 0 ? "GROUND FLOOR" : $"FLOOR {floorNumber}";
         }
 
+        /// <summary>
+        /// Pure zoom math for the fullscreen map. Positive <paramref name="scrollY"/> zooms in.
+        /// One typical mouse-wheel notch is ~120 Input System scroll units and doubles or halves
+        /// zoom (<see cref="MapZoomStepPerNotch"/> = 1 → 2×), clamped to
+        /// [<see cref="MinMapZoom"/>, <see cref="MaxMapZoom"/>]. A non-zero scroll smaller than
+        /// one notch still counts as a full notch; several 120-unit notches in one event stack.
+        /// </summary>
+        public static float ComputeMapZoom(float currentZoom, float scrollY)
+        {
+            float zoom = Mathf.Clamp(currentZoom, MinMapZoom, MaxMapZoom);
+            if (Mathf.Approximately(scrollY, 0f))
+            {
+                return zoom;
+            }
+
+            float notches = Mathf.Abs(scrollY) < ScrollUnitsPerNotch
+                ? Mathf.Sign(scrollY)
+                : scrollY / ScrollUnitsPerNotch;
+            float factor = Mathf.Pow(1f + MapZoomStepPerNotch, notches);
+            return Mathf.Clamp(zoom * factor, MinMapZoom, MaxMapZoom);
+        }
+
         /// <summary>True while any modal that owns player input (or the game menu) is showing.</summary>
         public static bool IsBlockingUiOpen()
         {
@@ -210,7 +241,46 @@ namespace UIU.Simulator.UI
                 Toggle();
             }
 
+            if (IsOpen)
+            {
+                HandleMapZoomScroll();
+            }
+
             RefreshMiniMap();
+        }
+
+        private void HandleMapZoomScroll()
+        {
+            Mouse mouse = Mouse.current;
+            if (mouse == null)
+            {
+                return;
+            }
+
+            float scrollY = mouse.scroll.ReadValue().y;
+            if (Mathf.Approximately(scrollY, 0f))
+            {
+                return;
+            }
+
+            float newZoom = ComputeMapZoom(mapZoom, scrollY);
+            if (Mathf.Approximately(newZoom, mapZoom))
+            {
+                return;
+            }
+
+            Vector2? focusLocal = null;
+            if (mapAreaRect != null
+                && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    mapAreaRect,
+                    mouse.position.ReadValue(),
+                    null,
+                    out Vector2 cursorLocal))
+            {
+                focusLocal = cursorLocal;
+            }
+
+            SetMapZoom(newZoom, focusLocal);
         }
 
         public void Toggle()
@@ -298,6 +368,7 @@ namespace UIU.Simulator.UI
 
             bool wasOpen = IsOpen;
             IsOpen = false;
+            ResetMapZoom();
 
             if (wasOpen && restoreGameplayControls)
             {
@@ -313,6 +384,15 @@ namespace UIU.Simulator.UI
 
         /// <summary>EditMode test seam: floor title currently shown in the map panel.</summary>
         public string DisplayedTitleForTesting => titleLabel != null ? titleLabel.text : null;
+
+        /// <summary>EditMode test seam: current fullscreen map zoom factor.</summary>
+        public float MapZoomForTesting => mapZoom;
+
+        /// <summary>EditMode test seam: apply a scroll-wheel delta to the fullscreen map zoom.</summary>
+        public void ApplyMapScrollForTesting(float scrollY)
+        {
+            SetMapZoom(ComputeMapZoom(mapZoom, scrollY));
+        }
 
         /// <summary>EditMode test seam: whether the bottom-right corner map is showing.</summary>
         public bool IsMiniMapVisibleForTesting => miniMapRoot != null && miniMapRoot.activeSelf;
@@ -330,6 +410,66 @@ namespace UIU.Simulator.UI
             Texture2D texture = LoadMapTexture(floorNumber);
             ApplyMapTexture(mapImage, mapAspect, texture);
             statusLabel.gameObject.SetActive(texture == null);
+            ResetMapZoom();
+        }
+
+        private void ResetMapZoom()
+        {
+            SetMapZoom(MinMapZoom);
+        }
+
+        private void SetMapZoom(float zoom, Vector2? focusLocalInMapArea = null)
+        {
+            float oldZoom = Mathf.Max(mapZoom, MinMapZoom);
+            mapZoom = Mathf.Clamp(zoom, MinMapZoom, MaxMapZoom);
+
+            if (mapZoomRect == null)
+            {
+                return;
+            }
+
+            mapZoomRect.localScale = new Vector3(mapZoom, mapZoom, 1f);
+
+            if (mapZoom <= MinMapZoom + 0.0001f || !focusLocalInMapArea.HasValue)
+            {
+                mapZoomRect.anchoredPosition = Vector2.zero;
+                return;
+            }
+
+            Vector2 cursor = focusLocalInMapArea.Value;
+            Vector2 oldPosition = mapZoomRect.anchoredPosition;
+            Vector2 newPosition = cursor - (cursor - oldPosition) * (mapZoom / oldZoom);
+            mapZoomRect.anchoredPosition = ClampMapPan(newPosition, mapZoom);
+        }
+
+        /// <summary>
+        /// Keeps the scaled plan covering the map area so zoom/pan never reveals empty space.
+        /// </summary>
+        private Vector2 ClampMapPan(Vector2 position, float zoom)
+        {
+            if (mapAreaRect == null || zoom <= MinMapZoom + 0.0001f)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 areaSize = mapAreaRect.rect.size;
+            // The plan is letterboxed inside the zoom rect. Clamp against the fitted image,
+            // so panning stops when the plan edge meets the area instead of the empty margin.
+            Vector2 contentSize = areaSize;
+            if (mapImage != null)
+            {
+                Vector2 imageSize = mapImage.rectTransform.rect.size;
+                if (imageSize.x > 1f && imageSize.y > 1f)
+                {
+                    contentSize = imageSize;
+                }
+            }
+
+            float maxX = Mathf.Max(0f, contentSize.x * zoom - areaSize.x) * 0.5f;
+            float maxY = Mathf.Max(0f, contentSize.y * zoom - areaSize.y) * 0.5f;
+            return new Vector2(
+                Mathf.Clamp(position.x, -maxX, maxX),
+                Mathf.Clamp(position.y, -maxY, maxY));
         }
 
         private Texture2D LoadMapTexture(int floorNumber)
@@ -389,9 +529,9 @@ namespace UIU.Simulator.UI
             Capture(FindFirstObjectByType<InteractionController>());
             Capture(FindFirstObjectByType<CameraFollow>());
 
-            // Disabling look/follow frees the cursor; the map has nothing to click, so keep it hidden.
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            // Disabling look/follow frees the cursor; show it so the player can aim scroll-zoom.
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         private void Capture(Behaviour control)
@@ -454,6 +594,7 @@ namespace UIU.Simulator.UI
             }
 
             IsOpen = false;
+            ResetMapZoom();
         }
 
         private void BuildUI()
@@ -498,26 +639,35 @@ namespace UIU.Simulator.UI
 
             GameObject mapArea = new GameObject("FloorMapArea");
             mapArea.transform.SetParent(panel.transform, false);
-            RectTransform mapAreaRect = mapArea.AddComponent<RectTransform>();
+            mapAreaRect = mapArea.AddComponent<RectTransform>();
             mapAreaRect.anchorMin = Vector2.zero;
             mapAreaRect.anchorMax = Vector2.one;
             mapAreaRect.offsetMin = new Vector2(32f, 64f);
             mapAreaRect.offsetMax = new Vector2(-32f, -84f);
+            mapArea.AddComponent<RectMask2D>();
+
+            GameObject zoomGo = new GameObject("FloorMapZoom");
+            zoomGo.transform.SetParent(mapArea.transform, false);
+            mapZoomRect = zoomGo.AddComponent<RectTransform>();
+            StretchFull(mapZoomRect);
+            mapZoomRect.pivot = new Vector2(0.5f, 0.5f);
 
             GameObject mapGo = new GameObject("FloorMapImage");
-            mapGo.transform.SetParent(mapArea.transform, false);
-            mapGo.AddComponent<RectTransform>();
+            mapGo.transform.SetParent(zoomGo.transform, false);
+            RectTransform mapRect = mapGo.AddComponent<RectTransform>();
+            mapRect.pivot = new Vector2(0.5f, 0.5f);
             mapImage = mapGo.AddComponent<RawImage>();
             mapImage.raycastTarget = false;
             mapAspect = mapGo.AddComponent<AspectRatioFitter>();
             mapAspect.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             mapAspect.aspectRatio = 1f;
+            ResetMapZoom();
 
             statusLabel = CreateLabel(mapArea.transform, "FloorMapStatus", "Map unavailable for this floor.", 20f, FontStyles.Bold, UiTheme.Red);
             StretchFull(statusLabel.rectTransform);
             statusLabel.gameObject.SetActive(false);
 
-            TextMeshProUGUI hint = CreateLabel(panel.transform, "FloorMapHint", "Press M or Esc to close", 14f, FontStyles.Normal, UiTheme.Grey);
+            TextMeshProUGUI hint = CreateLabel(panel.transform, "FloorMapHint", "Scroll to zoom · Press M or Esc to close", 14f, FontStyles.Normal, UiTheme.Grey);
             RectTransform hintRect = hint.rectTransform;
             hintRect.anchorMin = new Vector2(0f, 0f);
             hintRect.anchorMax = new Vector2(1f, 0f);
