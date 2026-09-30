@@ -52,6 +52,13 @@ public class FacultyProgressController {
         return ResponseEntity.ok(facultyProgressService.claimCoffee(jwt, request.option()));
     }
 
+    @PostMapping("/me/faculty-progress/prepare-questions")
+    public ResponseEntity<FacultyProgressResponse> prepareFacultyQuestions(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(facultyProgressService.prepareQuestions(jwt));
+    }
+
     @PostMapping(
             value = "/me/faculty-teach/scan",
             consumes = MediaType.APPLICATION_JSON_VALUE

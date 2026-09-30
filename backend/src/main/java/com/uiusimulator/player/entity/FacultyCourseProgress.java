@@ -62,6 +62,12 @@ public class FacultyCourseProgress {
         return true;
     }
 
+    /** Clears completion so the course can be taught again after a faculty day advance. */
+    public void markIncomplete() {
+        this.completed = false;
+        this.completedAt = null;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -6,6 +6,7 @@ import com.uiusimulator.player.entity.ClassroomLocationCatalog;
 import com.uiusimulator.player.entity.FacultyCourseAssignment;
 import com.uiusimulator.player.entity.FacultyCourseAssignmentCatalog;
 import com.uiusimulator.player.entity.FacultyCourseProgress;
+import com.uiusimulator.player.entity.FacultyDaySchedule;
 import com.uiusimulator.player.entity.FacultyProgress;
 import com.uiusimulator.player.repository.FacultyCourseAssignmentRepository;
 import com.uiusimulator.player.repository.FacultyCourseProgressRepository;
@@ -82,12 +83,25 @@ public class FacultyTeachService {
         }
 
         boolean firstScanReward = locked.beginLectureSession(requestedCourse);
+        int currentDay = context.save().getCurrentDay();
+        boolean examPenaltyApplied = false;
+        if (FacultyDaySchedule.isExamDay(context.save().getSemester(), currentDay)) {
+            examPenaltyApplied = locked.applyExamUnpreparedPenaltyForDay(currentDay);
+        }
         FacultyProgress saved = facultyProgressRepository.saveAndFlush(locked);
         if (firstScanReward) {
             log.info(
                     "Faculty classroom scan reward applied for clerkUserId={} courseId={} reputation={}",
                     jwt.getSubject(),
                     requestedCourse,
+                    saved.getReputation()
+            );
+        }
+        if (examPenaltyApplied) {
+            log.info(
+                    "Faculty exam unprepared penalty applied for clerkUserId={} day={} reputation={}",
+                    jwt.getSubject(),
+                    currentDay,
                     saved.getReputation()
             );
         }
