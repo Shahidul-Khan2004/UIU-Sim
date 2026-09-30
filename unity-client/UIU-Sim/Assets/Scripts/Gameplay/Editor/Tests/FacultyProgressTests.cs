@@ -93,11 +93,43 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: true);
             facultyHud.ApplyRoleVisibility();
 
+            Assert.That(FindLabel(facultyHud.transform, "IdCardTitle").gameObject.activeInHierarchy, Is.True);
             AssertObjective(facultyHud, "IdCard", complete: true);
             AssertObjective(facultyHud, "Office", complete: false);
             AssertObjective(facultyHud, "Materials", complete: false);
             AssertObjective(facultyHud, "Course0", complete: false);
             AssertObjective(facultyHud, "Course1", complete: false);
+        }
+
+        [TestCase(1, true)]
+        [TestCase(2, false)]
+        [TestCase(3, false)]
+        [TestCase(5, false)]
+        public void FacultyHud_HidesCompletedIdCardRow_FromDay2Onward(int day, bool expectIdRowVisible)
+        {
+            ApplyFacultySave(day);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            TextMeshProUGUI idTitle = FindLabel(facultyHud.transform, "IdCardTitle");
+            Assert.That(idTitle, Is.Not.Null);
+            Assert.That(idTitle.gameObject.activeInHierarchy, Is.EqualTo(expectIdRowVisible));
+            if (expectIdRowVisible)
+            {
+                AssertObjective(facultyHud, "IdCard", complete: true);
+            }
+        }
+
+        [Test]
+        public void FacultyHud_Day2WithoutId_KeepsIdCardRowVisible()
+        {
+            ApplyFacultySave(2);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: false);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "IdCardTitle").gameObject.activeInHierarchy, Is.True);
+            AssertObjective(facultyHud, "IdCard", complete: false);
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Collect Faculty ID Card"));
         }
 
         [Test]
@@ -347,6 +379,116 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindLabel(facultyHud.transform, "ReputationValue").text, Is.EqualTo("71"));
         }
 
+        [TestCase(2, "Exam Day — use your office computer")]
+        [TestCase(3, "Midterm Exam Day — use your office computer")]
+        [TestCase(5, "Exam Day — use your office computer")]
+        [TestCase(6, "Final Exam Day — use your office computer")]
+        public void FacultyHud_ExamDay_CurrentObjectiveIsPrepareQuestions_WhenIdIssued(int day, string nextSnippet)
+        {
+            ApplyFacultySave(day);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Prepare Questions"));
+            Assert.That(FindLabel(facultyHud.transform, "NextActivity").text, Does.Contain(nextSnippet));
+            AssertObjective(facultyHud, "PrepareQuestions", complete: false);
+            Assert.That(FindLabel(facultyHud.transform, "PrepareQuestionsTitle").gameObject.activeInHierarchy, Is.True);
+            Assert.That(FindLabel(facultyHud.transform, "IdCardTitle").gameObject.activeInHierarchy, Is.False);
+        }
+
+        [Test]
+        public void FacultyHud_Day1_DoesNotShowPrepareQuestionsAsCurrentObjective()
+        {
+            ApplyFacultySave(1);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Not.Contain("Prepare Questions"));
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Setup Faculty Office"));
+            Assert.That(FindLabel(facultyHud.transform, "PrepareQuestionsTitle").gameObject.activeInHierarchy, Is.False);
+        }
+
+        [Test]
+        public void FacultyHud_Day4_HidesPrepareQuestionsRow()
+        {
+            ApplyFacultySave(4);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Not.Contain("Prepare Questions"));
+            Assert.That(FindLabel(facultyHud.transform, "PrepareQuestionsTitle").gameObject.activeInHierarchy, Is.False);
+        }
+
+        [TestCase(1, true)]
+        [TestCase(2, false)]
+        [TestCase(3, false)]
+        [TestCase(5, false)]
+        [TestCase(6, false)]
+        public void FacultyHud_HidesCompletedOfficeRow_FromDay2Onward(int day, bool expectOfficeRowVisible)
+        {
+            ApplyFacultySave(day);
+            facultyProgress.SetStateForTesting(
+                55,
+                computerUsedValue: true,
+                officeEnteredValue: true,
+                facultyIdIssuedValue: true,
+                questionsPreparedForCurrentDayValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            TextMeshProUGUI officeTitle = FindLabel(facultyHud.transform, "OfficeTitle");
+            Assert.That(officeTitle, Is.Not.Null);
+            Assert.That(officeTitle.gameObject.activeInHierarchy, Is.EqualTo(expectOfficeRowVisible));
+            if (expectOfficeRowVisible)
+            {
+                AssertObjective(facultyHud, "Office", complete: true);
+            }
+        }
+
+        [Test]
+        public void FacultyHud_Day2WithoutOffice_KeepsOfficeRowVisible()
+        {
+            ApplyFacultySave(2);
+            facultyProgress.SetStateForTesting(
+                50,
+                facultyIdIssuedValue: true,
+                questionsPreparedForCurrentDayValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "OfficeTitle").gameObject.activeInHierarchy, Is.True);
+            AssertObjective(facultyHud, "Office", complete: false);
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Setup Faculty Office"));
+        }
+
+        [Test]
+        public void FacultyHud_ExamDayWithoutId_KeepsIdAsCurrentObjective_ButShowsPrepareRow()
+        {
+            ApplyFacultySave(2);
+            facultyProgress.SetStateForTesting(50, facultyIdIssuedValue: false);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Collect Faculty ID Card"));
+            Assert.That(FindLabel(facultyHud.transform, "PrepareQuestionsTitle").gameObject.activeInHierarchy, Is.True);
+            Assert.That(FindLabel(facultyHud.transform, "IdCardTitle").gameObject.activeInHierarchy, Is.True);
+            AssertObjective(facultyHud, "IdCard", complete: false);
+            AssertObjective(facultyHud, "PrepareQuestions", complete: false);
+        }
+
+        [Test]
+        public void FacultyHud_ExamDay_AfterQuestionsPrepared_ContinuesExistingObjectiveOrder()
+        {
+            ApplyFacultySave(2);
+            facultyProgress.SetStateForTesting(
+                53,
+                facultyIdIssuedValue: true,
+                questionsPreparedForCurrentDayValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("Setup Faculty Office"));
+            Assert.That(FindLabel(facultyHud.transform, "IdCardTitle").gameObject.activeInHierarchy, Is.False);
+            Assert.That(FindLabel(facultyHud.transform, "OfficeTitle").gameObject.activeInHierarchy, Is.True);
+            AssertObjective(facultyHud, "PrepareQuestions", complete: true);
+        }
+
         [Test]
         public void FacultyClassroom_AfterIcs_StillOpensDiscreteMathematicsChoiceUi()
         {
@@ -405,7 +547,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindNamedChild(lecture.transform, "LeaveButton"), Is.Not.Null);
         }
 
-        private void ApplyFacultySave()
+        private void ApplyFacultySave(int currentDay = 1)
         {
             saveState.ApplyCreatedSave(new ApiClient.PlayerSaveStatusDto
             {
@@ -419,7 +561,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                     admissionCompleted = true,
                     idCardIssued = true,
                     semester = 1,
-                    currentDay = 1
+                    currentDay = currentDay
                 }
             });
         }

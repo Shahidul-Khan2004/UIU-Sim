@@ -19,6 +19,7 @@ namespace UIU.Simulator.Gameplay.Faculty
         private const string ProgressPath = "api/players/me/faculty-progress";
         private const string ComputerPath = "api/players/me/faculty-progress/computer";
         private const string CoffeePath = "api/players/me/faculty-progress/coffee";
+        private const string PrepareQuestionsPath = "api/players/me/faculty-progress/prepare-questions";
         private const string ScanPath = "api/players/me/faculty-teach/scan";
         private const string CompletePath = "api/players/me/faculty-teach/complete";
         private const string LeavePath = "api/players/me/faculty-teach/leave";
@@ -96,6 +97,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 playerSaveState.OnHydrated += HandleSaveHydrated;
                 playerSaveState.OnAdmissionCompleted += HandleSaveHydrated;
+                playerSaveState.OnDayProgressChanged += HandleDayProgressChanged;
             }
         }
 
@@ -105,6 +107,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             {
                 playerSaveState.OnHydrated -= HandleSaveHydrated;
                 playerSaveState.OnAdmissionCompleted -= HandleSaveHydrated;
+                playerSaveState.OnDayProgressChanged -= HandleDayProgressChanged;
             }
         }
 
@@ -147,6 +150,52 @@ namespace UIU.Simulator.Gameplay.Faculty
 
             string json = JsonUtility.ToJson(new ApiClient.FacultyCoffeeRequestDto(option.Trim()));
             RequestMutation(CoffeePath, json, FacultyUpdateSource.GameplayMutation, onSuccess, onFailure);
+        }
+
+        public void RequestPrepareQuestions(Action onSuccess = null, Action onFailure = null)
+        {
+            if (!Application.isPlaying)
+            {
+                ApplyPrepareQuestionsLocallyForTesting();
+                onSuccess?.Invoke();
+                return;
+            }
+
+            RequestMutation(PrepareQuestionsPath, jsonBody: null, FacultyUpdateSource.GameplayMutation, onSuccess, onFailure);
+        }
+
+        /// <summary>
+        /// EditMode / offline seam used when prepare-questions cannot hit the network.
+        /// Applies +3 Reputation once and marks questions prepared for the current day.
+        /// </summary>
+        public void ApplyPrepareQuestionsLocallyForTesting()
+        {
+            if (facultyProgress == null)
+            {
+                facultyProgress = GetComponent<FacultyProgress>() ?? FacultyProgress.EnsureExists();
+            }
+
+            if (facultyProgress == null || facultyProgress.QuestionsPreparedForCurrentDay)
+            {
+                return;
+            }
+
+            facultyProgress.SetStateForTesting(
+                Mathf.Clamp(facultyProgress.Reputation + 3, 0, 100),
+                facultyProgress.ComputerUsed,
+                facultyProgress.OfficeEntered,
+                facultyProgress.ClassroomScanned,
+                facultyProgress.LectureCompleted,
+                facultyProgress.LectureLeft,
+                facultyProgress.IcsMaterialPrepared,
+                facultyProgress.DmMaterialPrepared,
+                FacultyUpdateSource.GameplayMutation,
+                facultyProgress.IcsCompleted,
+                facultyProgress.DmCompleted,
+                facultyProgress.FacultyIdIssued,
+                facultyProgress.CoffeeClaimedForCurrentDay,
+                facultyProgress.CoffeeOption,
+                questionsPreparedForCurrentDayValue: true);
         }
 
         public void RequestScan(string courseId, Action onSuccess, Action onFailure)
@@ -193,6 +242,29 @@ namespace UIU.Simulator.Gameplay.Faculty
             }
 
             FacultyHUD.EnsureExists();
+            if (!isHydrating)
+            {
+                StartCoroutine(HydrateRoutine(FacultyUpdateSource.InitialHydration));
+            }
+        }
+
+        private void HandleDayProgressChanged()
+        {
+            if (playerSaveState == null || !playerSaveState.IsHydrated)
+            {
+                return;
+            }
+
+            if (!FacultyIdentity.Matches(playerSaveState.Role))
+            {
+                return;
+            }
+
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
             if (!isHydrating)
             {
                 StartCoroutine(HydrateRoutine(FacultyUpdateSource.InitialHydration));
@@ -364,7 +436,8 @@ namespace UIU.Simulator.Gameplay.Faculty
                     dto.dmCompleted,
                     dto.facultyIdIssued,
                     dto.coffeeClaimedForCurrentDay,
-                    dto.coffeeOption);
+                    dto.coffeeOption,
+                    dto.questionsPreparedForCurrentDay);
                 return dto;
             }
             catch (Exception ex)

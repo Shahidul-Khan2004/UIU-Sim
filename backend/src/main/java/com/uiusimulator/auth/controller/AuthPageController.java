@@ -147,8 +147,6 @@ public class AuthPageController {
                       <div class="row">
                         <button id="send-unity" type="button">Send to Unity</button>
                         <button id="copy-token" class="secondary" type="button">Copy token</button>
-                        <button id="try-deeplink" class="secondary" type="button">Try deep link</button>
-                        <button id="sign-out" class="secondary" type="button">Sign out</button>
                       </div>
                       <div id="user-info"></div>
                       <div id="dev-panel">
@@ -159,7 +157,6 @@ public class AuthPageController {
                     <div id="status">Loading Clerk…</div>
                   </main>
                   <script>
-                    const DEEP_LINK = "uiusim://auth/callback";
                     const params = new URLSearchParams(window.location.search);
                     const sessionId = params.get("session");
                     const statusEl = document.getElementById("status");
@@ -216,13 +213,6 @@ public class AuthPageController {
                       setStatus("Token copied. Paste it in Unity Editor (Apply JWT).", "ok");
                     }
 
-                    async function tryDeepLink() {
-                      const token = cachedToken || await fetchToken();
-                      const url = DEEP_LINK + "?token=" + encodeURIComponent(token);
-                      setStatus("Attempting uiusim:// deep link (usually fails on Linux Editor)…");
-                      window.location.href = url;
-                    }
-
                     function renderAuthState() {
                       const user = window.Clerk.user;
                       if (user) {
@@ -265,11 +255,6 @@ public class AuthPageController {
                             afterSignUpUrl: window.location.href
                           });
                         });
-                        document.getElementById("sign-out").addEventListener("click", async () => {
-                          await clerk.signOut();
-                          cachedToken = "";
-                          renderAuthState();
-                        });
                         document.getElementById("send-unity").addEventListener("click", () => {
                           sendToUnityBridge().catch((err) => {
                             console.error(err);
@@ -280,12 +265,6 @@ public class AuthPageController {
                           copyToken().catch((err) => {
                             console.error(err);
                             setStatus(err.message || "Copy failed", "error");
-                          });
-                        });
-                        document.getElementById("try-deeplink").addEventListener("click", () => {
-                          tryDeepLink().catch((err) => {
-                            console.error(err);
-                            setStatus(err.message || "Deep link failed", "error");
                           });
                         });
 

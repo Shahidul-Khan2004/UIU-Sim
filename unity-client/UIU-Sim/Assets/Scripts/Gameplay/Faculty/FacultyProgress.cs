@@ -32,6 +32,7 @@ namespace UIU.Simulator.Gameplay.Faculty
         private bool dmCompleted;
         private bool coffeeClaimedForCurrentDay;
         private string coffeeOption;
+        private bool questionsPreparedForCurrentDay;
 
         public int Reputation => reputation;
         public bool FacultyIdIssued => facultyIdIssued;
@@ -51,6 +52,7 @@ namespace UIU.Simulator.Gameplay.Faculty
         public bool BothClassesCompleted => icsCompleted && dmCompleted;
         public bool CoffeeClaimedForCurrentDay => coffeeClaimedForCurrentDay;
         public string CoffeeOption => coffeeOption;
+        public bool QuestionsPreparedForCurrentDay => questionsPreparedForCurrentDay;
 
         public event Action<int, FacultyUpdateSource> OnReputationUpdated;
         public event Action OnObjectivesChanged;
@@ -113,7 +115,8 @@ namespace UIU.Simulator.Gameplay.Faculty
                 false,
                 false,
                 false,
-                null);
+                null,
+                false);
         }
 
         public void SetFacultyIdIssued(bool issued)
@@ -141,7 +144,8 @@ namespace UIU.Simulator.Gameplay.Faculty
             bool newDmCompleted = false,
             bool newFacultyIdIssued = false,
             bool newCoffeeClaimedForCurrentDay = false,
-            string newCoffeeOption = null)
+            string newCoffeeOption = null,
+            bool newQuestionsPreparedForCurrentDay = false)
         {
             int previousReputation = reputation;
             reputation = Mathf.Clamp(newReputation, 0, 100);
@@ -157,6 +161,7 @@ namespace UIU.Simulator.Gameplay.Faculty
             dmCompleted = newDmCompleted;
             coffeeClaimedForCurrentDay = newCoffeeClaimedForCurrentDay;
             coffeeOption = newCoffeeClaimedForCurrentDay ? newCoffeeOption : null;
+            questionsPreparedForCurrentDay = newQuestionsPreparedForCurrentDay;
 
             OnReputationUpdated?.Invoke(reputation, source);
             OnObjectivesChanged?.Invoke();
@@ -180,7 +185,8 @@ namespace UIU.Simulator.Gameplay.Faculty
             bool dmCompletedValue = false,
             bool facultyIdIssuedValue = false,
             bool coffeeClaimedForCurrentDayValue = false,
-            string coffeeOptionValue = null)
+            string coffeeOptionValue = null,
+            bool questionsPreparedForCurrentDayValue = false)
         {
             ApplyServerState(
                 reputationValue,
@@ -196,7 +202,8 @@ namespace UIU.Simulator.Gameplay.Faculty
                 dmCompletedValue,
                 facultyIdIssuedValue,
                 coffeeClaimedForCurrentDayValue,
-                coffeeOptionValue);
+                coffeeOptionValue,
+                questionsPreparedForCurrentDayValue);
         }
 
         public bool IsCourseCompleted(string courseCode)

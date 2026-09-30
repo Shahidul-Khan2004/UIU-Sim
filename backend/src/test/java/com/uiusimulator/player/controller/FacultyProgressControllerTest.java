@@ -143,7 +143,8 @@ class FacultyProgressControllerTest {
                         null,
                         List.of(),
                         true,
-                        "CAPPUCCINO"
+                        "CAPPUCCINO",
+                        false
                 ));
 
         mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
@@ -154,6 +155,54 @@ class FacultyProgressControllerTest {
                 .andExpect(jsonPath("$.reputation").value(51))
                 .andExpect(jsonPath("$.coffeeClaimedForCurrentDay").value(true))
                 .andExpect(jsonPath("$.coffeeOption").value("CAPPUCCINO"));
+    }
+
+    @Test
+    void prepareQuestions_faculty_returnsUpdatedReputation() throws Exception {
+        when(facultyProgressService.prepareQuestions(any(Jwt.class)))
+                .thenReturn(new FacultyProgressResponse(
+                        53,
+                        true,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        "ICS",
+                        null,
+                        null,
+                        List.of(),
+                        false,
+                        null,
+                        true
+                ));
+
+        mockMvc.perform(post("/api/players/me/faculty-progress/prepare-questions")
+                        .with(jwt().jwt(j -> j.subject("user_me"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reputation").value(53))
+                .andExpect(jsonPath("$.questionsPreparedForCurrentDay").value(true));
+    }
+
+    @Test
+    void prepareQuestions_notExamDay_returns400() throws Exception {
+        when(facultyProgressService.prepareQuestions(any(Jwt.class)))
+                .thenThrow(new IllegalArgumentException(
+                        FacultyProgressService.PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE
+                ));
+
+        mockMvc.perform(post("/api/players/me/faculty-progress/prepare-questions")
+                        .with(jwt().jwt(j -> j.subject("user_me"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message")
+                        .value(FacultyProgressService.PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE));
     }
 
     @Test
@@ -190,6 +239,8 @@ class FacultyProgressControllerTest {
         mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"option\":\"CAPPUCCINO\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/players/me/faculty-progress/prepare-questions"))
                 .andExpect(status().isUnauthorized());
     }
 }

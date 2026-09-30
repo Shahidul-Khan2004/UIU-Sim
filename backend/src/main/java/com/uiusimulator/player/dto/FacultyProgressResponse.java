@@ -22,7 +22,8 @@ public record FacultyProgressResponse(
         String teachBlockedReason,
         List<FacultyCourseProgressItem> courses,
         boolean coffeeClaimedForCurrentDay,
-        String coffeeOption
+        String coffeeOption,
+        boolean questionsPreparedForCurrentDay
 ) {
     public static FacultyProgressResponse from(
             FacultyProgress progress,
@@ -58,7 +59,8 @@ public record FacultyProgressResponse(
                 teachBlockedReason,
                 courses == null ? List.of() : List.copyOf(courses),
                 coffeeClaimedForCurrentDay,
-                coffeeClaimedForCurrentDay ? progress.getCoffeeOption() : null
+                coffeeClaimedForCurrentDay ? progress.getCoffeeOption() : null,
+                progress.isQuestionsPreparedForDay(currentDay)
         );
     }
 
@@ -91,7 +93,8 @@ public record FacultyProgressResponse(
                 null,
                 List.of(),
                 false,
-                null
+                null,
+                false
         );
     }
 }

@@ -6,6 +6,7 @@ import com.uiusimulator.player.entity.ClassroomCourseDefinition;
 import com.uiusimulator.player.entity.FacultyCoffeeOption;
 import com.uiusimulator.player.entity.FacultyCourseAssignmentCatalog;
 import com.uiusimulator.player.entity.FacultyCourseProgress;
+import com.uiusimulator.player.entity.FacultyDaySchedule;
 import com.uiusimulator.player.entity.FacultyProgress;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerRole;
@@ -33,6 +34,8 @@ public class FacultyProgressService {
 
     public static final String FACULTY_ONLY_MESSAGE = "Faculty progress is available only to faculty.";
     public static final String COFFEE_CLASSES_REQUIRED_MESSAGE = "Coffee is available after your classes.";
+    public static final String PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE =
+            "Question preparation is only available on exam days.";
 
     private static final Logger log = LoggerFactory.getLogger(FacultyProgressService.class);
 
@@ -111,6 +114,56 @@ public class FacultyProgressService {
             );
         }
         return toResponse(saved);
+    }
+
+    /**
+     * Exam-day question preparation. Awards +3 reputation once for the current day.
+     * Idempotent for the current player day; rejected on non-exam days (1 and 6).
+     */
+    @Transactional
+    public FacultyProgressResponse prepareQuestions(Jwt jwt) {
+        FacultyContext context = requireFaculty(jwt);
+        int currentDay = context.save().getCurrentDay();
+        if (!FacultyDaySchedule.isExamDay(context.save().getSemester(), currentDay)) {
+            throw new IllegalArgumentException(PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE);
+        }
+
+        FacultyProgress locked = getOrCreateWithLock(context.player());
+        boolean rewarded = locked.prepareQuestionsForDay(currentDay);
+        FacultyProgress saved = facultyProgressRepository.saveAndFlush(locked);
+        if (rewarded) {
+            log.info(
+                    "Faculty question prepare reward applied for clerkUserId={} day={} reputation={}",
+                    jwt.getSubject(),
+                    currentDay,
+                    saved.getReputation()
+            );
+        }
+        return toResponse(saved);
+    }
+
+    /**
+     * Resets faculty daily teaching state before day advance: lecture session flags and
+     * per-course completion. Preserves reputation, office/computer setup, materials,
+     * coffee, and question/penalty day columns.
+     */
+    @Transactional
+    public void resetDailyActivities(Player player) {
+        if (player == null) {
+            return;
+        }
+        FacultyProgress locked = getOrCreateWithLock(player);
+        locked.resetDailyTeachingState();
+        facultyProgressRepository.saveAndFlush(locked);
+
+        List<FacultyCourseProgress> courses = facultyCourseProgressRepository.findByPlayerId(player.getId());
+        for (FacultyCourseProgress course : courses) {
+            FacultyCourseProgress row = facultyCourseProgressRepository
+                    .findByPlayerIdAndCourseCodeWithLock(player.getId(), course.getCourseCode())
+                    .orElse(course);
+            row.markIncomplete();
+            facultyCourseProgressRepository.saveAndFlush(row);
+        }
     }
 
     /**

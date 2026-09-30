@@ -85,6 +85,8 @@ namespace UIU.Simulator.Authentication
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
 
+            AuthUiUtility.CreateCampusBackdrop(canvasObject.transform);
+
             GameObject panel = AuthUiUtility.CreateRect("Panel", canvasObject.transform);
             Image panelImage = panel.AddComponent<Image>();
             panelImage.color = new Color(UiTheme.Black.r, UiTheme.Black.g, UiTheme.Black.b, 0.96f);

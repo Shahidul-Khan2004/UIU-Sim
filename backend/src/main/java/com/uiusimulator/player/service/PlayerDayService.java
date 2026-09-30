@@ -10,6 +10,7 @@ import com.uiusimulator.player.entity.LibrarySelfStudyDefinition;
 import com.uiusimulator.player.entity.LibraryStudyDefinition;
 import com.uiusimulator.player.entity.Player;
 import com.uiusimulator.player.entity.PlayerDayActivity;
+import com.uiusimulator.player.entity.PlayerRole;
 import com.uiusimulator.player.entity.PlayerSave;
 import com.uiusimulator.player.entity.PlayerStats;
 import com.uiusimulator.player.exception.PlayerSaveNotFoundException;
@@ -41,6 +42,7 @@ public class PlayerDayService {
     private final PlayerStatsRepository playerStatsRepository;
     private final AttendIcsService attendIcsService;
     private final com.uiusimulator.assessment.service.AssessmentService assessments;
+    private final FacultyProgressService facultyProgressService;
 
     public PlayerDayService(
             PlayerService playerService,
@@ -48,7 +50,8 @@ public class PlayerDayService {
             PlayerDayActivityRepository playerDayActivityRepository,
             PlayerStatsRepository playerStatsRepository,
             AttendIcsService attendIcsService,
-            com.uiusimulator.assessment.service.AssessmentService assessments
+            com.uiusimulator.assessment.service.AssessmentService assessments,
+            FacultyProgressService facultyProgressService
     ) {
         this.playerService = playerService;
         this.playerSaveRepository = playerSaveRepository;
@@ -56,6 +59,7 @@ public class PlayerDayService {
         this.playerStatsRepository = playerStatsRepository;
         this.attendIcsService = attendIcsService;
         this.assessments = assessments;
+        this.facultyProgressService = facultyProgressService;
     }
 
     /**
@@ -153,10 +157,15 @@ public class PlayerDayService {
             throw new IllegalArgumentException("Semester progression is not available yet.");
         }
 
-        // Safety: close unresolved required activities before clearing rows.
-        ensureBreakfastResolved(player, lockedSave, lockedStats);
-        attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
-        assessments.finalizeDay(player, lockedSave);
+        if (lockedSave.getRole() == PlayerRole.FACULTY) {
+            // Faculty: skip student breakfast / ICS / assessment finalize; reset daily teaching.
+            facultyProgressService.resetDailyActivities(player);
+        } else {
+            // Safety: close unresolved required activities before clearing rows.
+            ensureBreakfastResolved(player, lockedSave, lockedStats);
+            attendIcsService.ensureResolvedOnFinalize(player, lockedSave, lockedStats);
+            assessments.finalizeDay(player, lockedSave);
+        }
 
         playerDayActivityRepository.deleteByPlayer_Id(player.getId());
         playerDayActivityRepository.flush();

@@ -62,6 +62,38 @@ namespace UIU.Simulator.Authentication
             return go;
         }
 
+        /// <summary>
+        /// Full-screen campus photo behind auth cards. Crops via AspectRatioFitter envelope.
+        /// </summary>
+        public static RawImage CreateCampusBackdrop(Transform parent)
+        {
+            GameObject backdrop = CreateRect("Backdrop", parent);
+            RectTransform rect = backdrop.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            RawImage image = backdrop.AddComponent<RawImage>();
+            image.raycastTarget = false;
+
+            Texture2D texture = Resources.Load<Texture2D>("UI/login-background");
+            if (texture != null)
+            {
+                image.texture = texture;
+                AspectRatioFitter fitter = backdrop.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = (float)texture.width / texture.height;
+            }
+            else
+            {
+                image.color = UiTheme.Black;
+                Debug.LogWarning("[AuthUiUtility] Missing Resources/UI/login-background; using black fallback.");
+            }
+
+            return image;
+        }
+
         public static Text CreateText(Transform parent, string name, string content, int fontSize, TextAnchor anchor)
         {
             GameObject go = CreateRect(name, parent);

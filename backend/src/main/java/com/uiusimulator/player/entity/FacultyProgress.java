@@ -28,6 +28,8 @@ public class FacultyProgress implements Persistable<UUID> {
     public static final int LECTURE_COMPLETE_REWARD = 5;
     public static final int LECTURE_LEAVE_PENALTY = -10;
     public static final int WRONG_CLASSROOM_PENALTY = -5;
+    public static final int QUESTION_PREPARE_REWARD = 3;
+    public static final int EXAM_UNPREPARED_PENALTY = -3;
 
     @Id
     @Column(name = "player_id")
@@ -66,6 +68,14 @@ public class FacultyProgress implements Persistable<UUID> {
     /** Last successful coffee option name; meaningful only when claimed for the compared day. */
     @Column(name = "coffee_option", length = 64)
     private String coffeeOption;
+
+    /** Game day for which exam questions were prepared (day-scoped like coffee_claimed_day). */
+    @Column(name = "questions_prepared_day")
+    private Integer questionsPreparedDay;
+
+    /** Game day for which the exam unprepared classroom-scan penalty was applied. */
+    @Column(name = "exam_unprepared_penalty_day")
+    private Integer examUnpreparedPenaltyDay;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
@@ -202,6 +212,54 @@ public class FacultyProgress implements Persistable<UUID> {
         return coffeeClaimedDay != null && coffeeClaimedDay == currentDay;
     }
 
+    /**
+     * Marks questions prepared for the given game day and awards +3 reputation once.
+     * Returns false when already prepared for that day (idempotent no-op).
+     */
+    public boolean prepareQuestionsForDay(int currentDay) {
+        if (isQuestionsPreparedForDay(currentDay)) {
+            return false;
+        }
+        this.questionsPreparedDay = currentDay;
+        addReputation(QUESTION_PREPARE_REWARD);
+        return true;
+    }
+
+    public boolean isQuestionsPreparedForDay(int currentDay) {
+        return questionsPreparedDay != null && questionsPreparedDay == currentDay;
+    }
+
+    /**
+     * Applies the once-per-day −3 unprepared exam-day penalty when questions were not prepared.
+     * Returns false when already prepared or already penalized for that day.
+     */
+    public boolean applyExamUnpreparedPenaltyForDay(int currentDay) {
+        if (isQuestionsPreparedForDay(currentDay)) {
+            return false;
+        }
+        if (isExamUnpreparedPenaltyAppliedForDay(currentDay)) {
+            return false;
+        }
+        this.examUnpreparedPenaltyDay = currentDay;
+        addReputation(EXAM_UNPREPARED_PENALTY);
+        return true;
+    }
+
+    public boolean isExamUnpreparedPenaltyAppliedForDay(int currentDay) {
+        return examUnpreparedPenaltyDay != null && examUnpreparedPenaltyDay == currentDay;
+    }
+
+    /**
+     * Clears daily lecture-session flags so both classes can be taught again after day advance.
+     * Does not touch reputation, office/computer setup, coffee, or question/penalty day columns.
+     */
+    public void resetDailyTeachingState() {
+        this.classroomScanned = false;
+        this.lectureCompleted = false;
+        this.lectureLeft = false;
+        this.activeCourseCode = null;
+    }
+
     public void addReputation(int delta) {
         this.reputation = clamp(this.reputation + delta);
     }
@@ -216,6 +274,8 @@ public class FacultyProgress implements Persistable<UUID> {
         this.activeCourseCode = null;
         this.coffeeClaimedDay = null;
         this.coffeeOption = null;
+        this.questionsPreparedDay = null;
+        this.examUnpreparedPenaltyDay = null;
         this.updatedAt = Instant.now();
     }
 
@@ -265,6 +325,14 @@ public class FacultyProgress implements Persistable<UUID> {
 
     public String getCoffeeOption() {
         return coffeeOption;
+    }
+
+    public Integer getQuestionsPreparedDay() {
+        return questionsPreparedDay;
+    }
+
+    public Integer getExamUnpreparedPenaltyDay() {
+        return examUnpreparedPenaltyDay;
     }
 
     public Instant getUpdatedAt() {

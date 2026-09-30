@@ -36,6 +36,8 @@ import org.springframework.test.context.ActiveProfiles;
         PlayerService.class,
         PlayerSaveService.class,
         FacultyProgressService.class,
+        FacultyTeachService.class,
+        FacultyCourseService.class,
         PlayerActivityService.class,
         PlayerDayService.class,
         AttendIcsService.class,
@@ -54,6 +56,12 @@ class PlayerDayServiceTest {
 
     @Autowired
     private PlayerService playerService;
+
+    @Autowired
+    private FacultyProgressService facultyProgressService;
+
+    @Autowired
+    private FacultyTeachService facultyTeachService;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -338,6 +346,71 @@ class PlayerDayServiceTest {
 
         assertThatThrownBy(() -> playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1)))
                 .isInstanceOf(com.uiusimulator.player.exception.PlayerSaveNotFoundException.class);
+    }
+
+    @Test
+    void facultyAdvance_resetsClassCompletionAndLectureFlags_keepsReputation_skipsBreakfastPenalty() {
+        Jwt jwt = jwtWith("user_faculty_day_adv");
+        playerSaveService.createSave(
+                jwt,
+                new PlayerSaveCreateRequest(PlayerRole.FACULTY, "Faculty Day", cse.getId(), "F-D01")
+        );
+
+        facultyProgressService.useComputer(jwt);
+        facultyTeachService.scanClassroom(jwt, "ICS");
+        facultyTeachService.completeLecture(jwt);
+        facultyTeachService.scanClassroom(jwt, "DM");
+        facultyTeachService.completeLecture(jwt);
+
+        var before = facultyProgressService.getProgress(jwt);
+        assertThat(before.reputation()).isEqualTo(75);
+        assertThat(before.computerUsed()).isTrue();
+        assertThat(before.icsCompleted()).isTrue();
+        assertThat(before.dmCompleted()).isTrue();
+        assertThat(before.classroomScanned()).isTrue();
+        assertThat(before.lectureCompleted()).isTrue();
+
+        Player player = playerRepository.findByClerkUserId("user_faculty_day_adv").orElseThrow();
+        int auraBefore = playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura();
+
+        DayAdvanceResponse advanced = playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1));
+        assertThat(advanced.currentDay()).isEqualTo(2);
+        assertThat(advanced.alreadyAdvanced()).isFalse();
+
+        var after = facultyProgressService.getProgress(jwt);
+        assertThat(after.reputation()).isEqualTo(75);
+        assertThat(after.computerUsed()).isTrue();
+        assertThat(after.officeEntered()).isTrue();
+        assertThat(after.icsCompleted()).isFalse();
+        assertThat(after.dmCompleted()).isFalse();
+        assertThat(after.classroomScanned()).isFalse();
+        assertThat(after.lectureCompleted()).isFalse();
+        assertThat(after.lectureLeft()).isFalse();
+        assertThat(after.activeCourseCode()).isNull();
+        assertThat(after.nextCourseCode()).isEqualTo("ICS");
+
+        // No student breakfast miss penalty applied to faculty aura.
+        assertThat(playerStatsRepository.findByPlayerId(player.getId()).orElseThrow().getAura())
+                .isEqualTo(auraBefore);
+        assertThat(playerDayActivityRepository.findByPlayer_IdAndActivityId(player.getId(), "BREAKFAST"))
+                .isEmpty();
+    }
+
+    @Test
+    void facultyAdvance_duplicateExpectedDay_isIdempotent() {
+        Jwt jwt = jwtWith("user_faculty_day_adv_dup");
+        playerSaveService.createSave(
+                jwt,
+                new PlayerSaveCreateRequest(PlayerRole.FACULTY, "Faculty Dup", cse.getId(), "F-D02")
+        );
+
+        DayAdvanceResponse first = playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1));
+        DayAdvanceResponse second = playerDayService.advanceDay(jwt, new DayAdvanceRequest(1, 1));
+
+        assertThat(first.currentDay()).isEqualTo(2);
+        assertThat(first.alreadyAdvanced()).isFalse();
+        assertThat(second.currentDay()).isEqualTo(2);
+        assertThat(second.alreadyAdvanced()).isTrue();
     }
 
     private void createSave(Jwt jwt) {

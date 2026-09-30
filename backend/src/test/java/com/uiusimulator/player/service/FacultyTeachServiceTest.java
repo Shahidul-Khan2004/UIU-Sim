@@ -212,6 +212,76 @@ class FacultyTeachServiceTest {
                 .isEqualTo(FacultyProgress.DEFAULT_REPUTATION);
     }
 
+    @Test
+    void unpreparedExamDayScanAppliesMinus3Once() {
+        Jwt jwt = jwtWith("user_faculty_exam_unprepared");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-E01");
+        advanceSaveToDay(player, 2);
+
+        FacultyProgressResponse first = facultyTeachService.scanClassroom(jwt, "ICS");
+        // +10 scan, −3 unprepared
+        assertThat(first.reputation()).isEqualTo(57);
+        assertThat(first.questionsPreparedForCurrentDay()).isFalse();
+        assertThat(first.classroomScanned()).isTrue();
+
+        facultyTeachService.completeLecture(jwt);
+        FacultyProgressResponse secondClass = facultyTeachService.scanClassroom(jwt, "DM");
+        // +5 complete only; no second −3; second scan does not re-award +10
+        assertThat(secondClass.reputation()).isEqualTo(62);
+    }
+
+    @Test
+    void preparedExamDayScanHasNoUnpreparedPenalty() {
+        Jwt jwt = jwtWith("user_faculty_exam_prepared");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-E02");
+        advanceSaveToDay(player, 2);
+
+        FacultyProgressResponse prepared = facultyProgressService.prepareQuestions(jwt);
+        assertThat(prepared.reputation()).isEqualTo(53);
+        assertThat(prepared.questionsPreparedForCurrentDay()).isTrue();
+
+        FacultyProgressResponse scan = facultyTeachService.scanClassroom(jwt, "ICS");
+        assertThat(scan.reputation()).isEqualTo(63);
+        assertThat(scan.questionsPreparedForCurrentDay()).isTrue();
+    }
+
+    @Test
+    void wrongClassroomOnExamDayDoesNotApplyUnpreparedPenalty() {
+        Jwt jwt = jwtWith("user_faculty_exam_wrong");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-E03");
+        advanceSaveToDay(player, 2);
+
+        FacultyProgressResponse wrong = facultyTeachService.scanClassroom(jwt, "DM");
+        assertThat(wrong.reputation()).isEqualTo(45);
+        assertThat(wrong.teachBlockedReason()).isNotNull();
+
+        FacultyProgressResponse correct = facultyTeachService.scanClassroom(jwt, "ICS");
+        // wrong −5, then +10 scan and −3 unprepared
+        assertThat(correct.reputation()).isEqualTo(52);
+    }
+
+    @Test
+    void prepareAfterUnpreparedScanStillGrantsPlus3() {
+        Jwt jwt = jwtWith("user_faculty_exam_late_prepare");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-E04");
+        advanceSaveToDay(player, 3);
+
+        FacultyProgressResponse scan = facultyTeachService.scanClassroom(jwt, "ICS");
+        assertThat(scan.reputation()).isEqualTo(57);
+
+        FacultyProgressResponse prepared = facultyProgressService.prepareQuestions(jwt);
+        assertThat(prepared.reputation()).isEqualTo(60);
+        assertThat(prepared.questionsPreparedForCurrentDay()).isTrue();
+    }
+
+    private void advanceSaveToDay(Player player, int targetDay) {
+        PlayerSave save = playerSaveRepository.findByPlayerId(player.getId()).orElseThrow();
+        while (save.getCurrentDay() < targetDay) {
+            save.advanceToNextDay();
+        }
+        playerSaveRepository.saveAndFlush(save);
+    }
+
     private Player createSave(Jwt jwt, PlayerRole role, String name, String universityId) {
         Player player = playerService.getOrProvisionPlayer(jwt);
         playerSaveRepository.saveAndFlush(
