@@ -59,6 +59,14 @@ public class FacultyProgress implements Persistable<UUID> {
     @Column(name = "active_course_code", length = 32)
     private String activeCourseCode;
 
+    /** Game day (player_saves.current_day) for which coffee was last successfully claimed. */
+    @Column(name = "coffee_claimed_day")
+    private Integer coffeeClaimedDay;
+
+    /** Last successful coffee option name; meaningful only when claimed for the compared day. */
+    @Column(name = "coffee_option", length = 64)
+    private String coffeeOption;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -173,6 +181,27 @@ public class FacultyProgress implements Persistable<UUID> {
         this.activeCourseCode = null;
     }
 
+    /**
+     * Claims coffee for the given game day and awards the option's exclusive reputation reward.
+     * Returns false when coffee was already claimed for that day (idempotent no-op).
+     */
+    public boolean claimCoffeeForDay(int currentDay, FacultyCoffeeOption option) {
+        if (option == null) {
+            throw new IllegalArgumentException("Coffee option is required.");
+        }
+        if (isCoffeeClaimedForDay(currentDay)) {
+            return false;
+        }
+        this.coffeeClaimedDay = currentDay;
+        this.coffeeOption = option.name();
+        addReputation(option.reputationReward());
+        return true;
+    }
+
+    public boolean isCoffeeClaimedForDay(int currentDay) {
+        return coffeeClaimedDay != null && coffeeClaimedDay == currentDay;
+    }
+
     public void addReputation(int delta) {
         this.reputation = clamp(this.reputation + delta);
     }
@@ -185,6 +214,8 @@ public class FacultyProgress implements Persistable<UUID> {
         this.lectureCompleted = false;
         this.lectureLeft = false;
         this.activeCourseCode = null;
+        this.coffeeClaimedDay = null;
+        this.coffeeOption = null;
         this.updatedAt = Instant.now();
     }
 
@@ -226,6 +257,14 @@ public class FacultyProgress implements Persistable<UUID> {
 
     public String getActiveCourseCode() {
         return activeCourseCode;
+    }
+
+    public Integer getCoffeeClaimedDay() {
+        return coffeeClaimedDay;
+    }
+
+    public String getCoffeeOption() {
+        return coffeeOption;
     }
 
     public Instant getUpdatedAt() {

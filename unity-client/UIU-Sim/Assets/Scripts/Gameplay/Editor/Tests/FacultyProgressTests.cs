@@ -290,6 +290,61 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
             Assert.That(FindLabel(facultyHud.transform, "NextActivity").text, Does.Contain("—"));
             Assert.That(FindLabel(facultyHud.transform, "Course0Marker").text, Is.EqualTo("✓"));
             Assert.That(FindLabel(facultyHud.transform, "Course1Marker").text, Is.EqualTo("✓"));
+            Assert.That(FindLabel(facultyHud.transform, "OptionalHeader").text, Is.EqualTo("OPTIONAL"));
+            Assert.That(FindLabel(facultyHud.transform, "OptionalHeader").gameObject.activeInHierarchy, Is.True);
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeTitle").text, Is.EqualTo("Get Coffee"));
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeMarker").text, Is.EqualTo("○"));
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeMarker").color, Is.EqualTo(UiTheme.Grey));
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Not.Contain("Coffee"));
+            Assert.That(FindLabel(facultyHud.transform, "NextActivity").text, Does.Not.Contain("Coffee"));
+        }
+
+        [Test]
+        public void FacultyHud_OptionalCoffeeHidden_BeforeBothClassesComplete()
+        {
+            ApplyFacultySave();
+            facultyProgress.SetStateForTesting(
+                65,
+                computerUsedValue: true,
+                officeEnteredValue: true,
+                icsPreparedValue: true,
+                dmPreparedValue: true,
+                icsCompletedValue: true,
+                dmCompletedValue: false,
+                facultyIdIssuedValue: true);
+            facultyHud.ApplyRoleVisibility();
+
+            TextMeshProUGUI optionalHeader = FindLabel(facultyHud.transform, "OptionalHeader");
+            Assert.That(optionalHeader, Is.Not.Null);
+            Assert.That(optionalHeader.gameObject.activeInHierarchy, Is.False);
+        }
+
+        [Test]
+        public void FacultyHud_OptionalCoffeeCompletesWithoutChangingCurrentObjective()
+        {
+            ApplyFacultySave();
+            facultyProgress.SetStateForTesting(
+                71,
+                computerUsedValue: true,
+                officeEnteredValue: true,
+                classroomScannedValue: true,
+                lectureCompletedValue: true,
+                icsPreparedValue: true,
+                dmPreparedValue: true,
+                icsCompletedValue: true,
+                dmCompletedValue: true,
+                facultyIdIssuedValue: true,
+                coffeeClaimedForCurrentDayValue: true,
+                coffeeOptionValue: "CAPPUCCINO",
+                source: FacultyUpdateSource.GameplayMutation);
+            facultyHud.ApplyRoleVisibility();
+
+            Assert.That(FindLabel(facultyHud.transform, "CurrentObjective").text, Does.Contain("All classes completed."));
+            Assert.That(FindLabel(facultyHud.transform, "NextActivity").text, Does.Contain("—"));
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeMarker").text, Is.EqualTo("✓"));
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeMarker").color, Is.EqualTo(UiTheme.Success));
+            Assert.That(FindLabel(facultyHud.transform, "CoffeeTitle").color, Is.EqualTo(UiTheme.Success));
+            Assert.That(FindLabel(facultyHud.transform, "ReputationValue").text, Is.EqualTo("71"));
         }
 
         [Test]

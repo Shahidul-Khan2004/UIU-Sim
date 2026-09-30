@@ -14,8 +14,10 @@ import com.uiusimulator.common.exception.GlobalExceptionHandler;
 import com.uiusimulator.config.ClerkProperties;
 import com.uiusimulator.config.SecurityConfig;
 import com.uiusimulator.player.dto.FacultyProgressResponse;
+import com.uiusimulator.player.entity.FacultyCoffeeOption;
 import com.uiusimulator.player.service.FacultyProgressService;
 import com.uiusimulator.player.service.FacultyTeachService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -120,6 +122,58 @@ class FacultyProgressControllerTest {
     }
 
     @Test
+    void coffee_faculty_returnsUpdatedReputation() throws Exception {
+        when(facultyProgressService.claimCoffee(any(Jwt.class), eq(FacultyCoffeeOption.CAPPUCCINO)))
+                .thenReturn(new FacultyProgressResponse(
+                        51,
+                        true,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        true,
+                        true,
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        true,
+                        "CAPPUCCINO"
+                ));
+
+        mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
+                        .with(jwt().jwt(j -> j.subject("user_me")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"option\":\"CAPPUCCINO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reputation").value(51))
+                .andExpect(jsonPath("$.coffeeClaimedForCurrentDay").value(true))
+                .andExpect(jsonPath("$.coffeeOption").value("CAPPUCCINO"));
+    }
+
+    @Test
+    void coffee_missingOption_returns400() throws Exception {
+        mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
+                        .with(jwt().jwt(j -> j.subject("user_me")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void coffee_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"option\":\"CAPPUCCINO\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void facultyProgress_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/players/me/faculty-progress"))
                 .andExpect(status().isUnauthorized());
@@ -132,6 +186,10 @@ class FacultyProgressControllerTest {
         mockMvc.perform(post("/api/players/me/faculty-teach/complete"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/players/me/faculty-teach/leave"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/players/me/faculty-progress/coffee")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"option\":\"CAPPUCCINO\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }

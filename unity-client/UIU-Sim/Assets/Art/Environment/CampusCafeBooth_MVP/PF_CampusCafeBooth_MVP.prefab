@@ -156,6 +156,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7057375179024203364}
+  - component: {fileID: 1140001122334455667}
   m_Layer: 0
   m_Name: PF_CampusCafeBooth_MVP
   m_TagString: Untagged
@@ -163,6 +164,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1140001122334455667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7942611023023476236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f3a2c1b9e6d4a70b5c8d0e1f2a3b4c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Gameplay.Faculty.FacultyCoffeeInteractable
+  interactionPrompt: Get Coffee
+  boothSpeakerName: Campus Cafe
+  greeting: What would you like today?
+  cappuccinoLabel: Cappuccino
+  cappuccinoCookieLabel: Cappuccino + Cookie
+  cappuccinoCookieBrownieLabel: Cappuccino + Cookie + Brownie
+  studentsDeniedMessage: Faculty only.
+  idRequiredMessage: You need a Faculty ID Card first.
+  classesRequiredMessage: Coffee is available after your classes.
+  alreadyClaimedMessage: You already got your coffee for today.
+  boothClosedMessage: The cafe is closed right now.
 --- !u!4 &7057375179024203364
 Transform:
   m_ObjectHideFlags: 0

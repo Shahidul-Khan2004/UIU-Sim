@@ -1,5 +1,6 @@
 package com.uiusimulator.player.controller;
 
+import com.uiusimulator.player.dto.FacultyCoffeeRequest;
 import com.uiusimulator.player.dto.FacultyProgressResponse;
 import com.uiusimulator.player.dto.FacultyTeachScanRequest;
 import com.uiusimulator.player.service.FacultyProgressService;
@@ -38,6 +39,17 @@ public class FacultyProgressController {
     @PostMapping("/me/faculty-progress/computer")
     public ResponseEntity<FacultyProgressResponse> useFacultyComputer(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(facultyProgressService.useComputer(jwt));
+    }
+
+    @PostMapping(
+            value = "/me/faculty-progress/coffee",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<FacultyProgressResponse> claimFacultyCoffee(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody FacultyCoffeeRequest request
+    ) {
+        return ResponseEntity.ok(facultyProgressService.claimCoffee(jwt, request.option()));
     }
 
     @PostMapping(
