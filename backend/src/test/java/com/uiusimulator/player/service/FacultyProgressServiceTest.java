@@ -191,7 +191,51 @@ class FacultyProgressServiceTest {
         assertThatThrownBy(() -> facultyProgressService.useComputer(jwt))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(FacultyProgressService.FACULTY_ONLY_MESSAGE);
+        assertThatThrownBy(() -> facultyProgressService.prepareQuestions(jwt))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FacultyProgressService.FACULTY_ONLY_MESSAGE);
         assertThat(facultyProgressRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void prepareQuestionsGivesPlus3OnceOnExamDay() {
+        Jwt jwt = jwtWith("user_faculty_prepare_once");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-P01");
+        advanceSaveToDay(player, 6);
+
+        FacultyProgressResponse first = facultyProgressService.prepareQuestions(jwt);
+        assertThat(first.reputation()).isEqualTo(53);
+        assertThat(first.questionsPreparedForCurrentDay()).isTrue();
+
+        FacultyProgressResponse second = facultyProgressService.prepareQuestions(jwt);
+        assertThat(second.reputation()).isEqualTo(53);
+        assertThat(second.questionsPreparedForCurrentDay()).isTrue();
+    }
+
+    @Test
+    void prepareQuestionsRejectedOnDay1AndDay4() {
+        Jwt jwt = jwtWith("user_faculty_prepare_offday");
+        Player player = createSave(jwt, PlayerRole.FACULTY, "Lail", "F-P02");
+
+        assertThatThrownBy(() -> facultyProgressService.prepareQuestions(jwt))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FacultyProgressService.PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE);
+        assertThat(facultyProgressService.getProgress(jwt).reputation())
+                .isEqualTo(FacultyProgress.DEFAULT_REPUTATION);
+        assertThat(facultyProgressService.getProgress(jwt).questionsPreparedForCurrentDay()).isFalse();
+
+        advanceSaveToDay(player, 4);
+        assertThatThrownBy(() -> facultyProgressService.prepareQuestions(jwt))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(FacultyProgressService.PREPARE_QUESTIONS_NOT_EXAM_DAY_MESSAGE);
+    }
+
+    private void advanceSaveToDay(Player player, int targetDay) {
+        PlayerSave save = playerSaveRepository.findByPlayerId(player.getId()).orElseThrow();
+        while (save.getCurrentDay() < targetDay) {
+            save.advanceToNextDay();
+        }
+        playerSaveRepository.saveAndFlush(save);
     }
 
     private Player createSave(Jwt jwt, PlayerRole role, String name, String universityId) {
