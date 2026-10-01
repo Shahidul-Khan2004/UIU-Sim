@@ -3,7 +3,7 @@ guid: 99dac127bac5421ca3859d62dd93f53c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3395856866206217572
+      213: 21300000
     second: brain_0
   externalObjects: {}
   serializedVersion: 13
@@ -129,7 +129,7 @@ TextureImporter:
       tessellationDetail: -1
       bones: []
       spriteID: c9a05b51c2e7fd0d0800000000000000
-      internalID: -3395856866206217572
+      internalID: 21300000
       vertices: []
       indices: 
       edges: []
@@ -139,7 +139,7 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: d445340f56d84cc7a9f22e7d1216c8a7
-    internalID: 21300000
+    internalID: 0
     vertices: []
     indices: 
     edges: []
@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      brain_0: 21300000
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
