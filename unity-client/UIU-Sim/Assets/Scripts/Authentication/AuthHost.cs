@@ -6,12 +6,12 @@ namespace UIU.Simulator.Authentication
     /// <summary>
     /// Persistent auth host across Bootstrap → Login → Main.
     /// One instance only; created by Bootstrap (or Login fallback), not by gameplay scenes.
+    /// Backend URL comes from <see cref="BackendConfig"/> (baked at build time from backend/.env).
     /// </summary>
     public sealed class AuthHost : MonoBehaviour
     {
         public static AuthHost Instance { get; private set; }
 
-        [SerializeField] private string backendBaseUrl = "http://localhost:8080";
         [SerializeField] private bool requireBackendValidation;
 
         public ClerkAuthManager AuthManager { get; private set; }
@@ -62,6 +62,14 @@ namespace UIU.Simulator.Authentication
             if (ApiClient == null)
             {
                 ApiClient = GetComponent<ApiClient>() ?? gameObject.AddComponent<ApiClient>();
+            }
+
+            string backendBaseUrl = BackendConfig.ResolveBaseUrl();
+            if (string.IsNullOrWhiteSpace(backendBaseUrl))
+            {
+                Debug.LogError(
+                    "[AuthHost] Backend base URL is not configured. " +
+                    "Fix backend/.env and run UIU Simulator → Sync Backend Config From .env");
             }
 
             ApiClient.BackendBaseUrl = backendBaseUrl;

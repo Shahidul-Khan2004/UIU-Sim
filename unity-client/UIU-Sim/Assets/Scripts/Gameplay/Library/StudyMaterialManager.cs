@@ -20,7 +20,7 @@ namespace UIU.Simulator.Gameplay.Library
     }
 
     /// <summary>
-    /// Local Unity-only PDF catalog under Resources/StudyMaterials.
+    /// Local Unity-only PDF catalog under StreamingAssets/StudyMaterials.
     /// Opens files in the system browser. Nothing is uploaded or stored on the backend.
     /// </summary>
     public static class StudyMaterialManager
@@ -38,8 +38,12 @@ namespace UIU.Simulator.Gameplay.Library
             }
 
             string folder = ResolveFolder();
-            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+            bool exists = !string.IsNullOrEmpty(folder) && Directory.Exists(folder);
+            Debug.Log($"[StudyMaterialManager] Study folder: {folder}");
+            Debug.Log($"[StudyMaterialManager] Study folder exists: {exists}");
+            if (!exists)
             {
+                Debug.Log("[StudyMaterialManager] PDF count: 0");
                 Debug.LogWarning($"[StudyMaterialManager] Study materials folder not found: {folder}");
                 return Array.Empty<StudyMaterial>();
             }
@@ -59,6 +63,7 @@ namespace UIU.Simulator.Gameplay.Library
             }
 
             materials.Sort((a, b) => string.Compare(a.DisplayName, b.DisplayName, StringComparison.OrdinalIgnoreCase));
+            Debug.Log($"[StudyMaterialManager] PDF count: {materials.Count}");
             return materials.ToArray();
         }
 
@@ -94,7 +99,7 @@ namespace UIU.Simulator.Gameplay.Library
 
         private static string ResolveFolder()
         {
-            return Path.Combine(Application.dataPath, "Resources", ResourceFolder);
+            return Path.Combine(Application.streamingAssetsPath, ResourceFolder);
         }
     }
 }

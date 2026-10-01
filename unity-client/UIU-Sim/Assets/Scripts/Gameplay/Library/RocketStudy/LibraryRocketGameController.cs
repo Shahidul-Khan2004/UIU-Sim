@@ -177,10 +177,9 @@ namespace UIU.Simulator.Gameplay.Library.RocketStudy
         private void CreateBrainVisual(RectTransform playerRoot)
         {
             Sprite sprite = brainSprite;
-#if UNITY_EDITOR
-            if (sprite == null)
-                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(BrainSpritePath);
-#endif
+            Debug.Log(sprite != null
+                ? $"[RocketStudy] Brain sprite loaded: {sprite.name}"
+                : "[RocketStudy] Brain sprite is NULL.");
             if (sprite == null)
             {
                 Debug.LogWarning("[RocketStudy] Brain sprite is not assigned.");
