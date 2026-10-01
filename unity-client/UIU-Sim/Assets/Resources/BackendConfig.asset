@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8f5a2b19e3d4a7b9c0d1e2f3a4b5c6d, type: 3}
   m_Name: BackendConfig
   m_EditorClassIdentifier: Assembly-CSharp::UIU.Simulator.Networking.BackendConfig
-  environment: 0
+  environment: 1
   localBackendUrl: http://localhost:8080
-  remoteBackendUrl: __RENDER_BACKEND_URL_NOT_CONFIGURED__
+  remoteBackendUrl: https://uiu-sim.onrender.com
