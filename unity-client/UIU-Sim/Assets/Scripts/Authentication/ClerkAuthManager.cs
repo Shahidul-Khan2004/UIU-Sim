@@ -11,7 +11,7 @@ namespace UIU.Simulator.Authentication
     /// </summary>
     public sealed class ClerkAuthManager : MonoBehaviour
     {
-        [SerializeField] private string backendBaseUrl = "http://localhost:8080";
+        [SerializeField] private string backendBaseUrl;
         [SerializeField] private ApiClient apiClient;
         [SerializeField] private AuthTokenProvider authTokenProvider;
         [SerializeField] private AuthCallbackHandler callbackHandler;
@@ -25,7 +25,7 @@ namespace UIU.Simulator.Authentication
 
         public UserSession Session { get; } = new UserSession();
 
-        public string BackendBaseUrl => backendBaseUrl.TrimEnd('/');
+        public string BackendBaseUrl => BackendConfig.NormalizeBaseUrl(backendBaseUrl);
 
         public event Action<UserSession> SessionChanged;
 

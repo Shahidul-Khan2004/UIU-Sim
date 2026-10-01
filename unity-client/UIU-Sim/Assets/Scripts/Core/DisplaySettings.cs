@@ -3,10 +3,9 @@ using UnityEngine;
 namespace UIU.Simulator.Core
 {
     /// <summary>
-    /// Locks the standalone player to 1280x720 Fullscreen Window (borderless).
-    /// Rendering stays at 720p on higher-resolution monitors; the OS compositor scales
-    /// the backbuffer to fill the display. URP render scale should remain 1.0 so the
-    /// pipeline does not upsample on top of this.
+    /// Opens the standalone player as borderless fullscreen at the monitor's native
+    /// resolution (the display the window is on). Re-applies on focus so moving the
+    /// window between monitors picks up the new display size.
     ///
     /// Owned by <see cref="GameManager"/> — do not place this on scene objects.
     /// </summary>
@@ -14,8 +13,6 @@ namespace UIU.Simulator.Core
     [DefaultExecutionOrder(-990)]
     public sealed class DisplaySettings : MonoBehaviour
     {
-        public const int Width = 1280;
-        public const int Height = 720;
         public const int TargetFrameRate = 60;
 
         private void Awake()
@@ -39,7 +36,7 @@ namespace UIU.Simulator.Core
         }
 
         /// <summary>
-        /// Applies the locked display mode. Safe to call more than once.
+        /// Applies native-resolution borderless fullscreen. Safe to call more than once.
         /// </summary>
         public static void Apply()
         {
@@ -50,7 +47,17 @@ namespace UIU.Simulator.Core
 
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = TargetFrameRate;
-            Screen.SetResolution(Width, Height, FullScreenMode.FullScreenWindow);
+
+            var info = Screen.mainWindowDisplayInfo;
+            int width = info.width;
+            int height = info.height;
+            if (width <= 0 || height <= 0)
+            {
+                width = Display.main.systemWidth;
+                height = Display.main.systemHeight;
+            }
+
+            Screen.SetResolution(width, height, FullScreenMode.FullScreenWindow);
         }
     }
 }

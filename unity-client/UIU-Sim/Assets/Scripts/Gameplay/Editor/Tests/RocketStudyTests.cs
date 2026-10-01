@@ -361,6 +361,7 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
         public void Controller_ReplacesOrangePlayerWithCenteredBrainWithoutChangingHitbox()
         {
             var host = new GameObject("Brain visual test");
+            Scene scene = default;
             try
             {
                 Sprite brain = AssetDatabase.LoadAssetAtPath<Sprite>(LibraryRocketGameController.BrainSpritePath);
@@ -370,12 +371,28 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single));
                 Assert.That(importer.filterMode, Is.EqualTo(FilterMode.Point));
                 Assert.That(importer.alphaIsTransparency, Is.True);
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(brain, out string primaryGuid, out long primaryFileId);
+                Assert.That(primaryGuid, Is.EqualTo("99dac127bac5421ca3859d62dd93f53c"));
+                Assert.That(primaryFileId, Is.EqualTo(21300000L),
+                    "Player builds include the Single-mode sprite at file ID 21300000.");
+
+                scene = EditorSceneManager.OpenScene(RocketLibraryStudyMinigame.ScenePath, OpenSceneMode.Additive);
+                LibraryRocketGameController sceneController = scene.GetRootGameObjects()[0]
+                    .GetComponent<LibraryRocketGameController>();
+                Assert.That(sceneController, Is.Not.Null);
+                var sceneSprite = (Sprite)typeof(LibraryRocketGameController)
+                    .GetField("brainSprite", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetValue(sceneController);
+                Assert.That(sceneSprite, Is.EqualTo(brain),
+                    "LibraryRocketStudy.brainSprite must be the primary brain.png sprite the player includes.");
+                EditorSceneManager.CloseScene(scene, true);
+                scene = default;
 
                 var controller = host.AddComponent<LibraryRocketGameController>();
                 typeof(LibraryRocketGameController).GetField("settings", BindingFlags.NonPublic | BindingFlags.Instance)
                     .SetValue(controller, new RocketStudySettings { gravity = 0f });
                 typeof(LibraryRocketGameController).GetField("brainSprite", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .SetValue(controller, brain);
+                    .SetValue(controller, sceneSprite);
                 controller.Open(_ => { });
                 var run = controller.Simulation;
                 var player = host.GetComponentsInChildren<RectTransform>().Single(t => t.name == "Rocket");
@@ -397,7 +414,11 @@ namespace UIU.Simulator.Gameplay.Editor.Tests
                 Assert.That(visual.position, Is.EqualTo(player.position));
                 Assert.That(player.sizeDelta, Is.EqualTo(run.RocketSize));
             }
-            finally { Object.DestroyImmediate(host); }
+            finally
+            {
+                if (scene.IsValid()) EditorSceneManager.CloseScene(scene, true);
+                Object.DestroyImmediate(host);
+            }
         }
 
         [Test]

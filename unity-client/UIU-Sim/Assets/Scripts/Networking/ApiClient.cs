@@ -14,12 +14,12 @@ namespace UIU.Simulator.Networking
     /// </summary>
     public sealed class ApiClient : MonoBehaviour
     {
-        [SerializeField] private string backendBaseUrl = "http://localhost:8080";
+        [SerializeField] private string backendBaseUrl;
         [SerializeField] private AuthTokenProvider authTokenProvider;
 
         public string BackendBaseUrl
         {
-            get => backendBaseUrl.TrimEnd('/');
+            get => BackendConfig.NormalizeBaseUrl(backendBaseUrl);
             set => backendBaseUrl = value;
         }
 
@@ -33,6 +33,11 @@ namespace UIU.Simulator.Networking
             if (authTokenProvider == null)
             {
                 authTokenProvider = GetComponent<AuthTokenProvider>();
+            }
+
+            if (string.IsNullOrWhiteSpace(backendBaseUrl))
+            {
+                backendBaseUrl = BackendConfig.ResolveBaseUrl();
             }
         }
 
@@ -974,7 +979,21 @@ namespace UIU.Simulator.Networking
 
             if (!string.IsNullOrWhiteSpace(request.error))
             {
+                if (request.responseCode == 0 ||
+                    request.result == UnityWebRequest.Result.ConnectionError ||
+                    request.result == UnityWebRequest.Result.DataProcessingError)
+                {
+                    return
+                        "Cannot reach the game server. Check your internet connection " +
+                        $"or try again later. ({request.error})";
+                }
+
                 return request.error;
+            }
+
+            if (request.responseCode == 0)
+            {
+                return "Cannot reach the game server. Check your internet connection or try again later.";
             }
 
             return $"HTTP {(int)request.responseCode}";

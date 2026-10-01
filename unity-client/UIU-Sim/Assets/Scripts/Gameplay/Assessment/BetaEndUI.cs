@@ -1,3 +1,4 @@
+using UIU.Simulator.Core;
 using UIU.Simulator.UI;
 using UnityEngine;
 
@@ -34,10 +35,8 @@ namespace UIU.Simulator.Gameplay.Assessment
         }
         private void QuitGame()
         {
-#if UNITY_EDITOR
-            Debug.Log("Quit Game requested. Application.Quit does not stop the Unity Editor.");
-#endif
-            Application.Quit();
+            Debug.Log("[BetaEndUI] QUIT GAME clicked.");
+            GameManager.EnsureExists().Quit();
         }
     }
 }
